@@ -28,15 +28,15 @@
     "lat": 60.5154,
     "lon": 30.2113,
     "website": "https://igora.ru/",
-    "webcam_url": "https://webcam.exdesign.ru/igora-1/",
+    "webcam_url": "https://igora.ru/cam/",
     "prices_format": "html_js",
     "status": "active",
-    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. Цены — Playwright/SSR таблицы на /price/; часы — EN /en/working-hours/.",
+    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. Цены — Playwright/SSR таблицы на /price/; часы — /working-hours/.",
     "sources": [
       "https://igora.ru/",
       "https://igora.ru/cam/",
       "https://igora.ru/price/",
-      "https://igora.ru/en/working-hours/",
+      "https://igora.ru/working-hours/",
       "https://igora.ru/slopes/"
     ],
     "prices_url": "https://igora.ru/price/"

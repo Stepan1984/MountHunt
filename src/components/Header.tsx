@@ -13,7 +13,7 @@ export function Header() {
           <NavLink to="/" end>
             Курорты
           </NavLink>
-          <a href={homeHash('#map')}>Карта</a>
+          <a href={homeHash('#explore')}>Карта</a>
           <a href={homeHash('#important')}>Важное</a>
           <NavLink to="/about">О проекте</NavLink>
         </nav>

@@ -151,12 +151,12 @@ function applySeedFixes(resorts) {
       webcam_url: 'https://igora.ru/cam/',
       sourcesAdd: [
         'https://igora.ru/price/',
-        'https://igora.ru/en/working-hours/',
+        'https://igora.ru/working-hours/',
         'https://igora.ru/cam/',
         'https://igora.ru/slopes/',
       ],
       notes:
-        'Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. Цены — Playwright/SSR таблицы на /price/; часы — EN /en/working-hours/.',
+        'Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. Цены — Playwright/SSR таблицы на /price/; часы — /working-hours/.',
     },
     'severny-sklon': {
       website: 'https://severnysklon.ru/',

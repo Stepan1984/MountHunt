@@ -1,9 +1,10 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 import { useSiteData } from './hooks/useSiteData'
 import { AboutPage } from './pages/AboutPage'
 import { HomePage } from './pages/HomePage'
+import { NotFoundPage } from './pages/NotFoundPage'
 import { ResortPage } from './pages/ResortPage'
 
 const routerBasename = (() => {
@@ -36,7 +37,7 @@ export default function App() {
               <Route path="/" element={<HomePage data={state.data} />} />
               <Route path="/resort/:id" element={<ResortPage data={state.data} />} />
               <Route path="/about" element={<AboutPage meta={state.data.meta} />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           )}
         </main>

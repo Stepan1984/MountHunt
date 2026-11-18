@@ -7,6 +7,10 @@ import type { Resort } from '../types'
 type Props = {
   resorts: Resort[]
   selectedId?: string | null
+  /** When true, render only the map shell (no section chrome) for the home explore layout. */
+  embedded?: boolean
+  /** Taller/shorter canvas for detail pages. */
+  size?: 'default' | 'detail'
 }
 
 const markerIcon = L.divIcon({
@@ -16,7 +20,12 @@ const markerIcon = L.divIcon({
   iconAnchor: [9, 9],
 })
 
-export function ResortMap({ resorts, selectedId }: Props) {
+export function ResortMap({
+  resorts,
+  selectedId,
+  embedded = false,
+  size = 'default',
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
   const navigate = useNavigate()
@@ -53,6 +62,11 @@ export function ResortMap({ resorts, selectedId }: Props) {
     const map = mapRef.current
     if (!map) return
 
+    // Leaflet needs a reflow when the container size changes (embedded side panel).
+    const resize = () => map.invalidateSize()
+    const timer = window.setTimeout(resize, 80)
+    window.addEventListener('resize', resize)
+
     const layer = L.layerGroup().addTo(map)
     const bounds: L.LatLngExpression[] = []
 
@@ -62,7 +76,7 @@ export function ResortMap({ resorts, selectedId }: Props) {
       bounds.push([lat, lon])
       const marker = L.marker([lat, lon], { icon: markerIcon })
       marker.bindPopup(
-        `<strong>${resort.name}</strong><br/><span>${resort.city_or_district}</span>`,
+        `<strong>${resort.name}</strong><br/><span>${resort.city_or_district}</span><br/><em>Открыть карточку</em>`,
       )
       marker.on('click', () => {
         navigate(`/resort/${resort.id}`)
@@ -76,15 +90,38 @@ export function ResortMap({ resorts, selectedId }: Props) {
     if (bounds.length > 1) {
       map.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [36, 36], maxZoom: 10 })
     } else if (bounds.length === 1) {
-      map.setView(bounds[0], 11)
+      map.setView(bounds[0], size === 'detail' ? 12 : 11)
     }
 
     return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('resize', resize)
       layer.remove()
     }
     // mappableKey tracks resort identity changes without depending on array identity
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mappableKey, navigate, selectedId])
+  }, [mappableKey, navigate, selectedId, size])
+
+  const canvas = (
+    <div className={`map-shell${size === 'detail' ? ' map-shell--detail' : ''}`}>
+      <div
+        ref={containerRef}
+        className={`map-canvas${size === 'detail' ? ' map-canvas--detail' : ''}`}
+        role="presentation"
+      />
+    </div>
+  )
+
+  if (embedded) {
+    return (
+      <div className="map-embedded">
+        <p className="map-embedded__hint muted">
+          {mappable.length} точек · нажмите маркер, чтобы открыть курорт
+        </p>
+        {canvas}
+      </div>
+    )
+  }
 
   return (
     <section className="section map-section" id="map" aria-labelledby="map-title">
@@ -95,9 +132,7 @@ export function ResortMap({ resorts, selectedId }: Props) {
           склоны по умолчанию скрыты.
         </p>
       </div>
-      <div className="map-shell">
-        <div ref={containerRef} className="map-canvas" role="presentation" />
-      </div>
+      {canvas}
     </section>
   )
 }

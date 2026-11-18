@@ -1,5 +1,5 @@
-import { Hero } from '../components/Hero'
 import { ImportantSection } from '../components/ImportantSection'
+import { Hero } from '../components/Hero'
 import { ResortCard } from '../components/ResortCard'
 import { ResortMap } from '../components/ResortMap'
 import { formatUpdatedAt } from '../lib/data'
@@ -13,27 +13,38 @@ export function HomePage({ data }: { data: SiteData }) {
     <>
       <Hero activeCount={active.length} />
 
-      <ResortMap resorts={data.resorts} />
+      <ImportantSection items={data.important} resorts={data.resorts} variant="strip" />
 
-      <ImportantSection items={data.important} resorts={data.resorts} />
-
-      <section className="section resorts" id="resorts" aria-labelledby="resorts-title">
+      <section className="section explore" id="explore" aria-labelledby="explore-title">
         <div className="section__head">
-          <h2 id="resorts-title">Курорты</h2>
+          <h2 id="explore-title">Карта и курорты</h2>
           <p>
-            Действующие комплексы СПБ и ЛО. Цены и часы — плейсхолдеры до ежедневного сбора данных
-            (обновление данных: {formatUpdatedAt(data.meta.updatedAt)}).
+            {active.length} действующих комплексов СПБ и ЛО. Цены и часы обновляются ежедневно с
+            официальных сайтов; где данных ещё нет — смотрите ссылку на сайт курорта. Снимок:{' '}
+            {formatUpdatedAt(data.meta.updatedAt)}.
           </p>
         </div>
-        <div className="resort-grid">
-          {active.map((resort) => (
-            <ResortCard
-              key={resort.id}
-              resort={resort}
-              hours={data.hours}
-              prices={data.prices}
-            />
-          ))}
+
+        <div className="explore__layout">
+          <div className="explore__map" id="map">
+            <ResortMap resorts={data.resorts} embedded />
+          </div>
+
+          <div className="explore__list" id="resorts">
+            <h3 className="explore__list-title">Список</h3>
+            <div className="resort-grid resort-grid--stack">
+              {active.map((resort) => (
+                <ResortCard
+                  key={resort.id}
+                  resort={resort}
+                  hours={data.hours}
+                  prices={data.prices}
+                  important={data.important}
+                  compact
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -46,13 +57,14 @@ export function HomePage({ data }: { data: SiteData }) {
               уточняйте перед выездом.
             </p>
           </div>
-          <div className="resort-grid resort-grid--compact">
+          <div className="resort-grid">
             {secondary.map((resort) => (
               <ResortCard
                 key={resort.id}
                 resort={resort}
                 hours={data.hours}
                 prices={data.prices}
+                important={data.important}
               />
             ))}
           </div>

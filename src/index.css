@@ -5,21 +5,23 @@
   --pine-mid: #2f5a4a;
   --graphite: #243038;
   --muted: #5d6b73;
-  --ice: #4f87a0;
+  --ice: #3f7a92;
   --ice-soft: #8fb8c9;
+  --amber: #a66b2b;
   --warn: #8a5a28;
   --warn-bg: #f3e7d6;
   --info-bg: #e7f0f4;
-  --surface: rgba(255, 255, 255, 0.72);
+  --surface: rgba(255, 255, 255, 0.78);
   --line: rgba(36, 48, 56, 0.12);
-  --shadow: 0 18px 40px rgba(27, 58, 47, 0.08);
-  --radius: 14px;
+  --shadow: 0 14px 32px rgba(27, 58, 47, 0.07);
+  --radius: 12px;
+  --radius-btn: 10px;
   --font-display: 'Fraunces', Georgia, serif;
   --font-body: 'Sora', 'Segoe UI', sans-serif;
   color: var(--graphite);
   background:
-    radial-gradient(1200px 500px at 10% -10%, rgba(143, 184, 201, 0.28), transparent 60%),
-    radial-gradient(900px 420px at 90% 0%, rgba(47, 90, 74, 0.12), transparent 55%),
+    radial-gradient(1200px 500px at 10% -10%, rgba(143, 184, 201, 0.26), transparent 60%),
+    radial-gradient(900px 420px at 90% 0%, rgba(47, 90, 74, 0.1), transparent 55%),
     linear-gradient(180deg, var(--snow), #eef3f6 40%, var(--fog));
   font-family: var(--font-body);
   line-height: 1.5;
@@ -93,12 +95,24 @@ main {
   font-size: 0.92rem;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .site-header {
   position: sticky;
   top: 0;
   z-index: 30;
   backdrop-filter: blur(12px);
-  background: rgba(244, 247, 249, 0.82);
+  background: rgba(244, 247, 249, 0.86);
   border-bottom: 1px solid var(--line);
 }
 
@@ -130,7 +144,7 @@ main {
 .site-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.85rem 1.1rem;
+  gap: 0.75rem 1.1rem;
   font-size: 0.92rem;
 }
 
@@ -146,7 +160,7 @@ main {
 
 .hero {
   position: relative;
-  min-height: min(92vh, 760px);
+  min-height: min(78vh, 640px);
   display: grid;
   align-items: end;
   overflow: hidden;
@@ -185,7 +199,7 @@ main {
 }
 
 .hero__content {
-  padding: 5.5rem 0 3.5rem;
+  padding: 4.5rem 0 2.75rem;
   max-width: 40rem;
   animation: rise-in 0.9s ease both;
 }
@@ -224,8 +238,8 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.15rem;
-  border-radius: 999px;
+  padding: 0.72rem 1.1rem;
+  border-radius: var(--radius-btn);
   border: 1px solid transparent;
   font: inherit;
   font-weight: 500;
@@ -254,20 +268,52 @@ main {
 }
 
 .section {
-  padding: 3.25rem 0 1rem;
+  padding: 2.75rem 0 1rem;
 }
 
 .section__head {
-  margin-bottom: 1.4rem;
-  max-width: 42rem;
+  margin-bottom: 1.25rem;
+  max-width: 46rem;
 }
 
 .section__head h2 {
-  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-size: clamp(1.55rem, 3vw, 2rem);
 }
 
 .section__head p {
   color: var(--muted);
+}
+
+.important--strip {
+  padding-top: 1.75rem;
+  padding-bottom: 0.25rem;
+}
+
+.important--strip .section__head {
+  margin-bottom: 0.9rem;
+}
+
+.explore__layout {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 960px) {
+  .explore__layout {
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+    align-items: start;
+    gap: 1.5rem;
+  }
+
+  .explore__map {
+    position: sticky;
+    top: 4.5rem;
+  }
+}
+
+.explore__list-title {
+  font-size: 1.05rem;
+  margin-bottom: 0.85rem;
 }
 
 .map-shell {
@@ -278,9 +324,21 @@ main {
   background: #dfe8ec;
 }
 
+.map-shell--detail {
+  box-shadow: none;
+}
+
 .map-canvas {
-  height: min(56vh, 480px);
+  height: min(52vh, 460px);
   width: 100%;
+}
+
+.map-canvas--detail {
+  height: 220px;
+}
+
+.map-embedded__hint {
+  margin: 0 0 0.55rem;
 }
 
 .map-pin {
@@ -295,7 +353,7 @@ main {
   border-radius: 50%;
   background: var(--ice);
   border: 2px solid #fff;
-  box-shadow: 0 0 0 4px rgba(79, 135, 160, 0.25);
+  box-shadow: 0 0 0 4px rgba(63, 122, 146, 0.22);
 }
 
 .important__list,
@@ -304,15 +362,19 @@ main {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 1rem;
+  gap: 0.9rem;
 }
 
 .important__list {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
+.important__list--detail {
+  grid-template-columns: 1fr;
+}
+
 .important__item {
-  padding: 1.1rem 1.15rem;
+  padding: 1rem 1.05rem;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--surface);
@@ -331,7 +393,7 @@ main {
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.45rem;
   font-size: 0.8rem;
   color: var(--muted);
 }
@@ -347,36 +409,75 @@ main {
 
 .important__resort {
   font-size: 0.9rem;
-  color: var(--ice);
   margin-bottom: 0.35rem;
+}
+
+.important__resort a {
+  color: var(--ice);
+  text-decoration: none;
+}
+
+.important__item h3 {
+  font-size: 1.05rem;
+}
+
+.important__item h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.important__item h3 a:hover {
+  color: var(--ice);
 }
 
 .resort-grid {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
-.resort-grid--compact {
-  opacity: 0.92;
+.resort-grid--stack {
+  grid-template-columns: 1fr;
 }
 
 .resort-card {
-  padding: 1.15rem 1.2rem 1.2rem;
+  position: relative;
+  padding: 1.05rem 1.1rem 1.1rem;
   border-radius: var(--radius);
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.82);
   box-shadow: var(--shadow);
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .resort-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(79, 135, 160, 0.35);
+  border-color: rgba(63, 122, 146, 0.35);
 }
 
 .resort-card--unclear,
-.resort-card--closed {
-  background: rgba(255, 255, 255, 0.55);
+.resort-card--closed,
+.resort-card--slopes-closed {
+  background: rgba(255, 255, 255, 0.62);
   box-shadow: none;
+}
+
+.resort-card__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.resort-card__top,
+.resort-card__facts,
+.resort-card__links,
+.resort-card__area {
+  position: relative;
+  z-index: 2;
+}
+
+.resort-card__links a {
+  position: relative;
+  z-index: 3;
 }
 
 .resort-card__top {
@@ -387,7 +488,7 @@ main {
 }
 
 .resort-card__top h3 {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
 .resort-card__top a {
@@ -399,25 +500,32 @@ main {
   color: var(--ice);
 }
 
+.resort-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
 .resort-card__area {
   color: var(--muted);
-  font-size: 0.92rem;
-  min-height: 2.6em;
+  font-size: 0.9rem;
+  min-height: 1.4em;
 }
 
 .resort-card__facts {
   display: grid;
-  gap: 0.55rem;
-  margin: 0 0 1rem;
+  gap: 0.5rem;
+  margin: 0 0 0.9rem;
 }
 
 .resort-card__facts div {
   display: grid;
-  gap: 0.15rem;
+  gap: 0.12rem;
 }
 
 .resort-card__facts dt {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--muted);
@@ -425,22 +533,22 @@ main {
 
 .resort-card__facts dd {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.94rem;
 }
 
 .resort-card__links {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem 1rem;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
   border: 1px solid transparent;
@@ -456,9 +564,10 @@ main {
   background: rgba(138, 90, 40, 0.12);
 }
 
-.badge--closed {
-  color: var(--muted);
-  background: rgba(93, 107, 115, 0.14);
+.badge--closed,
+.badge--warn {
+  color: var(--amber);
+  background: rgba(166, 107, 43, 0.14);
 }
 
 .page-narrow {
@@ -472,12 +581,21 @@ main {
   font-size: 0.9rem;
 }
 
+.resort-detail__brand-kicker {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pine-mid);
+}
+
 .resort-detail__header {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
-  margin: 1rem 0 1.25rem;
+  margin: 0.75rem 0 1.1rem;
 }
 
 .resort-detail__header h1 {
@@ -490,51 +608,83 @@ main {
 }
 
 .resort-detail__notes {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
+}
+
+.resort-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 1.1rem 0 1.5rem;
+}
+
+.resort-detail__important {
+  margin-bottom: 1.5rem;
+}
+
+.resort-detail__map {
+  margin-top: 0.75rem;
 }
 
 .detail-grid {
   display: grid;
-  gap: 1.25rem;
-  margin: 1.75rem 0;
+  gap: 1.15rem;
+  margin: 1.5rem 0;
 }
 
 @media (min-width: 720px) {
   .detail-grid {
     grid-template-columns: 1fr 1fr;
   }
+
+  .detail-grid__wide {
+    grid-column: 1 / -1;
+  }
 }
 
 .detail-grid section {
-  padding: 1rem 1.1rem;
+  padding: 1rem 1.05rem;
   border-radius: var(--radius);
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .detail-grid h2 {
-  font-size: 1.15rem;
+  font-size: 1.12rem;
+}
+
+.detail-lead {
+  font-size: 1.02rem;
 }
 
 .price-list,
+.period-list,
 .link-list,
-.resort-detail__important ul,
 .about-page ul {
   margin: 0.4rem 0 0.8rem;
   padding-left: 1.1rem;
 }
 
-.price-list {
+.price-list,
+.period-list {
   list-style: none;
   padding: 0;
 }
 
-.price-list li {
+.price-list li,
+.period-list li {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.35rem 0;
+  padding: 0.4rem 0;
   border-bottom: 1px solid var(--line);
+}
+
+.price-list__note {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 0.15rem;
 }
 
 .site-footer {
@@ -545,6 +695,10 @@ main {
 
 .site-footer__inner {
   padding: 1.5rem 0 2rem;
+}
+
+.not-found h1 {
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
 }
 
 @keyframes rise-in {
@@ -582,15 +736,24 @@ main {
   }
 
   .hero {
-    min-height: 88vh;
+    min-height: 70vh;
   }
 
   .hero__content {
-    padding-top: 4rem;
+    padding-top: 3.25rem;
+    padding-bottom: 2rem;
   }
 
   .map-canvas {
-    height: 360px;
+    height: 300px;
+  }
+
+  .explore__map {
+    position: static;
+  }
+
+  .resort-detail__actions .btn {
+    flex: 1 1 calc(50% - 0.65rem);
   }
 }
 

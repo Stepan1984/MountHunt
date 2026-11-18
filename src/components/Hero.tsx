@@ -61,11 +61,11 @@ export function Hero({ activeCount }: { activeCount: number }) {
           кататься, часы, цены и ссылки на камеры.
         </p>
         <div className="hero__actions">
-          <a className="btn btn--primary" href="#map">
-            Смотреть карту
+          <a className="btn btn--primary" href="#explore">
+            Карта и список
           </a>
-          <a className="btn btn--ghost" href="#resorts">
-            Список курортов
+          <a className="btn btn--ghost" href="#important">
+            Важное сейчас
           </a>
         </div>
       </div>

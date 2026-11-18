@@ -14,7 +14,7 @@ import {
 } from '../lib/parse.mjs'
 
 const PRICE_URL = 'https://igora.ru/price/'
-const HOURS_URL = 'https://igora.ru/en/working-hours/'
+const HOURS_URL = 'https://igora.ru/working-hours/'
 const CAM_URL = 'https://igora.ru/cam/'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
@@ -320,7 +320,7 @@ export async function scrapeIgora() {
     const hours = hoursHtml
       ? parseIgoraHours(hoursHtml)
       : {
-          summary: 'Часы склонов уточняйте на https://igora.ru/en/working-hours/',
+          summary: 'Часы склонов уточняйте на https://igora.ru/working-hours/',
           periods: [],
           status: 'partial',
         }

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * Заглушка ежедневного обновления данных.
- * Сейчас копирует seed-каталог курортов в public/data и обновляет meta.json.
- * Позже сюда подключатся парсеры цен/часов (cheerio / playwright).
+ * Подготовка public/data перед сборкой Pages:
+ * - копирует/чинит seed-каталог курортов;
+ * - дополняет hours/prices/important заглушками только для новых id;
+ * - НЕ затирает meta.json от scrape job (source scrape-*).
  */
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -26,6 +27,12 @@ if (!seedPath) {
 /** Seed corrections that should always land in public/data. */
 function applySeedFixes(resorts) {
   return resorts.map((r) => {
+    if (r.id === 'igora') {
+      return {
+        ...r,
+        sources: [...new Set((r.sources || []).map((s) => s.replace('/en/working-hours/', '/working-hours/')))],
+      }
+    }
     if (r.id !== 'krasnoe-ozero') return r
     return {
       ...r,
@@ -50,7 +57,20 @@ function ensureHours() {
   const byId = new Map(existing.map((h) => [h.resortId, h]))
   const next = resorts.map((r) => {
     const prev = byId.get(r.id)
-    if (prev) return prev
+    if (prev) {
+      // Keep scrape data; only scrub EN paths from user-visible summary.
+      if (typeof prev.summary === 'string' && prev.summary.includes('/en/')) {
+        return {
+          ...prev,
+          summary: prev.summary.replaceAll('https://igora.ru/en/working-hours/', 'https://igora.ru/working-hours/'),
+          sourceUrl:
+            typeof prev.sourceUrl === 'string'
+              ? prev.sourceUrl.replace('/en/working-hours/', '/working-hours/')
+              : prev.sourceUrl,
+        }
+      }
+      return prev
+    }
     return {
       resortId: r.id,
       scrapedAt: null,
@@ -86,40 +106,41 @@ function ensurePrices() {
 function ensureImportant() {
   const path = join(outDir, 'important.json')
   if (!existsSync(path)) {
-    writeFileSync(
-      path,
-      `${JSON.stringify(
-        [
-          {
-            id: 'mvp-data-note',
-            title: 'Данные в режиме подготовки',
-            body: 'Цены и часы работы появятся после запуска ежедневного сбора с официальных сайтов.',
-            severity: 'info',
-            updatedAt: now,
-          },
-        ],
-        null,
-        2,
-      )}\n`,
-    )
+    writeFileSync(path, `${JSON.stringify([], null, 2)}\n`)
+    return
   }
+  // Do not invent chrome notes on every deploy; leave file as committed.
 }
 
-writeFileSync(
-  join(outDir, 'meta.json'),
-  `${JSON.stringify(
-    {
-      updatedAt: now,
-      source: 'seed-refresh',
-      note: 'Заглушка CI: seed скопирован в public/data. Парсеры ещё не подключены.',
-    },
-    null,
-    2,
-  )}\n`,
-)
+function writeMeta() {
+  const path = join(outDir, 'meta.json')
+  if (existsSync(path)) {
+    const existing = JSON.parse(readFileSync(path, 'utf8'))
+    const source = String(existing.source || '')
+    // Preserve scrape job metadata (and any non-seed snapshot).
+    if (source.startsWith('scrape') || source === 'manual' || existing.resortsScraped) {
+      console.log(`meta.json сохранён (source=${source})`)
+      return
+    }
+  }
+
+  writeFileSync(
+    path,
+    `${JSON.stringify(
+      {
+        updatedAt: now,
+        source: 'seed-refresh',
+        note: 'Каталог курортов из seed. Цены и часы — из последнего scrape в public/data (если есть).',
+      },
+      null,
+      2,
+    )}\n`,
+  )
+}
 
 ensureHours()
 ensurePrices()
 ensureImportant()
+writeMeta()
 
-console.log(`Обновлено ${resorts.length} курортов → public/data (meta ${now})`)
+console.log(`Обновлено ${resorts.length} курортов → public/data`)
