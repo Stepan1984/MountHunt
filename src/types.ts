@@ -10,6 +10,8 @@ export type Resort = {
   coords_precision?: string
   website: string | null
   webcam_url: string | null
+  /** Direct player URLs (iframe/HLS/MJPEG). Page links stay in webcam_url. */
+  webcam_embeds?: string[]
   community_links?: string[]
   prices_format: string
   prices_url?: string

@@ -454,8 +454,8 @@ export async function scrapeIgora() {
         periods: hours.periods,
         status: hours.status,
       }),
-      webcamUrl: (embeds[0] || CAM_URL).replace(/\?$/, ''),
-      cameraEmbeds: embeds,
+      webcamUrl: CAM_URL,
+      cameraEmbeds: embeds.map((u) => u.replace(/\?$/, '')),
     }
   } catch (err) {
     return {

@@ -287,6 +287,11 @@ async function main() {
     if (result.webcamUrl !== undefined) {
       resorts = resorts.map((r) => (r.id === id ? { ...r, webcam_url: result.webcamUrl } : r))
     }
+    if (result.cameraEmbeds !== undefined) {
+      resorts = resorts.map((r) =>
+        r.id === id ? { ...r, webcam_embeds: [...new Set(result.cameraEmbeds.filter(Boolean))] } : r,
+      )
+    }
     if (result.website) {
       resorts = resorts.map((r) => (r.id === id ? { ...r, website: result.website } : r))
     }
