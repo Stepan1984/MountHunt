@@ -267,14 +267,6 @@
     "status": "pending"
   },
   {
-    "resortId": "kavgolovo-utc",
-    "scrapedAt": null,
-    "sourceUrl": null,
-    "summary": "Часы работы появятся после ежедневного обновления данных",
-    "periods": [],
-    "status": "pending"
-  },
-  {
     "resortId": "orlinaya-gora",
     "scrapedAt": null,
     "sourceUrl": null,

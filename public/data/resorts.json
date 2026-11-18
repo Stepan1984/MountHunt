@@ -354,23 +354,6 @@
     ]
   },
   {
-    "id": "kavgolovo-utc",
-    "name": "Кавголово (УТЦ)",
-    "area": "ЛО, Токсово–Кавголово",
-    "city_or_district": "Кавголово",
-    "lat": null,
-    "lon": null,
-    "website": null,
-    "webcam_url": "https://www.geocam.ru/online/ski-tunnel/",
-    "prices_format": "unknown",
-    "status": "unclear",
-    "notes": "Учебно-тренировочный центр (беговые, тоннель); не позиционируется как публичный alpine-курорт.",
-    "sources": [
-      "https://tur-ray.ru/lenoblast-gornolyzhnye-kurorty.html",
-      "https://www.geocam.ru/online/ski-tunnel/"
-    ]
-  },
-  {
     "id": "orlinaya-gora",
     "name": "Орлиная гора",
     "area": "ЛО, Токсово / Кавголово, у Курголовского озера",
