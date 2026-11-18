@@ -124,7 +124,8 @@ export async function scrapeLazurnyeOzera() {
         status: /выходной/.test(summary) ? 'ok' : 'partial',
       }),
       webcamUrl: HOME_URL,
-      cameraEmbeds: embeds,
+      // rtsp.me: «доступ ограничен» / unpaid — link-only, no empty player.
+      cameraEmbeds: embeds.filter(() => false),
       important,
     }
   } catch (err) {

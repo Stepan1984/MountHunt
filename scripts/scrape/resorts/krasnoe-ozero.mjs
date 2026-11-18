@@ -257,7 +257,8 @@ export async function scrapeKrasnoeOzero() {
       }),
       hours: hoursPack.hours,
       webcamUrl: WEBCAM_URL,
-      cameraEmbeds: embeds,
+      // ivideon embed stays on splash / no playable video in-page — link-only.
+      cameraEmbeds: embeds.filter(() => false),
       important: hoursPack.important,
     }
   } catch (err) {

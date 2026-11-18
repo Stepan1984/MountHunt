@@ -22,7 +22,8 @@ function classify(url) {
     return 'iframe'
   if (host === 'open.ivideon.com' && /\/embed\//i.test(path)) return 'iframe'
   if ((host === 'rtsp.me' || host === 'rtsp.ru') && /\/embed\//i.test(path)) return 'iframe'
-  if (host === 'webcam.exdesign.ru') return 'iframe'
+  // exdesign: empty black player when iframed — link-only
+  if (host === 'webcam.exdesign.ru') return 'link'
   if (host === 'ipeye.ru' && /iframe/i.test(path + raw.search)) return 'iframe'
   return 'link'
 }
@@ -31,7 +32,6 @@ describe('webcam classify', () => {
   it('embeds known player hosts', () => {
     assert.equal(classify('https://rtsp.me/embed/KDYy3ZSY/'), 'iframe')
     assert.equal(classify('https://rtsp.ru/embed/AebA57ah/'), 'iframe')
-    assert.equal(classify('https://webcam.exdesign.ru/igora-1/'), 'iframe')
     assert.equal(
       classify('https://open.ivideon.com/embed/v3/100-d029fa1f6111386709aaaf107f555963:720896'),
       'iframe',
@@ -42,6 +42,11 @@ describe('webcam classify', () => {
       ),
       'iframe',
     )
+  })
+
+  it('treats exdesign as link-only (blank iframe)', () => {
+    assert.equal(classify('https://webcam.exdesign.ru/igora-1/'), 'link')
+    assert.equal(classify('https://webcam.exdesign.ru/snegny/?fluid'), 'link')
   })
 
   it('detects HLS', () => {

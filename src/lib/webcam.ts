@@ -74,8 +74,10 @@ export function classifyWebcamUrl(url: string): ClassifiedWebcam {
     return { url, kind: 'iframe', playUrl: href }
   }
 
+  // webcam.exdesign.ru: pages hang / render an empty black player when iframed
+  // (Igora, Снежный). Prefer link-only «Открыть трансляцию» over a blank box.
   if (host === 'webcam.exdesign.ru') {
-    return { url, kind: 'iframe', playUrl: href }
+    return { url, kind: 'link', playUrl: href }
   }
 
   if (host === 'ipeye.ru' && /iframe/i.test(path + raw.search)) {

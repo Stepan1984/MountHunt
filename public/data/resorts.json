@@ -50,9 +50,7 @@
       "https://igora.ru/slopes/"
     ],
     "prices_url": "https://igora.ru/price/",
-    "webcam_embeds": [
-      "https://webcam.exdesign.ru/igora-1/"
-    ]
+    "webcam_embeds": []
   },
   {
     "id": "tuutari-park",
@@ -94,12 +92,7 @@
       "https://krasnoeozero.ru/cam/",
       "https://krasnoeozero.ru/grafik/"
     ],
-    "webcam_embeds": [
-      "https://open.ivideon.com/embed/v3/100-d029fa1f6111386709aaaf107f555963:720896",
-      "https://open.ivideon.com/embed/v3/100-d029fa1f6111386709aaaf107f555963:589824/",
-      "https://open.ivideon.com/embed/v3/100-d029fa1f6111386709aaaf107f555963:262144/",
-      "https://open.ivideon.com/embed/v3/100-d029fa1f6111386709aaaf107f555963:655360/"
-    ]
+    "webcam_embeds": []
   },
   {
     "id": "zolotaya-dolina",
@@ -118,13 +111,7 @@
       "https://zoldol.ru/",
       "https://zoldol.ru/webcamera"
     ],
-    "webcam_embeds": [
-      "https://rtsp.ru/embed/Oo2u84R8",
-      "https://rtsp.ru/embed/Pp5JtClq",
-      "https://rtsp.ru/embed/Cc27j7hc",
-      "https://rtsp.ru/embed/Ll7wJrKD",
-      "https://rtsp.ru/embed/Tt5Fafxl"
-    ]
+    "webcam_embeds": []
   },
   {
     "id": "snezhny",
@@ -144,10 +131,7 @@
       "https://snegny.ru/wp-content/themes/snegny/twocam.php"
     ],
     "prices_url": "https://snegny.ru/ски-пассы/",
-    "webcam_embeds": [
-      "https://webcam.exdesign.ru/snegny-2/?fluid",
-      "https://webcam.exdesign.ru/snegny/?fluid"
-    ]
+    "webcam_embeds": []
   },
   {
     "id": "severny-sklon",
@@ -184,9 +168,7 @@
       "https://puhgora.ru/uslugi/ceny-na-podyomniki"
     ],
     "prices_url": "https://puhgora.ru/uslugi/ceny-na-podyomniki",
-    "webcam_embeds": [
-      "https://ipeye.ru/ipeye_service/api/iframe.php?iframe_player=1&dev=2e9320175c6a48939c6fc1762f2d6316&autoplay=1&archive=1"
-    ]
+    "webcam_embeds": []
   },
   {
     "id": "yukki",
@@ -223,9 +205,7 @@
       "https://lazoorsnow.ru/ceny"
     ],
     "prices_url": "https://lazoorsnow.ru/ceny",
-    "webcam_embeds": [
-      "https://rtsp.me/embed/69yB8iF5/"
-    ]
+    "webcam_embeds": []
   },
   {
     "id": "drop-park",
@@ -246,12 +226,7 @@
       "https://mykorbi.ru/",
       "https://drop-park.ru/snow-park"
     ],
-    "webcam_embeds": [
-      "https://rtsp.ru/embed/AebA57ah/",
-      "https://rtsp.ru/embed/tG2Dt68i/",
-      "https://rtsp.ru/embed/dT5TQ2nF/",
-      "https://rtsp.ru/embed/hFA9FZ2D/"
-    ]
+    "webcam_embeds": []
   },
   {
     "id": "orekhovo",

@@ -532,7 +532,8 @@ export async function scrapeIgora() {
         status: hours.status,
       }),
       webcamUrl: CAM_URL,
-      cameraEmbeds: embeds.map((u) => u.replace(/\?$/, '')),
+      // exdesign iframes render empty black boxes on MountHunt — link-only.
+      cameraEmbeds: embeds.filter(() => false),
     }
   } catch (err) {
     return {

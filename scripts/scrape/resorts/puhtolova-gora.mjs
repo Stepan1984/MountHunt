@@ -134,7 +134,8 @@ export async function scrapePuhtolovaGora() {
         status: periods.length ? 'ok' : 'partial',
       }),
       webcamUrl: WEBCAM_URL,
-      cameraEmbeds: embeds,
+      // ipeye iframe: codec unsupported / no playable stream — link-only.
+      cameraEmbeds: embeds.filter(() => false),
     }
   } catch (err) {
     return {

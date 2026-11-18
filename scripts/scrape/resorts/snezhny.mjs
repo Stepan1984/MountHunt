@@ -150,7 +150,8 @@ export async function scrapeSnezhny() {
         status: 'partial',
       }),
       webcamUrl: HOME_URL,
-      cameraEmbeds: uniqueEmbeds,
+      // exdesign iframes render empty black boxes on MountHunt — link-only.
+      cameraEmbeds: uniqueEmbeds.filter(() => false),
     }
   } catch (err) {
     return {

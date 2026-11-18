@@ -174,7 +174,8 @@ export async function scrapeDropPark() {
         status: hours.status,
       }),
       webcamUrl: PAGE_URL,
-      cameraEmbeds: uniqueEmbeds,
+      // rtsp.ru cams deleted / stream failed — avoid empty player boxes.
+      cameraEmbeds: uniqueEmbeds.filter(() => false),
     }
   } catch (err) {
     return {
