@@ -166,6 +166,44 @@ function extractIvideon(html) {
 }
 
 /**
+ * Build skipass groups from CSV rows (site widget structure).
+ * @param {Record<string, string>[]} rows
+ */
+export function parseKrasnoeSkipassGroups(rows) {
+  /** @type {{ name: string, duration?: string, prices: object[], note?: string }[]} */
+  const skipassRows = []
+  const columns = ['1 ч будни', '1 ч выходные']
+  for (const row of rows) {
+    const pageKey = cleanText(row['Ключ страницы'] || '')
+    const show = cleanText(row['Показывать'] || '').toLowerCase()
+    if (pageKey !== 'ski-pass' || show !== 'yes') continue
+    const name = cleanText(row['Название'] || '')
+    if (!name) continue
+    const weekday = parsePrice(row['1 час будни'] ?? row['1 час'] ?? '')
+    const weekend = parsePrice(row['1 час выходные'] ?? '')
+    if (weekday == null && weekend == null) continue
+    skipassRows.push({
+      name,
+      duration: '1 час',
+      prices: [
+        { price: weekday, rawText: String(row['1 час будни'] ?? row['1 час'] ?? '') },
+        { price: weekend, rawText: String(row['1 час выходные'] ?? '') },
+      ],
+      note: cleanText(row['Уточнение'] || '') || undefined,
+    })
+  }
+  if (!skipassRows.length) return []
+  return [
+    {
+      category: 'Ски-пасс (часы)',
+      columns,
+      rows: skipassRows,
+      note: 'Стоимость БСК уточняйте на сайте',
+    },
+  ]
+}
+
+/**
  * Prices via public Google Sheets CSV; hours via schedule CSV (same workbook).
  * @returns {Promise<object>}
  */
@@ -190,31 +228,7 @@ export async function scrapeKrasnoeOzero() {
 
     const { header, rows } = parseCsv(csv)
     if (!header.length) throw new Error('CSV пустой')
-    const items = []
-    for (const row of rows) {
-      const pageKey = cleanText(row['Ключ страницы'] || '')
-      const show = cleanText(row['Показывать'] || '').toLowerCase()
-      if (pageKey !== 'ski-pass' || show !== 'yes') continue
-      const name = cleanText(row['Название'] || '')
-      if (!name) continue
-      const candidates = [
-        ['1 ч будни', row['1 час будни']],
-        ['1 ч выходные', row['1 час выходные']],
-        ['1 ч', row['1 час']],
-      ]
-      for (const [label, raw] of candidates) {
-        if (raw == null || raw === '') continue
-        const price = parsePrice(raw)
-        if (price == null) continue
-        items.push({
-          title: `${name} (${label})`,
-          price,
-          unit: 'час',
-          note: cleanText(row['Уточнение'] || '') || undefined,
-          rawText: String(raw),
-        })
-      }
-    }
+    const groups = parseKrasnoeSkipassGroups(rows)
 
     const hoursPack = hoursCsv
       ? parseHoursFromCsv(hoursCsv)
@@ -235,9 +249,9 @@ export async function scrapeKrasnoeOzero() {
       prices: priceSnapshot({
         resortId,
         sourceUrl: PAGE_URL,
-        items: items.slice(0, 30),
-        status: items.length ? 'ok' : 'partial',
-        note: items.length
+        groups,
+        status: groups.length ? 'ok' : 'partial',
+        note: groups.length
           ? 'Источник: публичный CSV виджета цен курорта'
           : 'CSV получен, ski-pass строки не найдены',
       }),

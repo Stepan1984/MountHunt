@@ -12,31 +12,43 @@ const PRICES_URL = 'https://zoldol.ru/price-winter'
 const HOURS_URL = 'https://zoldol.ru/vremya-raboty'
 const WEBCAM_URL = 'https://zoldol.ru/webcamera'
 
+const COLUMNS = ['Детский · будни', 'Взрослый · будни', 'Детский · выходные', 'Взрослый · выходные']
+
 /**
  * Tilda t431 tables store semicolon CSV rows (often in display:none).
  * @param {string} html
  */
-function parseLiftItemsFromHtml(html) {
-  const items = []
-  const labels = ['детский будни', 'взрослый будни', 'детский выходные', 'взрослый выходные']
+export function parseZoldolSkipassGroups(html) {
+  /** @type {Map<string, { name: string, duration: string, prices: object[] }[]>} */
+  const byKind = new Map()
   const rowRe =
     /((?:\d+\s*)?(?:подъем|подъём|подъема|часа?|час))\s*;\s*(\d+)\s*;\s*(\d+)\s*;\s*(\d+)\s*;\s*(\d+)/gi
   let m
   while ((m = rowRe.exec(html))) {
     const name = cleanText(m[1])
     if (/инвентар|комплект|ботин|палки|куртка|группа|баня/i.test(name)) continue
+    const kind = /час/i.test(name) ? 'По часам' : 'По подъёмам'
+    const prices = []
     for (let i = 0; i < 4; i++) {
       const price = parsePrice(m[i + 2])
-      if (price == null) continue
-      items.push({
-        title: `${name} (${labels[i]})`,
-        price,
-        unit: /час/i.test(name) ? 'час' : 'подъём',
-        rawText: m[i + 2],
-      })
+      prices.push({ price, rawText: m[i + 2] })
     }
+    if (!prices.some((p) => p.price != null)) continue
+    const rows = byKind.get(kind) || []
+    rows.push({
+      name: 'Ски-пасс',
+      duration: name.replace(/подъем/gi, 'подъём'),
+      prices,
+    })
+    byKind.set(kind, rows)
   }
-  return items
+
+  /** @type {{ category: string, columns: string[], rows: object[] }[]} */
+  const groups = []
+  for (const [category, rows] of byKind) {
+    groups.push({ category, columns: [...COLUMNS], rows })
+  }
+  return groups
 }
 
 /**
@@ -51,7 +63,7 @@ export async function scrapeZolotayaDolina() {
     await sleep()
     const camHtml = await fetchUrl(WEBCAM_URL)
 
-    let items = parseLiftItemsFromHtml(pricesHtml).slice(0, 40)
+    const groups = parseZoldolSkipassGroups(pricesHtml)
 
     const $h = loadHtml(hoursHtml)
     const text = cleanText($h('body').text())
@@ -72,11 +84,9 @@ export async function scrapeZolotayaDolina() {
       })
     }
 
-    // Weekly dated lines: «Среда; 18.11.2026 ; 12:00 - 22:00»
     const dayLines = [...text.matchAll(
       /(Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье)\s*;\s*[\d.]+\s*;\s*([^;]+?)(?=(?:Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье)|Бургерная|Велопарк|$)/gi,
     )]
-    // Take first week of slope-ish schedule (first 7 matches)
     const firstWeek = dayLines.slice(0, 7)
     if (firstWeek.length) {
       const bits = []
@@ -108,9 +118,9 @@ export async function scrapeZolotayaDolina() {
       prices: priceSnapshot({
         resortId,
         sourceUrl: PRICES_URL,
-        items,
-        status: items.length ? 'ok' : 'partial',
-        note: items.length
+        groups,
+        status: groups.length ? 'ok' : 'partial',
+        note: groups.length
           ? 'Не является публичной офертой — уточняйте на сайте курорта'
           : 'Не удалось извлечь таблицы ски-пассов',
       }),

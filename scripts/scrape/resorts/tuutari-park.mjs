@@ -26,15 +26,17 @@ export async function scrapeTuutari() {
     const camHtml = await fetchUrl(WEBCAM_URL)
 
     const $p = loadHtml(pricesHtml)
-    const items = []
+    /** @type {{ category: string, columns: string[], rows: object[] }[]} */
+    const groups = []
+
     $p('table').each((ti, table) => {
       const rows = tableRows($p, $p(table))
       if (rows.length < 2) return
       const header = rows[0].map((h) => h.toLowerCase())
       if (!header.some((h) => /час|взрослый|детск/.test(h))) return
-      // Heuristic: first table weekend, second weekday on this page — detect from preceding text
+
       const prevText = cleanText($p(table).prevAll().first().text() || $p(table).parent().prev().text())
-      let dayLabel = ti === 0 ? 'выходной/праздник' : 'будни'
+      let dayLabel = ti === 0 ? 'Выходной/праздник' : 'Будни'
       const section = cleanText(
         $p(table)
           .closest('div')
@@ -43,40 +45,50 @@ export async function scrapeTuutari() {
           .text(),
       )
       const blob = `${prevText} ${section} ${$p(table).parent().text().slice(0, 200)}`.toLowerCase()
-      if (/будн/.test(blob)) dayLabel = 'будни'
-      if (/выходн|празднич/.test(blob)) dayLabel = 'выходной/праздник'
+      if (/будн/.test(blob)) dayLabel = 'Будни'
+      if (/выходн|празднич/.test(blob)) dayLabel = 'Выходной/праздник'
 
+      const columns = rows[0].slice(1).map((c) => cleanText(c)).filter(Boolean)
+      if (!columns.length) return
+
+      /** @type {{ name: string, duration?: string, prices: object[] }[]} */
+      const skipassRows = []
       for (const row of rows.slice(1)) {
         const unit = row[0]
         if (!unit || !/\d/.test(unit)) continue
-        for (let c = 1; c < row.length; c++) {
-          const col = rows[0][c] || `кол.${c}`
+        const prices = []
+        let any = false
+        for (let c = 1; c < row.length && c - 1 < columns.length; c++) {
           const price = parsePrice(row[c])
-          if (price == null) continue
-          items.push({
-            title: `${col}, ${unit} (${dayLabel})`,
-            price,
-            unit: /час/i.test(unit) ? 'час' : undefined,
-            rawText: row[c],
-          })
+          if (price == null) {
+            prices.push({ price: null })
+            continue
+          }
+          any = true
+          prices.push({ price, rawText: row[c] })
         }
+        if (!any) continue
+        skipassRows.push({
+          name: 'Ски-пасс',
+          duration: cleanText(unit),
+          prices,
+        })
+      }
+      if (skipassRows.length) {
+        groups.push({
+          category: dayLabel,
+          columns,
+          rows: skipassRows,
+        })
       }
     })
-
-    // Prefer labels from page headings around tables
-    const pageText = cleanText($p('body').text())
-    if (/выходной день.*сезон/i.test(pageText) && items.length) {
-      // keep as-is; titles already include dayLabel
-    }
 
     const $h = loadHtml(hoursHtml)
     const body = cleanText($h('body').text())
     let summary = 'Режим парка уточняйте на сайте'
     const periods = []
-    // Winter-style park hours often appear as «Будние дни с 12-00 до 22-00»
     const weekday = body.match(/Режим работы парка:.*?Будние дни с\s*(\d{1,2})[-.:](\d{2})\s*до\s*(\d{1,2})[-.:](\d{2})/i)
     const weekend = body.match(/Режим работы парка:.*?Выходные дни с\s*(\d{1,2})[-.:](\d{2})\s*до\s*(\d{1,2})[-.:](\d{2})/i)
-    // Simpler independent matches near «Режим работы парка»
     const idx = body.toLowerCase().lastIndexOf('режим работы парка')
     const slice = idx >= 0 ? body.slice(idx, idx + 280) : body
     const wd = slice.match(/Будние дни с\s*(\d{1,2})[-.:](\d{2})\s*до\s*(\d{1,2})[-.:](\d{2})/i)
@@ -106,9 +118,9 @@ export async function scrapeTuutari() {
       prices: priceSnapshot({
         resortId,
         sourceUrl: PRICES_URL,
-        items,
-        status: items.length ? 'ok' : 'partial',
-        note: items.length ? undefined : 'Таблицы цен не распознаны',
+        groups,
+        status: groups.length ? 'ok' : 'partial',
+        note: groups.length ? undefined : 'Таблицы цен не распознаны',
       }),
       hours: hoursSnapshot({
         resortId,

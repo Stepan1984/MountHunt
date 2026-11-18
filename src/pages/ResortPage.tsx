@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ResortMap } from '../components/ResortMap'
+import { SkipassTables } from '../components/SkipassTables'
 import { WebcamSection } from '../components/WebcamPlayer'
 import {
   formatUpdatedAt,
@@ -44,10 +45,8 @@ export function ResortPage({ data }: { data: SiteData }) {
   const visitorNotes = publicResortNotes(resort.notes)
   const visitorPriceNote = publicPriceNote(prices?.note)
   const priceItems = prices?.items ?? []
-  const visiblePrices =
-    showAllPrices || priceItems.length <= PRICE_PREVIEW
-      ? priceItems
-      : priceItems.slice(0, PRICE_PREVIEW)
+  const priceGroups = prices?.groups ?? []
+  const hasSkipassTables = priceGroups.some((g) => g.rows?.length > 0)
   const webcamStreams = resolveWebcamPlayers(resort.webcam_url, resort.webcam_embeds)
   const webcamLink = webcamExternalLink(resort.webcam_url, resort.webcam_embeds)
 
@@ -165,42 +164,20 @@ export function ResortPage({ data }: { data: SiteData }) {
           </p>
         </section>
 
-        <section>
+        <section className={hasSkipassTables ? 'detail-grid__wide' : undefined}>
           <h2>Цены</h2>
-          {priceItems.length > 0 ? (
-            <>
-              <ul className="price-list">
-                {visiblePrices.map((item) => (
-                  <li key={`${item.title}-${item.price}-${item.unit ?? ''}`}>
-                    <span>
-                      {item.title}
-                      {item.unit ? <span className="muted"> · {item.unit}</span> : null}
-                      {item.note ? <span className="price-list__note">{item.note}</span> : null}
-                    </span>
-                    <strong>
-                      {item.price != null
-                        ? `${item.price.toLocaleString('ru-RU')} ₽`
-                        : (item.rawText ?? '—')}
-                    </strong>
-                  </li>
-                ))}
-              </ul>
-              {priceItems.length > PRICE_PREVIEW && (
-                <button
-                  type="button"
-                  className="price-list__more"
-                  onClick={() => setShowAllPrices((v) => !v)}
-                >
-                  {showAllPrices
-                    ? 'Свернуть список'
-                    : `Показать ещё ${priceItems.length - PRICE_PREVIEW}`}
-                </button>
-              )}
-            </>
+          {priceItems.length > 0 || hasSkipassTables ? (
+            <SkipassTables
+              groups={priceGroups}
+              items={priceItems}
+              showAll={showAllPrices}
+              previewLimit={PRICE_PREVIEW}
+              onToggleShowAll={() => setShowAllPrices((v) => !v)}
+            />
           ) : (
             <p>{visitorPriceNote ?? 'Цены появятся после ежедневного обновления данных.'}</p>
           )}
-          {visitorPriceNote && priceItems.length > 0 && (
+          {visitorPriceNote && (priceItems.length > 0 || hasSkipassTables) && (
             <p className="muted">{visitorPriceNote}</p>
           )}
           {prices?.status === 'failed' && (

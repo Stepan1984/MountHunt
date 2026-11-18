@@ -15,10 +15,11 @@ const WEBCAM_URL = 'https://www.ohtapark.ru/webcam/'
 /**
  * @param {string} html
  */
-function parseSeasonalPasses(html) {
+export function parseOkhtaSeasonalGroups(html) {
   const $ = loadHtml(html)
   const text = cleanText($('body').text())
-  const items = []
+  /** @type {{ name: string, duration?: string, prices: object[] }[]} */
+  const rows = []
 
   // «ВЗРОСЛЫЙ Сезонный ски-пасс [2 часа] … 45 000 р. 56 250 р.»
   const re =
@@ -30,23 +31,35 @@ function parseSeasonalPasses(html) {
     const sale = parsePrice(m[3])
     const full = parsePrice(m[4])
     if (sale == null) continue
-    items.push({
-      title: `Сезонный ски-пасс ${kind.toLowerCase()} [${window}] (предпродажа)`,
-      price: sale,
-      unit: 'сезон',
-      note: full != null ? `Цена без скидки ~${full} ₽` : undefined,
-      rawText: m[0],
+    rows.push({
+      name: `Сезонный ски-пасс ${kind.toLowerCase()}`,
+      duration: window,
+      prices: [
+        {
+          price: sale,
+          note: full != null ? `Цена без скидки ~${full} ₽` : undefined,
+          rawText: m[0],
+        },
+      ],
     })
   }
 
-  // Dedup (page repeats cards)
   const seen = new Set()
-  return items.filter((it) => {
-    const key = `${it.title}|${it.price}`
+  const deduped = rows.filter((it) => {
+    const key = `${it.name}|${it.duration}|${it.prices[0]?.price}`
     if (seen.has(key)) return false
     seen.add(key)
     return true
   })
+
+  if (!deduped.length) return []
+  return [
+    {
+      category: 'Сезонные ски-пассы (предпродажа)',
+      columns: ['Цена'],
+      rows: deduped,
+    },
+  ]
 }
 
 /**
@@ -97,7 +110,6 @@ function extractHlsRefs(html) {
     const name = cleanText($(el).find('.web-camera_card_name').text()) || 'камера'
     if (url) refs.push({ name, hlsUrl: url })
   })
-  // fallback: any data-url m3u8
   if (!refs.length) {
     $('[data-url]').each((_, el) => {
       const url = $(el).attr('data-url')
@@ -124,14 +136,13 @@ export async function scrapeOkhtaPark() {
       camHtml = ''
     }
 
-    const seasonal = parseSeasonalPasses(winterHtml)
+    const groups = parseOkhtaSeasonalGroups(winterHtml)
     const trailHours = parseTrailHours(trailsHtml)
     const hls = camHtml ? extractHlsRefs(camHtml) : []
 
-    const items = [...seasonal]
     const notes = []
     if (trailHours.preSale) notes.push('Открыта предпродажа сезонных ски-пассов')
-    if (trailHours.dayClosed || seasonal.length) {
+    if (trailHours.dayClosed || groups.length) {
       notes.push('Дневной прейскурант подъёмников часто закрыт до сезона — смотрите страницу трасс')
     }
 
@@ -153,8 +164,8 @@ export async function scrapeOkhtaPark() {
       prices: priceSnapshot({
         resortId,
         sourceUrl: WINTER_URL,
-        items,
-        status: items.length ? 'ok' : 'partial',
+        groups,
+        status: groups.length ? 'ok' : 'partial',
         note: notes.join('. ') || undefined,
       }),
       hours: hoursSnapshot({

@@ -13,60 +13,73 @@ const PRICES_URL = 'https://snegny.ru/%d1%81%d0%ba%d0%b8-%d0%bf%d0%b0%d1%81%d1%8
 const TWOCAM_URL = 'https://snegny.ru/wp-content/themes/snegny/twocam.php'
 const HOME_URL = 'https://snegny.ru/'
 
-const DAY_LABELS = [
-  'будни, льготный',
-  'будни, взрослый',
-  'выходные, льготный',
-  'выходные, взрослый',
+const DAY_COLUMNS = [
+  'Будни, льготный',
+  'Будни, взрослый',
+  'Выходные, льготный',
+  'Выходные, взрослый',
 ]
 
 /**
  * @param {import('cheerio').CheerioAPI} $
  * @param {import('cheerio').Element} table
  */
-function parseLiftTable($, table) {
-  const items = []
+function parseLiftGroup($, table) {
+  /** @type {{ name: string, duration?: string, prices: object[] }[]} */
+  const rowsOut = []
   const rows = tableRows($, $(table))
   for (const row of rows) {
     if (row.length < 5) continue
     const name = cleanText(row[0])
     if (!name || /будни|суббота|дети|взрослые|количество|почасов/i.test(name)) continue
     if (!/\d/.test(name)) continue
-    const unit = /проход/i.test(name) ? 'проход' : /час/i.test(name) ? 'час' : 'тариф'
+    const prices = []
+    let any = false
     for (let i = 0; i < 4; i++) {
       const price = parsePrice(row[i + 1])
-      if (price == null) continue
-      items.push({
-        title: `${name} (${DAY_LABELS[i]})`,
-        price,
-        unit,
-        rawText: row[i + 1],
-      })
+      if (price != null) any = true
+      prices.push({ price, rawText: row[i + 1] })
     }
+    if (!any) continue
+    rowsOut.push({
+      name: 'Ски-пасс',
+      duration: name,
+      prices,
+    })
   }
-  return items
+  if (!rowsOut.length) return null
+  return {
+    category: 'Ски-пассы (часы и проходы)',
+    columns: [...DAY_COLUMNS],
+    rows: rowsOut,
+  }
 }
 
 /**
  * @param {import('cheerio').CheerioAPI} $
  * @param {import('cheerio').Element} table
- * @param {string} prefix
+ * @param {string} category
  */
-function parseNamePriceTable($, table, prefix) {
-  const items = []
+function parseNamePriceGroup($, table, category) {
+  /** @type {{ name: string, duration?: string, prices: object[] }[]} */
+  const rowsOut = []
   for (const row of tableRows($, $(table))) {
     if (row.length < 2) continue
     const name = cleanText(row[0])
     const price = parsePrice(row[1])
     if (!name || price == null) continue
-    items.push({
-      title: prefix ? `${prefix}: ${name}` : name,
-      price,
-      unit: 'сезон',
-      rawText: row[1],
+    rowsOut.push({
+      name,
+      duration: 'сезон',
+      prices: [{ price, rawText: row[1] }],
     })
   }
-  return items
+  if (!rowsOut.length) return null
+  return {
+    category,
+    columns: ['Цена'],
+    rows: rowsOut,
+  }
 }
 
 /**
@@ -86,11 +99,19 @@ export async function scrapeSnezhny() {
 
     const $ = loadHtml(pricesHtml)
     const tables = $('table').toArray()
-    const items = []
-    if (tables[0]) items.push(...parseLiftTable($, tables[0]))
-    if (tables[1]) items.push(...parseNamePriceTable($, tables[1], 'Абонемент'))
+    /** @type {object[]} */
+    const groups = []
+    if (tables[0]) {
+      const g = parseLiftGroup($, tables[0])
+      if (g) groups.push(g)
+    }
+    if (tables[1]) {
+      const g = parseNamePriceGroup($, tables[1], 'Абонементы')
+      if (g) groups.push(g)
+    }
     if (tables[2]) {
-      items.push(...parseNamePriceTable($, tables[2], 'Единый ски-пасс Снежный/Золотая Долина'))
+      const g = parseNamePriceGroup($, tables[2], 'Единый ски-пасс Снежный/Золотая Долина')
+      if (g) groups.push(g)
     }
 
     const embeds = []
@@ -115,13 +136,12 @@ export async function scrapeSnezhny() {
       prices: priceSnapshot({
         resortId,
         sourceUrl: decodeURI(PRICES_URL),
-        items: items.slice(0, 50),
-        status: items.length ? 'ok' : 'partial',
-        note: items.length
+        groups,
+        status: groups.length ? 'ok' : 'partial',
+        note: groups.length
           ? 'Сезонные/подъёмные тарифы со страницы ски-пассов; уточняйте на сайте'
           : 'Таблицы ски-пассов не распознаны',
       }),
-      // Homepage hours are JS-rendered; cheerio-only → partial link note
       hours: hoursSnapshot({
         resortId,
         sourceUrl: HOME_URL,

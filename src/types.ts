@@ -37,12 +37,46 @@ export type PriceItem = {
   rawText?: string
 }
 
+/** One cell in a structured skipass table. */
+export type SkipassPriceCell = {
+  price: number | null
+  note?: string
+  rawText?: string
+}
+
+/**
+ * One row in a skipass group: name + optional duration/rides + prices
+ * aligned with the parent group's columns.
+ */
+export type SkipassRow = {
+  name: string
+  /** Hours / rides / season window, e.g. «2 часа», «10 проходов». */
+  duration?: string
+  prices: SkipassPriceCell[]
+  note?: string
+}
+
+/**
+ * Site-derived skipass block (hourly / per-ride / season).
+ * Prefer real section titles from the resort site — do not invent categories.
+ */
+export type SkipassGroup = {
+  category: string
+  /** Column headers after name/duration, e.g. «Будни», «Выходные», «Базовый». */
+  columns: string[]
+  rows: SkipassRow[]
+  note?: string
+}
+
 export type PriceSnapshot = {
   resortId: string
   scrapedAt: string | null
   sourceUrl: string | null
   currency: 'RUB'
+  /** Flat list for cards / fail-soft UI when groups are absent. */
   items: PriceItem[]
+  /** Structured tables when the site splits skipasses by category. */
+  groups?: SkipassGroup[]
   status: 'ok' | 'partial' | 'failed' | 'pending' | 'unavailable'
   note?: string
 }
