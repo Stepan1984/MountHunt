@@ -1,83 +1,234 @@
-import { fetchUrl } from '../lib/http.mjs'
-import { cleanText, parsePrice, priceSnapshot } from '../lib/parse.mjs'
+import { fetchUrl, sleep } from '../lib/http.mjs'
+import {
+  cleanText,
+  hoursSnapshot,
+  loadHtml,
+  parseCsv,
+  parsePrice,
+  priceSnapshot,
+} from '../lib/parse.mjs'
 
 const PAGE_URL = 'https://krasnoeozero.ru/winter/skipass-and-lifts'
 const CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSuTEvLg230S45pOu7aSVs--gOtknAPG2vYD6HwVEMcwTHhAd33FlU6aGrWAmQB68F4uDWeYkgzuWbj/pub?gid=1912036084&single=true&output=csv'
+const HOURS_PAGE_URL = 'https://krasnoeozero.ru/grafik/'
+const HOURS_CSV_URL =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSuTEvLg230S45pOu7aSVs--gOtknAPG2vYD6HwVEMcwTHhAd33FlU6aGrWAmQB68F4uDWeYkgzuWbj/pub?gid=1367114585&single=true&output=csv'
 const WEBCAM_URL = 'https://krasnoeozero.ru/cam/'
 
-/** Minimal CSV line split (handles quoted commas). */
-function splitCsvLine(line) {
-  const out = []
-  let cur = ''
-  let inQ = false
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i]
-    if (ch === '"') {
-      if (inQ && line[i + 1] === '"') {
-        cur += '"'
-        i++
-      } else inQ = !inQ
-      continue
-    }
-    if (ch === ',' && !inQ) {
-      out.push(cur)
-      cur = ''
-      continue
-    }
-    cur += ch
-  }
-  out.push(cur)
-  return out
+/** @param {string} h */
+function isDateHeader(h) {
+  return /^\d{1,2}\.\d{1,2}\.\d{2,4}$/.test(cleanText(h))
+}
+
+/** @param {string} h */
+function parseDateHeader(h) {
+  const m = cleanText(h).match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/)
+  if (!m) return null
+  const dd = Number(m[1])
+  const mm = Number(m[2])
+  let yyyy = Number(m[3])
+  if (yyyy < 100) yyyy += 2000
+  return new Date(Date.UTC(yyyy, mm - 1, dd))
 }
 
 /**
- * Optional wave-1.5: public Google Sheets CSV for ski-pass.
- * Hours left for P2 (Tilda/JS).
+ * Pick today's date column, else the latest past/equal date, else last date col.
+ * @param {string[]} header
+ */
+function pickScheduleDateColumn(header) {
+  const dateCols = header.filter(isDateHeader)
+  if (!dateCols.length) return null
+  const today = new Date()
+  const y = today.getUTCFullYear()
+  const m = today.getUTCMonth()
+  const d = today.getUTCDate()
+  const todayUtc = Date.UTC(y, m, d)
+  const todayLabel = `${String(d).padStart(2, '0')}.${String(m + 1).padStart(2, '0')}.${y}`
+  if (dateCols.includes(todayLabel)) return todayLabel
+
+  let best = null
+  let bestTs = -Infinity
+  for (const col of dateCols) {
+    const dt = parseDateHeader(col)
+    if (!dt) continue
+    const ts = dt.getTime()
+    if (ts <= todayUtc && ts >= bestTs) {
+      bestTs = ts
+      best = col
+    }
+  }
+  return best || dateCols[dateCols.length - 1]
+}
+
+/**
+ * @param {string} csv
+ */
+function parseHoursFromCsv(csv) {
+  const { header, rows } = parseCsv(csv)
+  const dateCol = pickScheduleDateColumn(header)
+  if (!dateCol) {
+    return {
+      hours: hoursSnapshot({
+        resortId: 'krasnoe-ozero',
+        sourceUrl: HOURS_PAGE_URL,
+        summary: 'Колонка даты в CSV графика не найдена',
+        status: 'partial',
+      }),
+      important: [],
+    }
+  }
+
+  const skiRows = rows.filter((r) => {
+    const name = cleanText(r['Наименование'] || '')
+    const cat = cleanText(r['Категория'] || '')
+    return (
+      /подъем|подъём|трасс/i.test(name) ||
+      (/инфраструктура/i.test(cat) && /трасс/i.test(name))
+    )
+  })
+
+  const lifts = []
+  const slopes = []
+  for (const r of skiRows) {
+    const name = cleanText(r['Наименование'] || '')
+    const val = cleanText(r[dateCol] || '')
+    const entry = { name, val }
+    if (/подъем|подъём/i.test(name)) lifts.push(entry)
+    else slopes.push(entry)
+  }
+
+  const periods = []
+  const bits = []
+  const closedUntilSeason = [...lifts, ...slopes].some((e) => /закрыт.*сезон/i.test(e.val))
+  const allClosed = [...lifts, ...slopes].every(
+    (e) => !e.val || /закрыт|выход/i.test(e.val),
+  )
+
+  for (const e of lifts.slice(0, 6)) {
+    const oc = e.val.match(/(\d{1,2}[:.]\d{2})\s*[-–—]\s*(\d{1,2}[:.]\d{2})/)
+    if (oc) {
+      const open = oc[1].replace('.', ':')
+      const close = oc[2].replace('.', ':')
+      periods.push({ days: `${e.name} (${dateCol})`, open, close })
+      bits.push(`${e.name}: ${open}–${close}`)
+    } else if (e.val) {
+      bits.push(`${e.name}: ${e.val}`)
+    }
+  }
+
+  if (!bits.length && slopes.length) {
+    const sample = slopes[0]
+    bits.push(`Трассы: ${sample.val || 'нет данных'} (${dateCol})`)
+  }
+
+  let summary = bits.slice(0, 4).join('; ') || `График на ${dateCol} без ski-строк`
+  if (closedUntilSeason || (allClosed && slopes.length)) {
+    summary = `На ${dateCol}: склоны/подъёмники закрыты до сезона (CSV графика)`
+  }
+
+  const important = []
+  if (closedUntilSeason || (allClosed && slopes.length)) {
+    important.push({
+      id: 'krasnoe-slopes-closed',
+      resortId: 'krasnoe-ozero',
+      title: 'Красное озеро: склоны закрыты до сезона',
+      body: `По публичному CSV графика на ${dateCol} трассы/подъёмники отмечены как закрытые до сезона.`,
+      severity: 'warn',
+      updatedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+      sourceUrl: HOURS_PAGE_URL,
+    })
+  }
+
+  return {
+    hours: hoursSnapshot({
+      resortId: 'krasnoe-ozero',
+      sourceUrl: HOURS_PAGE_URL,
+      summary,
+      periods,
+      status: bits.length || closedUntilSeason ? 'ok' : 'partial',
+    }),
+    important,
+  }
+}
+
+/**
+ * @param {string} html
+ */
+function extractIvideon(html) {
+  const $ = loadHtml(html)
+  const urls = []
+  $('[data-videolazy-id]').each((_, el) => {
+    const id = $(el).attr('data-videolazy-id')
+    if (id) urls.push(id)
+  })
+  return [...new Set(urls)].filter((u) => /ivideon/i.test(u))
+}
+
+/**
+ * Prices via public Google Sheets CSV; hours via schedule CSV (same workbook).
  * @returns {Promise<object>}
  */
 export async function scrapeKrasnoeOzero() {
   const resortId = 'krasnoe-ozero'
   try {
     const csv = await fetchUrl(CSV_URL)
-    const lines = csv.split(/\r?\n/).filter((l) => l.trim())
-    if (lines.length < 2) throw new Error('CSV пустой')
-    const header = splitCsvLine(lines[0]).map((h) => cleanText(h))
-    const idx = Object.fromEntries(header.map((h, i) => [h, i]))
-    const pageKeyCol = idx['Ключ страницы']
-    const showCol = idx['Показывать']
-    const nameCol = idx['Название'] ?? 0
-    const hourWeekday = idx['1 час будни']
-    const hourWeekend = idx['1 час выходные']
-    const hourGeneric = idx['1 час']
-    const noteCol = idx['Уточнение']
+    await sleep()
+    let hoursCsv = ''
+    try {
+      hoursCsv = await fetchUrl(HOURS_CSV_URL)
+    } catch {
+      hoursCsv = ''
+    }
+    await sleep()
+    let camHtml = ''
+    try {
+      camHtml = await fetchUrl(WEBCAM_URL)
+    } catch {
+      camHtml = ''
+    }
 
+    const { header, rows } = parseCsv(csv)
+    if (!header.length) throw new Error('CSV пустой')
     const items = []
-    for (const line of lines.slice(1)) {
-      const cols = splitCsvLine(line)
-      const pageKey = cleanText(cols[pageKeyCol] || '')
-      const show = cleanText(cols[showCol] || '').toLowerCase()
+    for (const row of rows) {
+      const pageKey = cleanText(row['Ключ страницы'] || '')
+      const show = cleanText(row['Показывать'] || '').toLowerCase()
       if (pageKey !== 'ski-pass' || show !== 'yes') continue
-      const name = cleanText(cols[nameCol] || '')
+      const name = cleanText(row['Название'] || '')
       if (!name) continue
       const candidates = [
-        ['1 ч будни', hourWeekday],
-        ['1 ч выходные', hourWeekend],
-        ['1 ч', hourGeneric],
+        ['1 ч будни', row['1 час будни']],
+        ['1 ч выходные', row['1 час выходные']],
+        ['1 ч', row['1 час']],
       ]
-      for (const [label, col] of candidates) {
-        if (col == null) continue
-        const price = parsePrice(cols[col])
+      for (const [label, raw] of candidates) {
+        if (raw == null || raw === '') continue
+        const price = parsePrice(raw)
         if (price == null) continue
         items.push({
           title: `${name} (${label})`,
           price,
           unit: 'час',
-          note: noteCol != null ? cleanText(cols[noteCol] || '') || undefined : undefined,
-          rawText: cols[col],
+          note: cleanText(row['Уточнение'] || '') || undefined,
+          rawText: String(raw),
         })
       }
     }
+
+    const hoursPack = hoursCsv
+      ? parseHoursFromCsv(hoursCsv)
+      : {
+          hours: hoursSnapshot({
+            resortId,
+            sourceUrl: HOURS_PAGE_URL,
+            summary: 'CSV графика недоступен',
+            status: 'partial',
+          }),
+          important: [],
+        }
+
+    const embeds = camHtml ? extractIvideon(camHtml) : []
 
     return {
       resortId,
@@ -90,8 +241,10 @@ export async function scrapeKrasnoeOzero() {
           ? 'Источник: публичный CSV виджета цен курорта'
           : 'CSV получен, ski-pass строки не найдены',
       }),
-      // hours intentionally omitted (P2)
-      webcamUrl: WEBCAM_URL,
+      hours: hoursPack.hours,
+      webcamUrl: embeds[0] || WEBCAM_URL,
+      cameraEmbeds: embeds,
+      important: hoursPack.important,
     }
   } catch (err) {
     return {
@@ -103,6 +256,12 @@ export async function scrapeKrasnoeOzero() {
         items: [],
         status: 'failed',
         note: String(err?.message || err),
+      }),
+      hours: hoursSnapshot({
+        resortId,
+        sourceUrl: HOURS_PAGE_URL,
+        summary: 'Не удалось обновить часы',
+        status: 'failed',
       }),
       webcamUrl: WEBCAM_URL,
     }

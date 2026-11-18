@@ -2,7 +2,7 @@
 
 Агрегатор горнолыжных курортов Санкт-Петербурга и Ленинградской области.
 
-Сайт на русском: карточки курортов, интерактивная карта (Leaflet + OSM), раздел «Важное», страницы курортов со ссылками на сайт и камеры. Цены и часы — из ежедневного scrape официальных публичных страниц (волна 1) либо плейсхолдеры.
+Сайт на русском: карточки курортов, интерактивная карта (Leaflet + OSM), раздел «Важное», страницы курортов со ссылками на сайт и камеры. Цены и часы — из ежедневного scrape официальных публичных страниц (волны 1–2) либо плейсхолдеры.
 
 **Стек:** Vite + React + TypeScript · статика для GitHub Pages · Node scrapers (cheerio / PDF+OCR).
 
@@ -77,13 +77,15 @@ npm run scrape
 
 ```bash
 npm run scrape -- --dry-run                 # без записи файлов
-npm run scrape -- --only=tuutari-park,yukki
-npm run scrape -- --skip-optional           # без CSV Красного озера
+npm run scrape -- --only=tuutari-park,snezhny
+npm run scrape -- --wave=2                  # только P2
+npm run scrape -- --skip-optional           # без Красного озера
 SCRAPE_DELAY_MS=2000 npm run scrape         # пауза между хостами
 ```
 
 **Волна 1 (P1):** `tuutari-park`, `zolotaya-dolina`, `lazurnye-ozera`, `puhtolova-gora`, `yukki` (PDF → `pdftotext` / OCR tesseract).  
-**Опционально:** `krasnoe-ozero` (публичный Google Sheets CSV).
+**Волна 2 (P2):** `krasnoe-ozero` (CSV цен + CSV графика), `snezhny`, `drop-park`, `okhta-park`.  
+**Позже (P3):** `igora` (Playwright), `severny-sklon` (manual/partial).
 
 Для Юкки локально желательны:
 

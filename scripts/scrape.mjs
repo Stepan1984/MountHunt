@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
- * MountHunt daily scrape — wave 1 (P1 HTML/PDF + optional Krasnoe CSV).
+ * MountHunt daily scrape — wave 1 (P1) + wave 2 (P2).
  *
  * Usage:
  *   npm run scrape
  *   npm run scrape -- --dry-run          # scrape but do not write files
- *   npm run scrape -- --only=tuutari-park,yukki
+ *   npm run scrape -- --only=tuutari-park,snezhny
+ *   npm run scrape -- --wave=2           # only wave 2 targets
  *   SCRAPE_DELAY_MS=2000 npm run scrape
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -19,6 +20,9 @@ import { scrapeLazurnyeOzera } from './scrape/resorts/lazurnye-ozera.mjs'
 import { scrapePuhtolovaGora } from './scrape/resorts/puhtolova-gora.mjs'
 import { scrapeYukki } from './scrape/resorts/yukki.mjs'
 import { scrapeKrasnoeOzero } from './scrape/resorts/krasnoe-ozero.mjs'
+import { scrapeSnezhny } from './scrape/resorts/snezhny.mjs'
+import { scrapeDropPark } from './scrape/resorts/drop-park.mjs'
+import { scrapeOkhtaPark } from './scrape/resorts/okhta-park.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const outDir = join(root, 'public', 'data')
@@ -31,17 +35,21 @@ const PARSERS = {
   'puhtolova-gora': scrapePuhtolovaGora,
   yukki: scrapeYukki,
   'krasnoe-ozero': scrapeKrasnoeOzero,
+  snezhny: scrapeSnezhny,
+  'drop-park': scrapeDropPark,
+  'okhta-park': scrapeOkhtaPark,
 }
 
 const WAVE1 = ['tuutari-park', 'zolotaya-dolina', 'lazurnye-ozera', 'puhtolova-gora', 'yukki']
-const OPTIONAL = ['krasnoe-ozero']
+const WAVE2 = ['krasnoe-ozero', 'snezhny', 'drop-park', 'okhta-park']
 
 function parseArgs(argv) {
-  const args = { dryRun: false, only: null, skipOptional: false }
+  const args = { dryRun: false, only: null, skipOptional: false, wave: null }
   for (const a of argv) {
     if (a === '--dry-run') args.dryRun = true
     else if (a === '--skip-optional') args.skipOptional = true
     else if (a.startsWith('--only=')) args.only = a.slice(7).split(',').map((s) => s.trim()).filter(Boolean)
+    else if (a.startsWith('--wave=')) args.wave = a.slice(7).trim()
   }
   return args
 }
@@ -85,10 +93,10 @@ function applySeedFixes(resorts) {
     'krasnoe-ozero': {
       webcam_url: 'https://krasnoeozero.ru/cam/',
       prices_format: 'csv',
-      sourcesAdd: ['https://krasnoeozero.ru/', 'https://krasnoeozero.ru/cam/'],
+      sourcesAdd: ['https://krasnoeozero.ru/', 'https://krasnoeozero.ru/cam/', 'https://krasnoeozero.ru/grafik/'],
       sourcesDrop: [/cam\.html/],
       notes:
-        'Крупнейший курорт кластера Коробицыно; ~13–18 трасс; цены из публичного CSV виджета.',
+        'Крупнейший курорт кластера Коробицыно; ~13–18 трасс; цены и график из публичных CSV виджетов.',
     },
     'lazurnye-ozera': {
       webcam_url: 'https://lazoorsnow.ru/',
@@ -105,6 +113,31 @@ function applySeedFixes(resorts) {
       prices_format: 'pdf',
       notes:
         'ГАУ ЛО СТЦ; учебный и основные склоны; VK https://vk.com/skyukki. Координаты приблизительные. Цены — PDF-прейскурант.',
+    },
+    snezhny: {
+      prices_format: 'html',
+      prices_url: 'https://snegny.ru/ски-пассы/',
+      webcam_url: 'https://snegny.ru/',
+      sourcesAdd: [
+        'https://snegny.ru/ски-пассы/',
+        'https://snegny.ru/wp-content/themes/snegny/twocam.php',
+      ],
+    },
+    'drop-park': {
+      prices_format: 'html',
+      prices_url: 'https://drop-park.ru/snow-park',
+      webcam_url: 'https://drop-park.ru/snow-park',
+      sourcesAdd: ['https://drop-park.ru/snow-park'],
+    },
+    'okhta-park': {
+      prices_format: 'html_mixed',
+      prices_url: 'https://winter.ohtapark.ru/',
+      webcam_url: 'https://www.ohtapark.ru/webcam/',
+      sourcesAdd: [
+        'https://winter.ohtapark.ru/',
+        'https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/',
+        'https://www.ohtapark.ru/webcam/',
+      ],
     },
   }
   return resorts.map((r) => {
@@ -124,15 +157,23 @@ function upsertImportant(list, items) {
   for (const item of items) {
     byId.set(item.id, item)
   }
-  // Refresh mvp note once scrapers exist
   byId.set('mvp-data-note', {
     id: 'mvp-data-note',
     title: 'Данные обновляются ежедневно',
-    body: 'Цены и часы для части курортов собираются с официальных публичных страниц (волна 1). Это не оферта — перед выездом сверяйте с сайтом курорта.',
+    body: 'Цены и часы для части курортов собираются с официальных публичных страниц (волны 1–2). Это не оферта — перед выездом сверяйте с сайтом курорта.',
     severity: 'info',
     updatedAt: nowIso(),
   })
   return [...byId.values()]
+}
+
+function defaultTargets(args) {
+  if (args.wave === '1') return [...WAVE1]
+  if (args.wave === '2') return [...WAVE2]
+  // Default: wave1 + wave2. --skip-optional keeps historical meaning (omit krasnoe only in wave1 era);
+  // for wave2 krasnoe is first-class — skip-optional still runs full wave2 minus nothing else.
+  if (args.skipOptional) return [...WAVE1, ...WAVE2.filter((id) => id !== 'krasnoe-ozero')]
+  return [...WAVE1, ...WAVE2]
 }
 
 async function main() {
@@ -154,15 +195,12 @@ async function main() {
   const pricesById = new Map(prevPrices.map((p) => [p.resortId, p]))
   const hoursById = new Map(prevHours.map((h) => [h.resortId, h]))
 
-  // Ensure placeholders for all resorts
   for (const r of resorts) {
     if (!pricesById.has(r.id)) pricesById.set(r.id, blankPrice(r.id, resorts))
     if (!hoursById.has(r.id)) hoursById.set(r.id, blankHours(r.id, resorts))
   }
 
-  const targets = args.only?.length
-    ? args.only
-    : [...WAVE1, ...(args.skipOptional ? [] : OPTIONAL)]
+  const targets = args.only?.length ? args.only : defaultTargets(args)
 
   const results = []
   const importantAdds = []
@@ -244,8 +282,8 @@ async function main() {
 
   const meta = {
     updatedAt: nowIso(),
-    source: 'scrape-wave1',
-    note: `Волна 1: ${success.map((r) => r.id).join(', ') || 'нет успешных'}; failed: ${
+    source: 'scrape-wave1+wave2',
+    note: `Волны 1–2: ${success.map((r) => r.id).join(', ') || 'нет успешных'}; failed: ${
       failed.map((r) => r.id).join(', ') || 'нет'
     }`,
     resortsScraped: results,
@@ -257,7 +295,6 @@ async function main() {
     return
   }
 
-  // Persist seed correction (krasnoe webcam) without overwriting seed with runtime embeds
   writeJson(seedPath, seedResorts)
   writeJson(join(outDir, 'resorts.json'), resorts)
   writeJson(join(outDir, 'prices.json'), prices)
