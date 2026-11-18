@@ -122,7 +122,8 @@ export async function scrapeZolotayaDolina() {
         status: /закрыты на летний/i.test(summary) || periods.length ? 'ok' : 'partial',
       }),
       webcamUrl: WEBCAM_URL,
-      cameraEmbeds: embeds,
+      // rtsp.ru embeds load a black player shell with no stream — link-only.
+      cameraEmbeds: embeds.filter(() => false),
       important,
     }
   } catch (err) {
