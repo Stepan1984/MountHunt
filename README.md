@@ -79,14 +79,14 @@ npm run scrape
 npm run scrape -- --dry-run                 # без записи файлов
 npm run scrape -- --only=tuutari-park,snezhny
 npm run scrape -- --wave=3                  # только P3
-npm run scrape -- --skip-optional           # без Красного озера
+npm run test:scrape                         # unit-тесты парсеров / fail-soft
 SCRAPE_DELAY_MS=2000 npm run scrape         # пауза между хостами
-IGORA_HTML_DIR=data/snapshots/igora npm run scrape -- --only=igora   # offline snapshot
+IGORA_HTML_DIR=data/snapshots/igora npm run scrape -- --only=igora   # offline snapshot (opt-in)
 ```
 
 **Волна 1 (P1):** `tuutari-park`, `zolotaya-dolina`, `lazurnye-ozera`, `puhtolova-gora`, `yukki` (PDF → `pdftotext` / OCR tesseract).  
-**Волна 2 (P2):** `krasnoe-ozero` (CSV цен + CSV графика), `snezhny`, `drop-park`, `okhta-park`.  
-**Волна 3 (P3):** `igora` (Playwright → cheerio `.common-price__table`; fallback `data/snapshots/igora`), `severny-sklon` (severnysklon.ru contacts/restaurant hours; ski-pass `unavailable`).
+**Волна 2 (P2):** `krasnoe-ozero` (CSV цен + CSV графика), `snezhny` (часы `partial` без Playwright), `drop-park`, `okhta-park`.  
+**Волна 3 (P3):** `igora` (Playwright → cheerio; bundled snapshot только через `IGORA_HTML_DIR` / `IGORA_ALLOW_SNAPSHOT`), `severny-sklon` (ski-pass `unavailable`, без цен с агрегаторов).
 
 Для Юкки локально желательны:
 
