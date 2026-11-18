@@ -114,6 +114,53 @@ export function nowIso() {
   return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')
 }
 
+/** Minimal CSV line split (handles quoted commas). */
+export function splitCsvLine(line) {
+  const out = []
+  let cur = ''
+  let inQ = false
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]
+    if (ch === '"') {
+      if (inQ && line[i + 1] === '"') {
+        cur += '"'
+        i++
+      } else inQ = !inQ
+      continue
+    }
+    if (ch === ',' && !inQ) {
+      out.push(cur)
+      cur = ''
+      continue
+    }
+    cur += ch
+  }
+  out.push(cur)
+  return out
+}
+
+/**
+ * Parse a whole CSV text into header + row objects.
+ * @param {string} csv
+ */
+export function parseCsv(csv) {
+  const lines = String(csv || '')
+    .replace(/^\uFEFF/, '')
+    .split(/\r?\n/)
+    .filter((l) => l.trim())
+  if (!lines.length) return { header: [], rows: [] }
+  const header = splitCsvLine(lines[0]).map((h) => cleanText(h))
+  const rows = lines.slice(1).map((line) => {
+    const cols = splitCsvLine(line)
+    const obj = {}
+    header.forEach((h, i) => {
+      obj[h] = cols[i] ?? ''
+    })
+    return obj
+  })
+  return { header, rows }
+}
+
 /**
  * Fail-soft merge: on failure keep previous content, mark status failed.
  * @template T

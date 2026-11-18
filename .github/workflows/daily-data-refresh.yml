@@ -1,4 +1,4 @@
-# Ежедневный сбор цен/часов (волна 1) → public/data → commit.
+# Ежедневный сбор цен/часов (волны 1–2) → public/data → commit.
 # Cron: 05:00 UTC ≈ 08:00 Europe/Moscow.
 name: Daily data refresh
 
@@ -31,7 +31,7 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Scrape wave 1 → public/data
+      - name: Scrape waves 1–2 → public/data
         run: npm run scrape
         env:
           SCRAPE_DELAY_MS: '1500'
@@ -44,6 +44,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "Нет изменений данных"
           else
-            git commit -m "chore(data): ежедневный scrape wave 1"
+            git commit -m "chore(data): ежедневный scrape waves 1–2"
             git push
           fi

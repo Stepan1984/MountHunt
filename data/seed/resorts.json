@@ -8,13 +8,17 @@
     "lon": 30.4469,
     "website": "https://www.ohtapark.ru/",
     "webcam_url": "https://www.ohtapark.ru/webcam/",
-    "prices_format": "unknown",
+    "prices_format": "html_mixed",
     "status": "active",
     "notes": "Ближайший крупный всесезонный курорт к СПб; ~9–10 трасс, перепад до ~55 м.",
     "sources": [
       "https://www.ohtapark.ru/",
-      "https://tur-ray.ru/lenoblast-gornolyzhnye-kurorty.html"
-    ]
+      "https://tur-ray.ru/lenoblast-gornolyzhnye-kurorty.html",
+      "https://winter.ohtapark.ru/",
+      "https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/",
+      "https://www.ohtapark.ru/webcam/"
+    ],
+    "prices_url": "https://winter.ohtapark.ru/"
   },
   {
     "id": "igora",
@@ -63,10 +67,11 @@
     "prices_format": "csv",
     "prices_url": "https://krasnoeozero.ru/winter/skipass-and-lifts",
     "status": "active",
-    "notes": "Крупнейший курорт кластера Коробицыно; ~13–18 трасс; цены из публичного CSV виджета.",
+    "notes": "Крупнейший курорт кластера Коробицыно; ~13–18 трасс; цены и график из публичных CSV виджетов.",
     "sources": [
       "https://krasnoeozero.ru/",
-      "https://krasnoeozero.ru/cam/"
+      "https://krasnoeozero.ru/cam/",
+      "https://krasnoeozero.ru/grafik/"
     ]
   },
   {
@@ -96,12 +101,15 @@
     "lon": 29.771853,
     "website": "https://snegny.ru/",
     "webcam_url": "https://snegny.ru/",
-    "prices_format": "unknown",
+    "prices_format": "html",
     "status": "active",
     "notes": "Координаты склонов с официального сайта; раздел веб-камеры на главной.",
     "sources": [
-      "https://snegny.ru/"
-    ]
+      "https://snegny.ru/",
+      "https://snegny.ru/ски-пассы/",
+      "https://snegny.ru/wp-content/themes/snegny/twocam.php"
+    ],
+    "prices_url": "https://snegny.ru/ски-пассы/"
   },
   {
     "id": "severny-sklon",
@@ -182,7 +190,7 @@
     "lat": 60.398298,
     "lon": 30.29769,
     "website": "https://drop-park.ru/",
-    "webcam_url": null,
+    "webcam_url": "https://drop-park.ru/snow-park",
     "prices_format": "html",
     "prices_url": "https://drop-park.ru/snow-park",
     "status": "active",
@@ -190,7 +198,8 @@
     "sources": [
       "https://drop-park.ru/",
       "https://drop-park.ru/contacty",
-      "https://mykorbi.ru/"
+      "https://mykorbi.ru/",
+      "https://drop-park.ru/snow-park"
     ]
   },
   {

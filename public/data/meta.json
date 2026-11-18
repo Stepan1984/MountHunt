@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-18T09:38:46Z",
-  "source": "scrape-wave1",
-  "note": "Волна 1: tuutari-park, zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero; failed: нет",
+  "updatedAt": "2026-11-18T10:16:42Z",
+  "source": "scrape-wave1+wave2",
+  "note": "Волны 1–2: tuutari-park, zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park; failed: нет",
   "resortsScraped": [
     {
       "id": "tuutari-park",
@@ -47,9 +47,33 @@
       "id": "krasnoe-ozero",
       "error": null,
       "prices": "ok",
-      "hours": null,
+      "hours": "ok",
       "itemCount": 4,
-      "summary": null
+      "summary": "На 18.11.2026: склоны/подъёмники закрыты до сезона (CSV графика)"
+    },
+    {
+      "id": "snezhny",
+      "error": null,
+      "prices": "ok",
+      "hours": "partial",
+      "itemCount": 45,
+      "summary": "Режим склонов уточняйте на главной snegny.ru (виджет; HTML без JS недоступен)"
+    },
+    {
+      "id": "drop-park",
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 16,
+      "summary": "По прайсу snow-park: 10:00–21:00; 11:00–23:00"
+    },
+    {
+      "id": "okhta-park",
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 2,
+      "summary": "пн–пт: 11:00–21:00; сб–вс: 11:00–21:00"
     }
   ]
 }
