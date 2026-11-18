@@ -29,8 +29,9 @@ export function ResortCard({
   const p = pricesFor(resort.id, prices)
   const rawHours = h?.summary ? localizePublicText(h.summary) : null
   const hoursText = rawHours ? truncateText(rawHours, compact ? 72 : 110) : 'нет данных'
-  const priceHint = priceHintFor(p)
   const closed = slopesClosedHint(resort.id, h, important)
+  // When slopes are closed, don't advertise a live «от N ₽» next to the warn badge.
+  const priceHint = closed ? 'сезон закрыт' : priceHintFor(p)
 
   return (
     <article className={`resort-card resort-card--${resort.status}${compact ? ' resort-card--compact' : ''}${closed ? ' resort-card--slopes-closed' : ''}`}>

@@ -106,9 +106,21 @@ function isSeasonalItem(title: string, unit?: string): boolean {
   return /сезон/.test(t) || unit === 'сезон'
 }
 
+/** Discount / junior lines — prefer adult/base when both exist in the pool. */
+function isDiscountedFromPrice(title: string, unit?: string, note?: string): boolean {
+  return /льготн|детск|ребен|ребён|junior|child|студент|пенсион|школьник/.test(
+    itemBlob(title, unit, note),
+  )
+}
+
+function minPriceLabel(items: { price: number | null }[]): number {
+  return Math.min(...items.map((i) => i.price as number))
+}
+
 /**
  * Honest compact price hint for cards.
  * Prefers day/hour ski-pass-like items; skips seasonal, BSK, rental, lessons.
+ * Prefers adult/base over льготный when both are in the pool.
  */
 export function priceHintFor(snapshot: PriceSnapshot | undefined): string {
   if (!snapshot) return 'цены уточняйте'
@@ -130,17 +142,58 @@ export function priceHintFor(snapshot: PriceSnapshot | undefined): string {
   })
   const pool = timed.length > 0 ? timed : usable
   if (pool.length > 0) {
-    const min = Math.min(...pool.map((i) => i.price as number))
-    return `от ${min.toLocaleString('ru-RU')} ₽`
+    const adult = pool.filter((i) => !isDiscountedFromPrice(i.title, i.unit, i.note))
+    const pick = adult.length > 0 ? adult : pool
+    return `от ${minPriceLabel(pick).toLocaleString('ru-RU')} ₽`
   }
 
   const seasonal = withPrice.filter((i) => isSeasonalItem(i.title, i.unit))
   if (seasonal.length === withPrice.length) {
-    const min = Math.min(...seasonal.map((i) => i.price as number))
-    return `сезон от ${min.toLocaleString('ru-RU')} ₽`
+    const adult = seasonal.filter((i) => !isDiscountedFromPrice(i.title, i.unit, i.note))
+    const pick = adult.length > 0 ? adult : seasonal
+    return `сезон от ${minPriceLabel(pick).toLocaleString('ru-RU')} ₽`
   }
 
   return 'цены уточняйте'
+}
+
+const SCRAPER_NOTE_MARKERS =
+  /playwright|\/ssr\b|\bssr\b|snapshot:|github actions|дождаться успешного|не live|status:\s*unavailable|status unavailable/i
+
+/** Strip scrape/tooling clauses; keep visitor-facing blurb. */
+function stripScraperClauses(text: string): string {
+  return text
+    .replace(/\s*цены\s*[—–-]\s*playwright[^.;]*/gi, '')
+    .replace(/\s*;?\s*цены и график из публичных csv[^.;]*/gi, '')
+    .replace(/:?\s*ski-pass на сайте не опубликован[^.;]*/gi, '')
+    .replace(/\s*[—–-]\s*статус unavailable/gi, '')
+    .replace(/\s*статус unavailable[^.;]*/gi, '')
+    .replace(/\s*часы\s*[—–-]\s*\/working-hours\/\.?/gi, '')
+    .replace(/\s*:\s*;/g, ';')
+    .replace(/\s*;\s*;/g, ';')
+    .replace(/[;:\s]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** Visitor-facing resort blurb — drop scrape/tooling sentences. */
+export function publicResortNotes(notes: string | null | undefined): string | null {
+  if (!notes?.trim()) return null
+  // Split on sentence ends only (not `;` — used in normal blurbs).
+  const parts = notes
+    .split(/(?<=[.!])\s+/)
+    .map((p) => stripScraperClauses(p))
+    .filter((p) => p.length > 0 && !SCRAPER_NOTE_MARKERS.test(p))
+
+  const cleaned = parts.join(' ').replace(/\s+/g, ' ').trim()
+  return cleaned || null
+}
+
+/** Hide scrape-internal price footnotes from the public detail page. */
+export function publicPriceNote(note: string | null | undefined): string | null {
+  if (!note?.trim()) return null
+  if (SCRAPER_NOTE_MARKERS.test(note)) return null
+  return note.trim()
 }
 
 export function truncateText(text: string, max = 96): string {
