@@ -124,12 +124,18 @@ export async function scrapeYukki() {
     const $ = loadHtml(pageHtml)
     const text = cleanText($('body').text())
 
-    let summary = 'ежедневно 10:00–21:00'
-    const periods = [{ days: 'ежедневно', open: '10:00', close: '21:00' }]
-    const hoursMatch = text.match(/Режим работы:\s*Ежедневно с\s*(\d{1,2}:\d{2})\s*до\s*(\d{1,2}:\d{2})/i)
+    // Only mark hours ok when «Режим работы» is present — do not invent 10:00–21:00 as ok.
+    const hoursMatch = text.match(
+      /Режим работы:\s*Ежедневно с\s*(\d{1,2}:\d{2})\s*до\s*(\d{1,2}:\d{2})/i,
+    )
+    let summary = 'Часы работы уточняйте на странице СТЦ Юкки'
+    /** @type {{ days: string, open: string, close: string }[]} */
+    const periods = []
+    let hoursStatus = 'partial'
     if (hoursMatch) {
       summary = `ежедневно ${hoursMatch[1]}–${hoursMatch[2]}`
-      periods[0] = { days: 'ежедневно', open: hoursMatch[1], close: hoursMatch[2] }
+      periods.push({ days: 'ежедневно', open: hoursMatch[1], close: hoursMatch[2] })
+      hoursStatus = 'ok'
     }
 
     let pdfHref = null
@@ -175,7 +181,7 @@ export async function scrapeYukki() {
         sourceUrl: PAGE_URL,
         summary,
         periods,
-        status: 'ok',
+        status: hoursStatus,
       }),
     }
   } catch (err) {
