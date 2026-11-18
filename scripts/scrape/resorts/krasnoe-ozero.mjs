@@ -242,7 +242,7 @@ export async function scrapeKrasnoeOzero() {
           : 'CSV получен, ski-pass строки не найдены',
       }),
       hours: hoursPack.hours,
-      webcamUrl: embeds[0] || WEBCAM_URL,
+      webcamUrl: WEBCAM_URL,
       cameraEmbeds: embeds,
       important: hoursPack.important,
     }

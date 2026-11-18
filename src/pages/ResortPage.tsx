@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ResortMap } from '../components/ResortMap'
+import { WebcamSection } from '../components/WebcamPlayer'
 import {
   formatUpdatedAt,
   hoursFor,
@@ -13,6 +14,7 @@ import {
   statusLabel,
   yandexMapsUrl,
 } from '../lib/data'
+import { resolveWebcamPlayers, webcamExternalLink } from '../lib/webcam'
 import type { SiteData } from '../types'
 
 const PRICE_PREVIEW = 8
@@ -46,6 +48,8 @@ export function ResortPage({ data }: { data: SiteData }) {
     showAllPrices || priceItems.length <= PRICE_PREVIEW
       ? priceItems
       : priceItems.slice(0, PRICE_PREVIEW)
+  const webcamStreams = resolveWebcamPlayers(resort.webcam_url, resort.webcam_embeds)
+  const webcamLink = webcamExternalLink(resort.webcam_url, resort.webcam_embeds)
 
   return (
     <article className="section page-narrow resort-detail">
@@ -86,9 +90,9 @@ export function ResortPage({ data }: { data: SiteData }) {
             Яндекс Карты
           </a>
         )}
-        {resort.webcam_url && (
-          <a className="btn btn--ghost" href={resort.webcam_url} target="_blank" rel="noreferrer">
-            Веб-камера
+        {webcamLink && (
+          <a className="btn btn--ghost" href={webcamLink} target="_blank" rel="noreferrer">
+            Открыть трансляцию
           </a>
         )}
         {tariffsUrl && (
@@ -97,6 +101,15 @@ export function ResortPage({ data }: { data: SiteData }) {
           </a>
         )}
       </div>
+
+      {webcamLink && (
+        <WebcamSection
+          key={resort.id}
+          resortName={resort.name}
+          externalUrl={webcamLink}
+          streams={webcamStreams}
+        />
+      )}
 
       {important.length > 0 && (
         <section className="resort-detail__important" aria-labelledby="resort-important-title">
@@ -233,10 +246,10 @@ export function ResortPage({ data }: { data: SiteData }) {
                 </a>
               </li>
             )}
-            {resort.webcam_url && (
+            {webcamLink && (
               <li>
-                <a href={resort.webcam_url} target="_blank" rel="noreferrer">
-                  Веб-камера
+                <a href={webcamLink} target="_blank" rel="noreferrer">
+                  Открыть трансляцию
                 </a>
               </li>
             )}
@@ -247,7 +260,7 @@ export function ResortPage({ data }: { data: SiteData }) {
                 </a>
               </li>
             ))}
-            {!resort.website && !resort.webcam_url && !resort.community_links?.length && (
+            {!resort.website && !webcamLink && !resort.community_links?.length && (
               <li className="muted">Публичных ссылок пока нет</li>
             )}
           </ul>

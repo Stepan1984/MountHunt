@@ -18,7 +18,17 @@
       "https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/",
       "https://www.ohtapark.ru/webcam/"
     ],
-    "prices_url": "https://winter.ohtapark.ru/"
+    "prices_url": "https://winter.ohtapark.ru/",
+    "webcam_embeds": [
+      "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/69kp2pvk06/playlist.m3u8",
+      "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/7trzptz2/playlist.m3u8",
+      "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/130_art_10_katok/playlist.m3u8",
+      "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/30_pvk_12_konki/playlist.m3u8",
+      "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/pk_17/playlist.m3u8",
+      "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/stream6/playlist.m3u8",
+      "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/58_b_06_prud/playlist.m3u8",
+      "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/ptch_01/playlist.m3u8"
+    ]
   },
   {
     "id": "igora",
@@ -39,7 +49,10 @@
       "https://igora.ru/working-hours/",
       "https://igora.ru/slopes/"
     ],
-    "prices_url": "https://igora.ru/price/"
+    "prices_url": "https://igora.ru/price/",
+    "webcam_embeds": [
+      "https://webcam.exdesign.ru/igora-1/"
+    ]
   },
   {
     "id": "tuutari-park",
@@ -57,6 +70,10 @@
     "sources": [
       "https://www.2-park.ru/",
       "https://tuutari.ru/"
+    ],
+    "webcam_embeds": [
+      "https://rtsp.me/embed/KDYy3ZSY/",
+      "https://rtsp.me/embed/N6QEftRr/"
     ]
   },
   {
@@ -76,6 +93,12 @@
       "https://krasnoeozero.ru/",
       "https://krasnoeozero.ru/cam/",
       "https://krasnoeozero.ru/grafik/"
+    ],
+    "webcam_embeds": [
+      "https://open.ivideon.com/embed/v3/100-d029fa1f6111386709aaaf107f555963:720896",
+      "https://open.ivideon.com/embed/v3/100-d029fa1f6111386709aaaf107f555963:589824/",
+      "https://open.ivideon.com/embed/v3/100-d029fa1f6111386709aaaf107f555963:262144/",
+      "https://open.ivideon.com/embed/v3/100-d029fa1f6111386709aaaf107f555963:655360/"
     ]
   },
   {
@@ -94,6 +117,13 @@
     "sources": [
       "https://zoldol.ru/",
       "https://zoldol.ru/webcamera"
+    ],
+    "webcam_embeds": [
+      "https://rtsp.ru/embed/Oo2u84R8",
+      "https://rtsp.ru/embed/Pp5JtClq",
+      "https://rtsp.ru/embed/Cc27j7hc",
+      "https://rtsp.ru/embed/Ll7wJrKD",
+      "https://rtsp.ru/embed/Tt5Fafxl"
     ]
   },
   {
@@ -113,7 +143,11 @@
       "https://snegny.ru/ски-пассы/",
       "https://snegny.ru/wp-content/themes/snegny/twocam.php"
     ],
-    "prices_url": "https://snegny.ru/ски-пассы/"
+    "prices_url": "https://snegny.ru/ски-пассы/",
+    "webcam_embeds": [
+      "https://webcam.exdesign.ru/snegny-2/?fluid",
+      "https://webcam.exdesign.ru/snegny/?fluid"
+    ]
   },
   {
     "id": "severny-sklon",
@@ -149,7 +183,10 @@
       "https://puhgora.ru/web-camera",
       "https://puhgora.ru/uslugi/ceny-na-podyomniki"
     ],
-    "prices_url": "https://puhgora.ru/uslugi/ceny-na-podyomniki"
+    "prices_url": "https://puhgora.ru/uslugi/ceny-na-podyomniki",
+    "webcam_embeds": [
+      "https://ipeye.ru/ipeye_service/api/iframe.php?iframe_player=1&dev=2e9320175c6a48939c6fc1762f2d6316&autoplay=1&archive=1"
+    ]
   },
   {
     "id": "yukki",
@@ -185,7 +222,10 @@
       "https://lazoorsnow.ru/contacts",
       "https://lazoorsnow.ru/ceny"
     ],
-    "prices_url": "https://lazoorsnow.ru/ceny"
+    "prices_url": "https://lazoorsnow.ru/ceny",
+    "webcam_embeds": [
+      "https://rtsp.me/embed/69yB8iF5/"
+    ]
   },
   {
     "id": "drop-park",
@@ -205,6 +245,12 @@
       "https://drop-park.ru/contacty",
       "https://mykorbi.ru/",
       "https://drop-park.ru/snow-park"
+    ],
+    "webcam_embeds": [
+      "https://rtsp.ru/embed/AebA57ah/",
+      "https://rtsp.ru/embed/tG2Dt68i/",
+      "https://rtsp.ru/embed/dT5TQ2nF/",
+      "https://rtsp.ru/embed/hFA9FZ2D/"
     ]
   },
   {

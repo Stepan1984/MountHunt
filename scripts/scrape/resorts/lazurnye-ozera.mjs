@@ -109,7 +109,7 @@ export async function scrapeLazurnyeOzera() {
         periods,
         status: /выходной/.test(summary) ? 'ok' : 'partial',
       }),
-      webcamUrl: embeds[0] || HOME_URL,
+      webcamUrl: HOME_URL,
       cameraEmbeds: embeds,
       important,
     }

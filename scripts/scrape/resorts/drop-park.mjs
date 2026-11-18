@@ -173,7 +173,7 @@ export async function scrapeDropPark() {
         periods: hours.periods,
         status: hours.status,
       }),
-      webcamUrl: uniqueEmbeds[0] || PAGE_URL,
+      webcamUrl: PAGE_URL,
       cameraEmbeds: uniqueEmbeds,
     }
   } catch (err) {

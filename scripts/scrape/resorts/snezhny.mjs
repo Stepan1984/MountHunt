@@ -129,7 +129,7 @@ export async function scrapeSnezhny() {
         periods: [],
         status: 'partial',
       }),
-      webcamUrl: uniqueEmbeds[0] || HOME_URL,
+      webcamUrl: HOME_URL,
       cameraEmbeds: uniqueEmbeds,
     }
   } catch (err) {

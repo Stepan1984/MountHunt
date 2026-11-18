@@ -70,7 +70,7 @@ export function ResortCard({
         )}
         {resort.webcam_url && (
           <a href={resort.webcam_url} target="_blank" rel="noreferrer">
-            Камера
+            Трансляция
           </a>
         )}
       </div>
