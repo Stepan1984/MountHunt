@@ -38,13 +38,19 @@ npm run preview
 
 `https://<user>.github.io/MountHunt/`
 
-### Как включить
+### Как включить (обязательно один раз)
 
-1. Слейте PR в `main` (workflow `Deploy to GitHub Pages` собирает и публикует `dist`).
-2. В репозитории: **Settings → Pages**.
-3. **Source:** GitHub Actions (не ветка `/docs`).
-4. Дождитесь успешного прогона workflow на `main`.
-5. Откройте URL Pages из Settings или из лога deploy.
+Workflow собирает `dist`, но **деплой падает с 404**, пока Pages не включён в настройках репозитория (`has_pages: false` → API `GET /pages` = 404).
+
+1. Откройте **[Settings → Pages](https://github.com/Stepan1984/MountHunt/settings/pages)**.
+2. В блоке **Build and deployment** → **Source** выберите **GitHub Actions**  
+   (не «Deploy from a branch» / не папка `/docs`).
+3. Сохраните / просто закройте страницу — GitHub создаст сайт Pages и environment `github-pages`.
+4. Перезапустите workflow: **Actions → Deploy to GitHub Pages → Run workflow**  
+   (или сделайте пустой push в `main`).
+5. После зелёного `deploy` откройте URL из Settings → Pages или из лога шага Deploy.
+
+Репозиторий **публичный** — GitHub Pro для Pages не нужен. Если сделаете private без Pro, Pages снова перестанет работать.
 
 Если репозиторий переименуете — обновите `base` в `vite.config.ts` и `VITE_BASE` в `.github/workflows/deploy-pages.yml`.
 
