@@ -11,10 +11,14 @@ type Props = {
 export function ResortCard({ resort, hours, prices }: Props) {
   const h = hoursFor(resort.id, hours)
   const p = pricesFor(resort.id, prices)
+  const priced = p?.items?.map((i) => i.price).filter((n): n is number => n != null) ?? []
+  const minPrice = priced.length ? Math.min(...priced) : null
   const priceHint =
-    p?.items?.[0]?.price != null
-      ? `от ${p.items[0].price.toLocaleString('ru-RU')} ₽`
-      : 'цены уточняются'
+    minPrice != null
+      ? `от ${minPrice.toLocaleString('ru-RU')} ₽`
+      : p?.status === 'failed'
+        ? 'обновление не удалось'
+        : 'цены уточняются'
 
   return (
     <article className={`resort-card resort-card--${resort.status}`}>

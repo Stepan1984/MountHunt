@@ -4,7 +4,7 @@
  * Сейчас копирует seed-каталог курортов в public/data и обновляет meta.json.
  * Позже сюда подключатся парсеры цен/часов (cheerio / playwright).
  */
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -23,8 +23,24 @@ if (!seedPath) {
   process.exit(1)
 }
 
-const resorts = JSON.parse(readFileSync(seedPath, 'utf8'))
-copyFileSync(seedPath, join(outDir, 'resorts.json'))
+/** Seed corrections that should always land in public/data. */
+function applySeedFixes(resorts) {
+  return resorts.map((r) => {
+    if (r.id !== 'krasnoe-ozero') return r
+    return {
+      ...r,
+      webcam_url: 'https://krasnoeozero.ru/cam/',
+      prices_format: 'csv',
+      sources: [...new Set(['https://krasnoeozero.ru/', 'https://krasnoeozero.ru/cam/', ...(r.sources || [])])].filter(
+        (s) => !/cam\.html/.test(s),
+      ),
+    }
+  })
+}
+
+const resorts = applySeedFixes(JSON.parse(readFileSync(seedPath, 'utf8')))
+writeFileSync(join(outDir, 'resorts.json'), `${JSON.stringify(resorts, null, 2)}\n`)
+writeFileSync(seedPath, `${JSON.stringify(resorts, null, 2)}\n`)
 
 const now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')
 

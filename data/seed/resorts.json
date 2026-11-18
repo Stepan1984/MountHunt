@@ -11,7 +11,10 @@
     "prices_format": "unknown",
     "status": "active",
     "notes": "Ближайший крупный всесезонный курорт к СПб; ~9–10 трасс, перепад до ~55 м.",
-    "sources": ["https://www.ohtapark.ru/", "https://tur-ray.ru/lenoblast-gornolyzhnye-kurorty.html"]
+    "sources": [
+      "https://www.ohtapark.ru/",
+      "https://tur-ray.ru/lenoblast-gornolyzhnye-kurorty.html"
+    ]
   },
   {
     "id": "igora",
@@ -25,7 +28,10 @@
     "prices_format": "unknown",
     "status": "active",
     "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м.",
-    "sources": ["https://igora.ru/", "https://igora.ru/cam/"]
+    "sources": [
+      "https://igora.ru/",
+      "https://igora.ru/cam/"
+    ]
   },
   {
     "id": "tuutari-park",
@@ -40,7 +46,10 @@
     "prices_url": "http://www.2-park.ru/prices/lift/",
     "status": "active",
     "notes": "5–6 трасс 400–600 м; зеркало/партнёрский сайт tuutari.ru.",
-    "sources": ["https://www.2-park.ru/", "https://tuutari.ru/"]
+    "sources": [
+      "https://www.2-park.ru/",
+      "https://tuutari.ru/"
+    ]
   },
   {
     "id": "krasnoe-ozero",
@@ -50,12 +59,15 @@
     "lat": 60.5344,
     "lon": 29.7386,
     "website": "https://krasnoeozero.ru/",
-    "webcam_url": "https://www.krasnoeozero.ru/cam.html",
-    "prices_format": "js_dynamic",
+    "webcam_url": "https://krasnoeozero.ru/cam/",
+    "prices_format": "csv",
     "prices_url": "https://krasnoeozero.ru/winter/skipass-and-lifts",
     "status": "active",
-    "notes": "Крупнейший курорт кластера Коробицыно; ~13–18 трасс; цены подгружаются динамически.",
-    "sources": ["https://krasnoeozero.ru/", "https://www.krasnoeozero.ru/cam.html"]
+    "notes": "Крупнейший курорт кластера Коробицыно; ~13–18 трасс; цены из публичного CSV виджета.",
+    "sources": [
+      "https://krasnoeozero.ru/",
+      "https://krasnoeozero.ru/cam/"
+    ]
   },
   {
     "id": "zolotaya-dolina",
@@ -70,7 +82,10 @@
     "prices_url": "https://zoldol.ru/price-winter",
     "status": "active",
     "notes": "~12 трасс до 1100 м; 5 бугелей; учебный склон; сноупарк.",
-    "sources": ["https://zoldol.ru/", "https://zoldol.ru/webcamera"]
+    "sources": [
+      "https://zoldol.ru/",
+      "https://zoldol.ru/webcamera"
+    ]
   },
   {
     "id": "snezhny",
@@ -84,7 +99,9 @@
     "prices_format": "unknown",
     "status": "active",
     "notes": "Координаты склонов с официального сайта; раздел веб-камеры на главной.",
-    "sources": ["https://snegny.ru/"]
+    "sources": [
+      "https://snegny.ru/"
+    ]
   },
   {
     "id": "severny-sklon",
@@ -98,7 +115,9 @@
     "prices_format": "unknown",
     "status": "active",
     "notes": "4 склона у оз. Хепоярви; бугели; альтернативные домены severnysklon.ru / севсклон.рф.",
-    "sources": ["https://sev-sklon.ru/"]
+    "sources": [
+      "https://sev-sklon.ru/"
+    ]
   },
   {
     "id": "puhtolova-gora",
@@ -112,7 +131,12 @@
     "prices_format": "html",
     "status": "active",
     "notes": "Единственный полноценный ГЛК в границах СПб; Пн–Вт склоны обычно закрыты.",
-    "sources": ["https://puhgora.ru/", "https://puhgora.ru/web-camera"]
+    "sources": [
+      "https://puhgora.ru/",
+      "https://puhgora.ru/web-camera",
+      "https://puhgora.ru/uslugi/ceny-na-podyomniki"
+    ],
+    "prices_url": "https://puhgora.ru/uslugi/ceny-na-podyomniki"
   },
   {
     "id": "yukki",
@@ -124,10 +148,12 @@
     "coords_precision": "approximate",
     "website": "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/",
     "webcam_url": null,
-    "prices_format": "unknown",
+    "prices_format": "pdf",
     "status": "active",
-    "notes": "ГАУ ЛО СТЦ; учебный и основные склоны; VK https://vk.com/skyukki. Координаты приблизительные.",
-    "sources": ["https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/"]
+    "notes": "ГАУ ЛО СТЦ; учебный и основные склоны; VK https://vk.com/skyukki. Координаты приблизительные. Цены — PDF-прейскурант.",
+    "sources": [
+      "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/"
+    ]
   },
   {
     "id": "lazurnye-ozera",
@@ -137,11 +163,16 @@
     "lat": 59.873182,
     "lon": 30.808842,
     "website": "https://lazoorsnow.ru/",
-    "webcam_url": null,
-    "prices_format": "unknown",
+    "webcam_url": "https://lazoorsnow.ru/",
+    "prices_format": "html",
     "status": "active",
     "notes": "Небольшой учебный склон (~400 м). На сайте: «Сезон 2026 закрыт!» — уточнять открытие перед выездом.",
-    "sources": ["https://lazoorsnow.ru/", "https://lazoorsnow.ru/contacts"]
+    "sources": [
+      "https://lazoorsnow.ru/",
+      "https://lazoorsnow.ru/contacts",
+      "https://lazoorsnow.ru/ceny"
+    ],
+    "prices_url": "https://lazoorsnow.ru/ceny"
   },
   {
     "id": "drop-park",
@@ -149,14 +180,18 @@
     "area": "ЛО, Всеволожский р-н, Куйвозовское СП (KORBI / Лемболово)",
     "city_or_district": "Куйвозовское СП / Лемболово",
     "lat": 60.398298,
-    "lon": 30.297690,
+    "lon": 30.29769,
     "website": "https://drop-park.ru/",
     "webcam_url": null,
     "prices_format": "html",
     "prices_url": "https://drop-park.ru/snow-park",
     "status": "active",
     "notes": "Тренировочный склон и сноупарк на территории KORBI: детский склон, ~200 м фрирайд, трамплинная линия; 2 подъёмника.",
-    "sources": ["https://drop-park.ru/", "https://drop-park.ru/contacty", "https://mykorbi.ru/"]
+    "sources": [
+      "https://drop-park.ru/",
+      "https://drop-park.ru/contacty",
+      "https://mykorbi.ru/"
+    ]
   },
   {
     "id": "orekhovo",
@@ -167,12 +202,17 @@
     "lon": 30.26,
     "coords_precision": "approximate",
     "website": null,
-    "community_links": ["https://t.me/orehovosklon"],
+    "community_links": [
+      "https://t.me/orehovosklon"
+    ],
     "webcam_url": null,
     "prices_format": "unknown",
     "status": "unclear",
     "notes": "Дикий лесной склон; нет официального оператора; режим бугелей не опубликован.",
-    "sources": ["https://www.exsnow.ru/kurorts/id464.html", "https://orehovosite.narod.ru/all.htm"]
+    "sources": [
+      "https://www.exsnow.ru/kurorts/id464.html",
+      "https://orehovosite.narod.ru/all.htm"
+    ]
   },
   {
     "id": "andreevsky",
@@ -186,7 +226,10 @@
     "prices_format": "unknown",
     "status": "unclear",
     "notes": "Малый исторический склон; по местным обзорам почти не используется, выкат ограничен дачами.",
-    "sources": ["https://ski2.ru/region/leningradskaya-oblast", "https://sgorkivniz.narod.ru/d11t12tokskav.htm"]
+    "sources": [
+      "https://ski2.ru/region/leningradskaya-oblast",
+      "https://sgorkivniz.narod.ru/d11t12tokskav.htm"
+    ]
   },
   {
     "id": "impuls",
@@ -200,7 +243,9 @@
     "prices_format": "unknown",
     "status": "unclear",
     "notes": "Дикий склон ~150 м; без ратраков/освещения; актуальность бугеля не подтверждена.",
-    "sources": ["https://ski2.ru/region/leningradskaya-oblast"]
+    "sources": [
+      "https://ski2.ru/region/leningradskaya-oblast"
+    ]
   },
   {
     "id": "poligon",
@@ -214,7 +259,10 @@
     "prices_format": "unknown",
     "status": "unclear",
     "notes": "Широкий дикий склон; исторически бугель; подготовка нерегулярная.",
-    "sources": ["https://ski2.ru/region/leningradskaya-oblast", "https://sgorkivniz.narod.ru/d11t12tokskav.htm"]
+    "sources": [
+      "https://ski2.ru/region/leningradskaya-oblast",
+      "https://sgorkivniz.narod.ru/d11t12tokskav.htm"
+    ]
   },
   {
     "id": "semeika",
@@ -228,7 +276,9 @@
     "prices_format": "unknown",
     "status": "unclear",
     "notes": "Короткий склон; часто ватрушки/любители.",
-    "sources": ["https://ski2.ru/region/leningradskaya-oblast"]
+    "sources": [
+      "https://ski2.ru/region/leningradskaya-oblast"
+    ]
   },
   {
     "id": "u-tramplina",
@@ -242,7 +292,9 @@
     "prices_format": "unknown",
     "status": "unclear",
     "notes": "Малый склон / бывший Dream Park; статус сезона 2026/27 не подтверждён.",
-    "sources": ["https://orehovosite.narod.ru/all.htm"]
+    "sources": [
+      "https://orehovosite.narod.ru/all.htm"
+    ]
   },
   {
     "id": "voronya-gora",
@@ -256,7 +308,9 @@
     "prices_format": "unknown",
     "status": "unclear",
     "notes": "Малый клубный склон без современного сервиса; актуальность уточнять.",
-    "sources": ["https://ski2.ru/region/leningradskaya-oblast"]
+    "sources": [
+      "https://ski2.ru/region/leningradskaya-oblast"
+    ]
   },
   {
     "id": "pulkovo-slope",
@@ -270,7 +324,9 @@
     "prices_format": "unknown",
     "status": "unclear",
     "notes": "Исторический городской склон; практически не используется как публичный ГЛК.",
-    "sources": ["https://orehovosite.narod.ru/all.htm"]
+    "sources": [
+      "https://orehovosite.narod.ru/all.htm"
+    ]
   },
   {
     "id": "mozhaiskaya",
@@ -284,7 +340,9 @@
     "prices_format": "unknown",
     "status": "unclear",
     "notes": "Малые естественные склоны без коммерческой инфраструктуры.",
-    "sources": ["https://orehovosite.narod.ru/all.htm"]
+    "sources": [
+      "https://orehovosite.narod.ru/all.htm"
+    ]
   },
   {
     "id": "kavgolovo-utc",
@@ -298,7 +356,10 @@
     "prices_format": "unknown",
     "status": "unclear",
     "notes": "Учебно-тренировочный центр (беговые, тоннель); не позиционируется как публичный alpine-курорт.",
-    "sources": ["https://tur-ray.ru/lenoblast-gornolyzhnye-kurorty.html", "https://www.geocam.ru/online/ski-tunnel/"]
+    "sources": [
+      "https://tur-ray.ru/lenoblast-gornolyzhnye-kurorty.html",
+      "https://www.geocam.ru/online/ski-tunnel/"
+    ]
   },
   {
     "id": "orlinaya-gora",
@@ -312,6 +373,9 @@
     "prices_format": "unknown",
     "status": "closed",
     "notes": "Публичный курорт закрыт с ~2008 г.; инфраструктура демонтирована / территория под тренировочный центр.",
-    "sources": ["https://www.exsnow.ru/kurorts/id463.html", "https://ski2.ru/resort/orlinaya-gora"]
+    "sources": [
+      "https://www.exsnow.ru/kurorts/id463.html",
+      "https://ski2.ru/resort/orlinaya-gora"
+    ]
   }
 ]

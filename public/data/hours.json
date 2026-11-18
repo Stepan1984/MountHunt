@@ -17,11 +17,22 @@
   },
   {
     "resortId": "tuutari-park",
-    "scrapedAt": null,
+    "scrapedAt": "2026-11-18T09:38:22Z",
     "sourceUrl": "https://www.2-park.ru/",
-    "summary": "Часы работы появятся после ежедневного обновления данных",
-    "periods": [],
-    "status": "pending"
+    "summary": "будни 12:00–22:00; выходные 10:00–22:00",
+    "periods": [
+      {
+        "days": "будни",
+        "open": "12:00",
+        "close": "22:00"
+      },
+      {
+        "days": "выходные",
+        "open": "10:00",
+        "close": "22:00"
+      }
+    ],
+    "status": "ok"
   },
   {
     "resortId": "krasnoe-ozero",
@@ -33,11 +44,47 @@
   },
   {
     "resortId": "zolotaya-dolina",
-    "scrapedAt": null,
-    "sourceUrl": "https://zoldol.ru/",
-    "summary": "Часы работы появятся после ежедневного обновления данных",
-    "periods": [],
-    "status": "pending"
+    "scrapedAt": "2026-11-18T09:38:27Z",
+    "sourceUrl": "https://zoldol.ru/vremya-raboty",
+    "summary": "Горнолыжные склоны закрыты на летний период (уточняйте открытие на сайте). Ближайший график (прочее): Понедельник: закрыто; Вторник: закрыто; Среда: 12:00–22:00…",
+    "periods": [
+      {
+        "days": "Понедельник",
+        "open": "",
+        "close": ""
+      },
+      {
+        "days": "Вторник",
+        "open": "",
+        "close": ""
+      },
+      {
+        "days": "Среда",
+        "open": "12:00",
+        "close": "22:00"
+      },
+      {
+        "days": "Четверг",
+        "open": "12:00",
+        "close": "22:00"
+      },
+      {
+        "days": "Пятница",
+        "open": "12:00",
+        "close": "23:00"
+      },
+      {
+        "days": "Суббота",
+        "open": "11:00",
+        "close": "23:00"
+      },
+      {
+        "days": "Понедельник",
+        "open": "",
+        "close": ""
+      }
+    ],
+    "status": "ok"
   },
   {
     "resortId": "snezhny",
@@ -57,27 +104,65 @@
   },
   {
     "resortId": "puhtolova-gora",
-    "scrapedAt": null,
-    "sourceUrl": "https://puhgora.ru/",
-    "summary": "Часы работы появятся после ежедневного обновления данных",
-    "periods": [],
-    "status": "pending"
+    "scrapedAt": "2026-11-18T09:38:33Z",
+    "sourceUrl": "https://puhgora.ru/o-kurorte/chasy-raboty",
+    "summary": "ср., чт., пт. 15:00–21:00; сб., вс. 10:00–21:00; пн., вт.: выходной",
+    "periods": [
+      {
+        "days": "ср., чт., пт.",
+        "open": "15:00",
+        "close": "21:00"
+      },
+      {
+        "days": "сб., вс.",
+        "open": "10:00",
+        "close": "21:00"
+      },
+      {
+        "days": "пн., вт.",
+        "open": "",
+        "close": ""
+      }
+    ],
+    "status": "ok"
   },
   {
     "resortId": "yukki",
-    "scrapedAt": null,
+    "scrapedAt": "2026-11-18T09:38:45Z",
     "sourceUrl": "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/",
-    "summary": "Часы работы появятся после ежедневного обновления данных",
-    "periods": [],
-    "status": "pending"
+    "summary": "ежедневно 10:00–21:00",
+    "periods": [
+      {
+        "days": "ежедневно",
+        "open": "10:00",
+        "close": "21:00"
+      }
+    ],
+    "status": "ok"
   },
   {
     "resortId": "lazurnye-ozera",
-    "scrapedAt": null,
+    "scrapedAt": "2026-11-18T09:38:30Z",
     "sourceUrl": "https://lazoorsnow.ru/",
-    "summary": "Часы работы появятся после ежедневного обновления данных",
-    "periods": [],
-    "status": "pending"
+    "summary": "пн: выходной; вт–пт: 11:00–22:00; сб–вс: 10:00–22:00",
+    "periods": [
+      {
+        "days": "пн",
+        "open": "",
+        "close": ""
+      },
+      {
+        "days": "вт–пт",
+        "open": "11:00",
+        "close": "22:00"
+      },
+      {
+        "days": "сб–вс",
+        "open": "10:00",
+        "close": "22:00"
+      }
+    ],
+    "status": "ok"
   },
   {
     "resortId": "drop-park",
