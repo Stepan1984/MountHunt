@@ -29,13 +29,17 @@
     "lon": 30.2113,
     "website": "https://igora.ru/",
     "webcam_url": "https://igora.ru/cam/",
-    "prices_format": "unknown",
+    "prices_format": "html_js",
     "status": "active",
-    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м.",
+    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. Цены — Playwright/SSR таблицы на /price/; часы — EN /en/working-hours/.",
     "sources": [
       "https://igora.ru/",
-      "https://igora.ru/cam/"
-    ]
+      "https://igora.ru/cam/",
+      "https://igora.ru/price/",
+      "https://igora.ru/en/working-hours/",
+      "https://igora.ru/slopes/"
+    ],
+    "prices_url": "https://igora.ru/price/"
   },
   {
     "id": "tuutari-park",
@@ -118,14 +122,15 @@
     "city_or_district": "Токсово",
     "lat": 60.156425,
     "lon": 30.548145,
-    "website": "https://sev-sklon.ru/",
+    "website": "https://severnysklon.ru/",
     "webcam_url": null,
-    "prices_format": "unknown",
+    "prices_format": "none",
     "status": "active",
-    "notes": "4 склона у оз. Хепоярви; бугели; альтернативные домены severnysklon.ru / севсклон.рф.",
+    "notes": "4 склона у оз. Хепоярви; бугели. Актуальный сайт severnysklon.ru (Tilda): ski-pass на сайте не опубликован — статус unavailable; sev-sklon.ru устарел.",
     "sources": [
-      "https://sev-sklon.ru/"
-    ]
+      "https://severnysklon.ru/"
+    ],
+    "prices_url": null
   },
   {
     "id": "puhtolova-gora",

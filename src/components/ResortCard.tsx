@@ -16,9 +16,11 @@ export function ResortCard({ resort, hours, prices }: Props) {
   const priceHint =
     minPrice != null
       ? `от ${minPrice.toLocaleString('ru-RU')} ₽`
-      : p?.status === 'failed'
-        ? 'обновление не удалось'
-        : 'цены уточняются'
+      : p?.status === 'unavailable'
+        ? 'на сайте не опубликованы'
+        : p?.status === 'failed'
+          ? 'обновление не удалось'
+          : 'цены уточняются'
 
   return (
     <article className={`resort-card resort-card--${resort.status}`}>
