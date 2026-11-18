@@ -1,0 +1,178 @@
+[
+  {
+    "resortId": "okhta-park",
+    "scrapedAt": null,
+    "sourceUrl": "https://www.ohtapark.ru/",
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "igora",
+    "scrapedAt": null,
+    "sourceUrl": "https://igora.ru/",
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "tuutari-park",
+    "scrapedAt": null,
+    "sourceUrl": "https://www.2-park.ru/",
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "krasnoe-ozero",
+    "scrapedAt": null,
+    "sourceUrl": "https://krasnoeozero.ru/",
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "zolotaya-dolina",
+    "scrapedAt": null,
+    "sourceUrl": "https://zoldol.ru/",
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "snezhny",
+    "scrapedAt": null,
+    "sourceUrl": "https://snegny.ru/",
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "severny-sklon",
+    "scrapedAt": null,
+    "sourceUrl": "https://sev-sklon.ru/",
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "puhtolova-gora",
+    "scrapedAt": null,
+    "sourceUrl": "https://puhgora.ru/",
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "yukki",
+    "scrapedAt": null,
+    "sourceUrl": "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/",
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "lazurnye-ozera",
+    "scrapedAt": null,
+    "sourceUrl": "https://lazoorsnow.ru/",
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "drop-park",
+    "scrapedAt": null,
+    "sourceUrl": "https://drop-park.ru/",
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "orekhovo",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "andreevsky",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "impuls",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "poligon",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "semeika",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "u-tramplina",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "voronya-gora",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "pulkovo-slope",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "mozhaiskaya",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "kavgolovo-utc",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "orlinaya-gora",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  }
+]

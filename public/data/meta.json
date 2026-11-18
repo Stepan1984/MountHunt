@@ -1,0 +1,5 @@
+{
+  "updatedAt": "2026-11-18T08:48:22Z",
+  "source": "seed-refresh",
+  "note": "Заглушка CI: seed скопирован в public/data. Парсеры ещё не подключены."
+}
