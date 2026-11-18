@@ -9,7 +9,7 @@ export function Footer() {
         </p>
         <p className="muted">
           Данные справочные. Уточняйте часы и цены на официальных сайтах.{' '}
-          <Link to="/about">О проекте и источниках</Link>
+          <Link to="/about">О проекте</Link>
         </p>
       </div>
     </footer>
