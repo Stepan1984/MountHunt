@@ -6,6 +6,7 @@ import {
   localizePublicText,
   pricesFor,
   scrapeStatusLabel,
+  slopesClosedHint,
   statusLabel,
   yandexMapsUrl,
 } from '../lib/data'
@@ -31,6 +32,7 @@ export function ResortPage({ data }: { data: SiteData }) {
   const hasCoords = resort.lat != null && resort.lon != null
   const tariffsUrl = prices?.sourceUrl || resort.prices_url || resort.website || undefined
   const hoursSummary = hours?.summary ? localizePublicText(hours.summary) : 'Нет данных'
+  const closed = slopesClosedHint(resort.id, hours, data.important)
 
   return (
     <article className="section page-narrow resort-detail">
@@ -46,7 +48,11 @@ export function ResortPage({ data }: { data: SiteData }) {
           <h1>{resort.name}</h1>
           <p className="resort-detail__area">{resort.area}</p>
         </div>
-        <span className={`badge badge--${resort.status}`}>{statusLabel(resort.status)}</span>
+        {closed ? (
+          <span className="badge badge--warn">Склоны закрыты</span>
+        ) : (
+          <span className={`badge badge--${resort.status}`}>{statusLabel(resort.status)}</span>
+        )}
       </header>
 
       {resort.notes && <p className="resort-detail__notes">{resort.notes}</p>}
@@ -222,8 +228,7 @@ export function ResortPage({ data }: { data: SiteData }) {
 
       <p className="muted resort-detail__meta">
         Данные каталога: {formatUpdatedAt(data.meta.updatedAt)}. Цены и часы — с официальных
-        публичных страниц (где парсер уже есть) либо плейсхолдер со ссылкой на сайт курорта. Не
-        оферта.
+        публичных страниц (где парсер уже есть) либо заглушка со ссылкой на сайт курорта. Не оферта.
       </p>
     </article>
   )

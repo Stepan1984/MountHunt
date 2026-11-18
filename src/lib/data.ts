@@ -95,7 +95,7 @@ function isExcludedFromFromPrice(title: string, unit?: string, note?: string): b
     unit === 'сезон' ||
     // JS \b is ASCII-only — match Cyrillic tokens by substring.
     /бск/.test(t) ||
-    /аренда|прокат|продлен|хранен|шлем|ботин|групп|школ|индивидуальн|комплект|сноуборд|полный с /.test(
+    /аренда|прокат|продлен|хранен|шлем|ботин|групп|школ|индивидуальн|инструктор|занят|комплект|сноуборд|полный с /.test(
       t,
     )
   )
