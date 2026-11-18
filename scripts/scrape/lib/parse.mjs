@@ -81,16 +81,87 @@ export function tableRows($, table) {
 }
 
 /**
- * @param {string} now
+ * Flatten structured skipass groups into PriceItem[] for cards / legacy UI.
+ * @param {import('../../../src/types.ts').SkipassGroup[] | undefined} groups
+ * @returns {{ title: string, price: number | null, unit?: string, note?: string, rawText?: string }[]}
+ */
+export function flattenSkipassGroups(groups) {
+  if (!Array.isArray(groups) || !groups.length) return []
+  /** @type {{ title: string, price: number | null, unit?: string, note?: string, rawText?: string }[]} */
+  const items = []
+  for (const group of groups) {
+    const columns = group.columns?.length ? group.columns : ['Цена']
+    for (const row of group.rows || []) {
+      const unit = inferUnitFromDuration(row.duration) || inferUnitFromCategory(group.category)
+      for (let i = 0; i < columns.length; i++) {
+        const cell = row.prices?.[i]
+        if (!cell || cell.price == null) continue
+        const col = cleanText(columns[i] || '')
+        const parts = []
+        if (row.name) parts.push(row.name)
+        if (row.duration) parts.push(row.duration)
+        let title = parts.join(' · ') || col
+        if (col && !/^цена$/i.test(col) && title) {
+          title = `${title} (${col})`
+        } else if (col && !title) {
+          title = col
+        }
+        if (group.category && columns.length === 1 && /^цена$/i.test(col)) {
+          // Keep category out of title when single price column — cards stay compact.
+        }
+        items.push({
+          title,
+          price: cell.price,
+          ...(unit ? { unit } : {}),
+          note: cell.note || row.note || undefined,
+          rawText: cell.rawText,
+        })
+      }
+    }
+  }
+  return items
+}
+
+/** @param {string | undefined} duration */
+function inferUnitFromDuration(duration) {
+  if (!duration) return undefined
+  const d = duration.toLowerCase()
+  if (/проход|подъ[её]м|разов/.test(d)) return /подъ[её]м/.test(d) ? 'подъём' : 'проход'
+  if (/час/.test(d)) return 'час'
+  if (/день|сутк/.test(d)) return 'день'
+  if (/сезон/.test(d)) return 'сезон'
+  return undefined
+}
+
+/** @param {string | undefined} category */
+function inferUnitFromCategory(category) {
+  if (!category) return undefined
+  const c = category.toLowerCase()
+  if (/сезон|абонемент/.test(c) && !/почасов|проход|подъ[её]м/.test(c)) return 'сезон'
+  if (/проход|разов/.test(c)) return 'проход'
+  if (/почасов|час/.test(c)) return 'час'
+  return undefined
+}
+
+/**
  * @param {object} partial
  */
 export function priceSnapshot(partial) {
+  const groups = Array.isArray(partial.groups)
+    ? partial.groups.filter((g) => g && Array.isArray(g.rows) && g.rows.length > 0)
+    : undefined
+  const fromGroups = groups?.length ? flattenSkipassGroups(groups) : []
+  const items =
+    Array.isArray(partial.items) && partial.items.length
+      ? partial.items
+      : fromGroups
   return {
     resortId: partial.resortId,
     scrapedAt: partial.scrapedAt ?? nowIso(),
     sourceUrl: partial.sourceUrl ?? null,
     currency: 'RUB',
-    items: partial.items ?? [],
+    items,
+    ...(groups?.length ? { groups } : {}),
     status: partial.status ?? 'ok',
     ...(partial.note ? { note: partial.note } : {}),
   }

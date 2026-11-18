@@ -191,15 +191,18 @@ function formatDurationLabel(raw, kind) {
 }
 
 /**
- * Parse ski-pass / instructor tables from Igora price page.
+ * Parse ski-pass / instructor tables from Igora price page into flat items + groups.
  * Prefer ONLINE column when present; keep cash price as note.
  * Skip incomplete rows (e.g. BSK with a single orphan cell).
  * @param {string} html
+ * @returns {{ items: object[], groups: object[] }}
  */
-export function parseIgoraPrices(html) {
+export function parseIgoraPriceTables(html) {
   const $ = loadHtml(html)
   /** @type {{ title: string, price: number, unit?: string, note?: string, rawText?: string, priority: number }[]} */
   const items = []
+  /** @type {{ category: string, columns: string[], rows: object[], priority: number }[]} */
+  const groupDrafts = []
 
   $('.common-price__table').each((_, table) => {
     const $table = $(table)
@@ -210,7 +213,6 @@ export function parseIgoraPrices(html) {
     const sectionBlob = `${faqTitle} ${h3}`
     const isInstructor = /инструктор/i.test(sectionBlob)
     const isOnlineInstructor = isInstructor && /онлайн|online/i.test(h3)
-    // Prefer specific h3; mark online instructor tables so cash/online can collapse later.
     const section = isOnlineInstructor
       ? 'инструктор online'
       : isInstructor
@@ -219,7 +221,6 @@ export function parseIgoraPrices(html) {
           : faqTitle || 'инструктор'
         : h3 || faqTitle || 'тариф'
 
-    // Focus on ski-pass blocks; skip bulky rental/service catalogs for MVP noise control.
     const focus = /ски-?пасс|почасов|проход|абонемент|инструктор/i.test(sectionBlob)
     const isRentalOrService = /прокат|ски-сервис|ремонт/i.test(sectionBlob)
     if (!focus || isRentalOrService) return
@@ -233,8 +234,11 @@ export function parseIgoraPrices(html) {
       /разов|проход/i.test(sectionBlob + ' ' + top.join(' ')) ||
       (durations.length >= 2 && durations.every((d) => /^\d+$/.test(d)))
     const kind = looksLikePasses ? 'passes' : /час/i.test(durations.join(' ')) ? 'hourly' : 'other'
-    // Prefer hourly ski-pass, then pass packs, then instructor when capping output.
     const priority = isInstructor ? 3 : kind === 'hourly' ? 1 : kind === 'passes' ? 2 : 4
+
+    /** Matrix: duration columns × tariff name rows (ski-pass ONLINE tables). */
+    /** @type {Map<string, { name: string, cells: Map<string, { price: number, note?: string, rawText?: string }> }>} */
+    const matrix = new Map()
 
     for (const row of rows) {
       const label = row[0]
@@ -245,16 +249,17 @@ export function parseIgoraPrices(html) {
       const cells = row.slice(1)
       const hasOnline = rows.some((r) => r.some((c) => /^online$/i.test(c)))
 
-      if (hasOnline && cells.length >= 2) {
-        // Require a full cash/online pair for at least the first duration — skip orphan single cells (BSK**).
+      if (hasOnline && cells.length >= 2 && !isInstructor) {
         const pairCount = Math.floor(cells.length / 2)
         if (pairCount < 1) continue
+        const name = cleanText(label)
+        if (!matrix.has(name)) matrix.set(name, { name, cells: new Map() })
+        const entry = matrix.get(name)
         for (let i = 0; i < pairCount * 2; i += 2) {
           const cash = parsePrice(cells[i])
           const online = parsePrice(cells[i + 1])
           const price = online ?? cash
           if (price == null) continue
-          // Skip cash-only stub where online column exists but this row left it empty AND only one price total
           if (online == null && cash != null && pairCount === 1 && cells.filter((c) => parsePrice(c) != null).length < 2) {
             continue
           }
@@ -262,17 +267,18 @@ export function parseIgoraPrices(html) {
           if (!durRaw && kind === 'passes') continue
           const dur = formatDurationLabel(durRaw || `${Math.floor(i / 2) + 1}`, kind)
           const unit = kind === 'passes' || /^\d+\s*проход/i.test(dur) ? 'проход' : /час/i.test(dur) ? 'час' : 'тариф'
+          const note = cash != null && online != null && cash !== online ? `в кассе ${cash} ₽` : undefined
+          entry.cells.set(dur, { price, note, rawText: cells[i + 1] || cells[i] })
           items.push({
-            title: `${cleanText(label)} · ${dur} (${section})`,
+            title: `${name} · ${dur} (${section})`,
             price,
             unit,
-            note: cash != null && online != null && cash !== online ? `в кассе ${cash} ₽` : undefined,
+            note,
             rawText: cells[i + 1] || cells[i],
             priority,
           })
         }
       } else if (/инструктор|человек|профи/i.test(label + sectionBlob)) {
-        // Instructor-style: weekday then weekend blocks of 3 durations
         const slots = ['1 час', '1,5 часа', '2 часа']
         if (cells.length < 3) continue
         for (let i = 0; i < cells.length; i++) {
@@ -289,13 +295,38 @@ export function parseIgoraPrices(html) {
           })
         }
       }
-      // else: incomplete non-instructor row (e.g. BSK with a single cell) — skip
+    }
+
+    if (matrix.size) {
+      const colSet = []
+      for (const entry of matrix.values()) {
+        for (const dur of entry.cells.keys()) {
+          if (!colSet.includes(dur)) colSet.push(dur)
+        }
+      }
+      const category =
+        kind === 'hourly'
+          ? h3 || faqTitle || 'Почасовые абонементы'
+          : kind === 'passes'
+            ? h3 || faqTitle || 'Абонементы на количество проходов'
+            : section
+      groupDrafts.push({
+        category: cleanText(category),
+        columns: colSet,
+        rows: [...matrix.values()].map((entry) => ({
+          name: entry.name,
+          prices: colSet.map((dur) => {
+            const cell = entry.cells.get(dur)
+            return cell ? { price: cell.price, note: cell.note, rawText: cell.rawText } : { price: null }
+          }),
+        })),
+        priority,
+      })
     }
   })
 
-  // Collapse cash+ONLINE instructor duplicates, then prefer hourly ski-pass when callers slice
   const seen = new Set()
-  return preferInstructorOnline(items)
+  const flat = preferInstructorOnline(items)
     .filter((it) => {
       const key = `${it.title}|${it.price}`
       if (seen.has(key)) return false
@@ -304,6 +335,49 @@ export function parseIgoraPrices(html) {
     })
     .sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title, 'ru'))
     .map(({ priority: _p, ...rest }) => rest)
+
+  // Instructor group from collapsed flat items (site day columns).
+  const instructorFlat = flat.filter((i) => / · (?:будни|выходные)/i.test(i.title))
+  /** @type {Map<string, { name: string, duration: string, weekday?: object, weekend?: object }>} */
+  const instrMatrix = new Map()
+  for (const it of instructorFlat) {
+    const m = it.title.match(/^(.+?) · (.+?) · (будни|выходные(?:\/праздники)?)(?:\s*\(|$)/i)
+    if (!m) continue
+    const name = cleanText(m[1])
+    const duration = cleanText(m[2])
+    const day = /выходн/i.test(m[3]) ? 'weekend' : 'weekday'
+    const key = `${name}|${duration}`
+    const row = instrMatrix.get(key) || { name, duration }
+    row[day] = { price: it.price, note: it.note, rawText: it.rawText }
+    instrMatrix.set(key, row)
+  }
+
+  /** @type {object[]} */
+  const groups = groupDrafts
+    .sort((a, b) => a.priority - b.priority)
+    .map(({ category, columns, rows }) => ({ category, columns, rows }))
+
+  if (instrMatrix.size) {
+    groups.push({
+      category: 'Инструктор',
+      columns: ['Будни', 'Выходные/праздники'],
+      rows: [...instrMatrix.values()].map((r) => ({
+        name: r.name,
+        duration: r.duration,
+        prices: [r.weekday || { price: null }, r.weekend || { price: null }],
+      })),
+    })
+  }
+
+  return { items: flat, groups }
+}
+
+/**
+ * Parse ski-pass / instructor tables from Igora price page.
+ * @param {string} html
+ */
+export function parseIgoraPrices(html) {
+  return parseIgoraPriceTables(html).items
 }
 
 /**
@@ -415,7 +489,9 @@ export async function scrapeIgora() {
       }
     }
 
-    const items = parseIgoraPrices(priceLoad.html).slice(0, 40)
+    const parsed = parseIgoraPriceTables(priceLoad.html)
+    const items = parsed.items.slice(0, 40)
+    const groups = parsed.groups
     const hours = hoursHtml
       ? parseIgoraHours(hoursHtml)
       : {
@@ -443,6 +519,7 @@ export async function scrapeIgora() {
         resortId,
         sourceUrl: PRICE_URL,
         items,
+        groups,
         // Snapshot-sourced tariffs stay partial until a live Playwright/fetch run succeeds.
         status: items.length ? (fromSnapshot ? 'partial' : 'ok') : 'partial',
         note: notes.filter(Boolean).join('. ') || undefined,

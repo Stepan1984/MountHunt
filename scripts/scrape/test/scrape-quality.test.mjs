@@ -7,8 +7,8 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { mergeSnapshot, parsePrice } from '../lib/parse.mjs'
-import { parseIgoraPrices } from '../resorts/igora.mjs'
+import { flattenSkipassGroups, mergeSnapshot, parsePrice } from '../lib/parse.mjs'
+import { parseIgoraPrices, parseIgoraPriceTables } from '../resorts/igora.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 
@@ -159,5 +159,58 @@ describe('Igora Playwright waits for attached tables', () => {
   it('browser loader uses state attached (collapsed FAQ)', () => {
     const src = readFileSync(join(root, 'scripts/scrape/lib/browser.mjs'), 'utf8')
     assert.match(src, /state:\s*'attached'/)
+  })
+})
+
+describe('skipass groups', () => {
+  it('flattenSkipassGroups expands matrix cells', () => {
+    const items = flattenSkipassGroups([
+      {
+        category: 'Ски-пасс',
+        columns: ['Будни', 'Выходные'],
+        rows: [
+          {
+            name: 'Ски-пасс',
+            duration: '1 час',
+            prices: [{ price: 1200 }, { price: 1500 }],
+          },
+        ],
+      },
+    ])
+    assert.equal(items.length, 2)
+    assert.match(items[0].title, /1 час/)
+    assert.equal(items[0].price, 1200)
+    assert.equal(items[0].unit, 'час')
+  })
+
+  it('Igora snapshot yields structured groups with site categories', () => {
+    const html = readFileSync(join(root, 'data/snapshots/igora/price.html'), 'utf8')
+    const { groups } = parseIgoraPriceTables(html)
+    assert.ok(groups.length >= 2)
+    assert.ok(groups.some((g) => /почасов/i.test(g.category)))
+    assert.ok(groups.some((g) => /проход/i.test(g.category)))
+    const hourly = groups.find((g) => /почасов/i.test(g.category))
+    assert.ok(hourly.columns.some((c) => /час/i.test(c)))
+    assert.ok(hourly.rows.some((r) => /базов/i.test(r.name)))
+  })
+
+  it('committed prices keep groups for split resorts and flat for drop-park', () => {
+    const prices = JSON.parse(readFileSync(join(root, 'public/data/prices.json'), 'utf8'))
+    const needGroups = [
+      'tuutari-park',
+      'lazurnye-ozera',
+      'zolotaya-dolina',
+      'snezhny',
+      'krasnoe-ozero',
+      'okhta-park',
+      'igora',
+    ]
+    for (const id of needGroups) {
+      const snap = prices.find((p) => p.resortId === id)
+      assert.ok(snap?.groups?.length, `${id} should have skipass groups`)
+    }
+    const drop = prices.find((p) => p.resortId === 'drop-park')
+    assert.ok((drop?.items || []).length > 0)
+    assert.equal(drop?.groups?.length || 0, 0, 'drop-park stays flat (no invented categories)')
   })
 })

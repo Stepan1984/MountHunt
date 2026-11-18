@@ -23,32 +23,39 @@ export async function scrapeLazurnyeOzera() {
     const homeHtml = await fetchUrl(HOME_URL)
 
     const $p = loadHtml(pricesHtml)
-    const items = []
+    /** @type {{ category: string, columns: string[], rows: object[] }[]} */
+    const groups = []
     const tables = $p('table').toArray()
-    // First table is typically hourly ski-pass
+    // First table is typically hourly ski-pass (часы × будни/выходные)
     if (tables[0]) {
       const rows = tableRows($p, $p(tables[0]))
+      const header = rows[0] || []
+      const colWeekday = header[1] ? cleanText(header[1]) : 'Будни'
+      const colWeekend = header[2] ? cleanText(header[2]) : 'Выходные'
+      /** @type {{ name: string, duration?: string, prices: object[] }[]} */
+      const skipassRows = []
       for (const row of rows.slice(1)) {
         const hours = row[0]
         if (!hours || !/\d/.test(hours)) continue
         const weekday = parsePrice(row[1])
         const weekend = parsePrice(row[2])
-        if (weekday != null) {
-          items.push({
-            title: `Ски-пасс ${hours} ч (будни)`,
-            price: weekday,
-            unit: 'час',
-            rawText: row[1],
-          })
-        }
-        if (weekend != null) {
-          items.push({
-            title: `Ски-пасс ${hours} ч (выходные)`,
-            price: weekend,
-            unit: 'час',
-            rawText: row[2],
-          })
-        }
+        if (weekday == null && weekend == null) continue
+        const duration = /час/i.test(hours) ? cleanText(hours) : `${cleanText(hours)} ч`
+        skipassRows.push({
+          name: 'Ски-пасс',
+          duration,
+          prices: [
+            { price: weekday, rawText: row[1] },
+            { price: weekend, rawText: row[2] },
+          ],
+        })
+      }
+      if (skipassRows.length) {
+        groups.push({
+          category: 'Ски-пасс',
+          columns: [colWeekday || 'Будни', colWeekend || 'Выходные'],
+          rows: skipassRows,
+        })
       }
     }
 
@@ -71,12 +78,10 @@ export async function scrapeLazurnyeOzera() {
 
     let summary = 'Режим уточняйте на сайте'
     const periods = []
-    // пн: выходной; вт–пт: 11.00–22.00; сб–вс: 10.00–22.00
     const hoursMatch = text.match(
       /пн[:\s]*выходной[;\s]*вт[–\-−]?пт[:\s]*([\d.]+)[–\-−]([\d.]+)[;\s]*сб[–\-−]?вс[:\s]*([\d.]+)[–\-−]([\d.]+)/i,
     )
     const norm = (t) => t.replace('.', ':').replace(/^(\d):/, '0$1:').replace(/:(\d)$/, ':$10')
-    // simpler: look for "вт-пт" pattern
     const footer = text.match(
       /пн:\s*выходной;\s*вт-пт:\s*([\d.]+)-([\d.]+);\s*сб-вс:\s*([\d.]+)-([\d.]+)/i,
     )
@@ -92,7 +97,6 @@ export async function scrapeLazurnyeOzera() {
     } else if (hoursMatch) {
       summary = `пн: выходной; вт–пт: ${norm(hoursMatch[1])}–${norm(hoursMatch[2])}; сб–вс: ${norm(hoursMatch[3])}–${norm(hoursMatch[4])}`
     }
-    // Surface closed-season in hours so cards hide «от N ₽» even if Important is filtered.
     if (seasonClosed) {
       summary = summary && summary !== 'Режим уточняйте на сайте'
         ? `Сезон закрыт. ${summary}`
@@ -106,9 +110,9 @@ export async function scrapeLazurnyeOzera() {
       prices: priceSnapshot({
         resortId,
         sourceUrl: PRICES_URL,
-        items,
-        status: items.length ? 'ok' : 'partial',
-        note: items.length ? undefined : 'Таблица цен не распознана',
+        groups,
+        status: groups.length ? 'ok' : 'partial',
+        note: groups.length ? undefined : 'Таблица цен не распознана',
       }),
       hours: hoursSnapshot({
         resortId,
