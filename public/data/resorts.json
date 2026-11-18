@@ -31,7 +31,7 @@
     "webcam_url": "https://igora.ru/cam/",
     "prices_format": "html_js",
     "status": "active",
-    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. Цены — Playwright/SSR таблицы на /price/; часы — EN /working-hours/.",
+    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. Цены — Playwright/SSR таблицы на /price/; часы — /working-hours/.",
     "sources": [
       "https://igora.ru/",
       "https://igora.ru/cam/",

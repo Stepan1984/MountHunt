@@ -20,7 +20,7 @@
   },
   {
     "resortId": "igora",
-    "scrapedAt": "2026-11-18T11:30:33Z",
+    "scrapedAt": "2026-11-18T13:20:50Z",
     "sourceUrl": "https://igora.ru/price/",
     "summary": "Часы склонов уточняйте на https://igora.ru/working-hours/",
     "periods": [],
@@ -107,7 +107,7 @@
   },
   {
     "resortId": "severny-sklon",
-    "scrapedAt": "2026-11-18T11:30:35Z",
+    "scrapedAt": "2026-11-18T13:20:16Z",
     "sourceUrl": "https://severnysklon.ru/",
     "summary": "Склон: часы не найдены на сайте. Ресторан: пн–чт (бар) 11:00–21:00; пт 11:00–21:00; сб–вс 10:00–22:00",
     "periods": [

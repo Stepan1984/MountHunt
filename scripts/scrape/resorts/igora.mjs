@@ -80,12 +80,36 @@ async function loadPageHtml(url, opts = {}) {
 }
 
 /**
+ * Human-readable duration / pass-count label from a header cell.
+ * @param {string} raw
+ * @param {'hourly' | 'passes' | 'other'} kind
+ */
+function formatDurationLabel(raw, kind) {
+  const d = cleanText(String(raw || ''))
+  if (!d) return ''
+  if (kind === 'passes' || /^\d+$/.test(d)) {
+    const n = Number(d)
+    if (Number.isFinite(n) && n > 0) {
+      const mod100 = n % 100
+      const mod10 = n % 10
+      if (mod100 >= 11 && mod100 <= 14) return `${n} проходов`
+      if (mod10 === 1) return `${n} проход`
+      if (mod10 >= 2 && mod10 <= 4) return `${n} прохода`
+      return `${n} проходов`
+    }
+  }
+  return d
+}
+
+/**
  * Parse ski-pass / instructor tables from Igora price page.
  * Prefer ONLINE column when present; keep cash price as note.
+ * Skip incomplete rows (e.g. BSK with a single orphan cell).
  * @param {string} html
  */
 export function parseIgoraPrices(html) {
   const $ = loadHtml(html)
+  /** @type {{ title: string, price: number, unit?: string, note?: string, rawText?: string, priority: number }[]} */
   const items = []
 
   $('.common-price__table').each((_, table) => {
@@ -95,28 +119,24 @@ export function parseIgoraPrices(html) {
     )
     const h3 = cleanText($table.prevAll('h3').first().text())
     const section = h3 || faqTitle || 'тариф'
+    const sectionBlob = `${faqTitle} ${h3}`
 
     // Focus on ski-pass blocks; skip bulky rental/service catalogs for MVP noise control.
-    const focus = /ски-?пасс|почасов|проход|абонемент|инструктор/i.test(`${faqTitle} ${h3}`)
-    const isRentalOrService = /прокат|ски-сервис|ремонт/i.test(`${faqTitle} ${h3}`)
+    const focus = /ски-?пасс|почасов|проход|абонемент|инструктор/i.test(sectionBlob)
+    const isRentalOrService = /прокат|ски-сервис|ремонт/i.test(sectionBlob)
     if (!focus || isRentalOrService) return
 
     const rows = tableRows($, $table)
     if (rows.length < 2) return
 
-    // Build column labels from thead-like first rows (duration × КАССА/ONLINE).
-    const headerNums = []
-    for (let r = 0; r < Math.min(3, rows.length); r++) {
-      const row = rows[r]
-      const joined = row.join(' ').toLowerCase()
-      if (/кассе|online/.test(joined) || /\d+\s*час|разов|^\d+$/.test(joined)) {
-        headerNums.push(row)
-      }
-    }
-
-    // Duration / count labels from first header row cells after title
     const top = rows[0] || []
     const durations = top.slice(1).filter((c) => c && !/^в\s*кассе$/i.test(c) && !/^online$/i.test(c))
+    const looksLikePasses =
+      /разов|проход/i.test(sectionBlob + ' ' + top.join(' ')) ||
+      (durations.length >= 2 && durations.every((d) => /^\d+$/.test(d)))
+    const kind = looksLikePasses ? 'passes' : /час/i.test(durations.join(' ')) ? 'hourly' : 'other'
+    // Prefer hourly ski-pass, then pass packs, then instructor when capping output.
+    const priority = /инструктор/i.test(sectionBlob) ? 3 : kind === 'hourly' ? 1 : kind === 'passes' ? 2 : 4
 
     for (const row of rows) {
       const label = row[0]
@@ -125,27 +145,38 @@ export function parseIgoraPrices(html) {
       if (!/базов|льгот|бск|человек|профи/i.test(label)) continue
 
       const cells = row.slice(1)
-      // Pair cash/online when even count and headers suggest it
       const hasOnline = rows.some((r) => r.some((c) => /^online$/i.test(c)))
+
       if (hasOnline && cells.length >= 2) {
-        for (let i = 0; i < cells.length; i += 2) {
+        // Require a full cash/online pair for at least the first duration — skip orphan single cells (BSK**).
+        const pairCount = Math.floor(cells.length / 2)
+        if (pairCount < 1) continue
+        for (let i = 0; i < pairCount * 2; i += 2) {
           const cash = parsePrice(cells[i])
           const online = parsePrice(cells[i + 1])
           const price = online ?? cash
           if (price == null) continue
-          const dur = durations[Math.floor(i / 2)] || `${Math.floor(i / 2) + 1}`
-          const unit = /час/i.test(String(dur)) ? 'час' : /проход|^\d+$/.test(String(dur)) ? 'проход' : 'тариф'
+          // Skip cash-only stub where online column exists but this row left it empty AND only one price total
+          if (online == null && cash != null && pairCount === 1 && cells.filter((c) => parsePrice(c) != null).length < 2) {
+            continue
+          }
+          const durRaw = durations[Math.floor(i / 2)]
+          if (!durRaw && kind === 'passes') continue
+          const dur = formatDurationLabel(durRaw || `${Math.floor(i / 2) + 1}`, kind)
+          const unit = kind === 'passes' || /^\d+\s*проход/i.test(dur) ? 'проход' : /час/i.test(dur) ? 'час' : 'тариф'
           items.push({
-            title: `${cleanText(label)} · ${cleanText(String(dur))} (${section})`,
+            title: `${cleanText(label)} · ${dur} (${section})`,
             price,
             unit,
             note: cash != null && online != null && cash !== online ? `в кассе ${cash} ₽` : undefined,
             rawText: cells[i + 1] || cells[i],
+            priority,
           })
         }
-      } else {
+      } else if (/инструктор|человек|профи/i.test(label + sectionBlob)) {
         // Instructor-style: weekday then weekend blocks of 3 durations
         const slots = ['1 час', '1,5 часа', '2 часа']
+        if (cells.length < 3) continue
         for (let i = 0; i < cells.length; i++) {
           const price = parsePrice(cells[i])
           if (price == null) continue
@@ -156,20 +187,25 @@ export function parseIgoraPrices(html) {
             price,
             unit: 'час',
             rawText: cells[i],
+            priority,
           })
         }
       }
+      // else: incomplete non-instructor row (e.g. BSK with a single cell) — skip
     }
   })
 
-  // Dedup
+  // Dedup, then prefer hourly ski-pass rows when callers slice
   const seen = new Set()
-  return items.filter((it) => {
-    const key = `${it.title}|${it.price}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+  return items
+    .filter((it) => {
+      const key = `${it.title}|${it.price}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title, 'ru'))
+    .map(({ priority: _p, ...rest }) => rest)
 }
 
 /**
@@ -237,9 +273,6 @@ export async function scrapeIgora() {
   try {
     const priceLoad = await loadPageHtml(PRICE_URL, { waitForSelector: '.common-price__table' })
     if (priceLoad.note) notes.push(priceLoad.note)
-    if (priceLoad.via.startsWith('bundled-snapshot') || priceLoad.via.startsWith('snapshot')) {
-      notes.push(`источник HTML: ${priceLoad.via}`)
-    }
 
     await sleep(500)
 
@@ -268,7 +301,6 @@ export async function scrapeIgora() {
         allowBundledSnapshot: Boolean(process.env.IGORA_ALLOW_SNAPSHOT || process.env.IGORA_HTML_DIR),
       })
       camHtml = camLoad.html
-      if (camLoad.via.includes('snapshot')) notes.push(`камеры: ${camLoad.via}`)
     } catch {
       // bundled cam snapshot if explicitly allowed
       if (process.env.IGORA_ALLOW_SNAPSHOT === '1' || process.env.IGORA_HTML_DIR) {
@@ -287,11 +319,23 @@ export async function scrapeIgora() {
     const items = parseIgoraPrices(priceLoad.html).slice(0, 40)
     const hours = hoursHtml
       ? parseIgoraHours(hoursHtml)
-      : { summary: 'Часы склонов уточняйте на https://igora.ru/working-hours/', periods: [], status: 'partial' }
+      : {
+          summary: 'Часы склонов уточняйте на https://igora.ru/working-hours/',
+          periods: [],
+          status: 'partial',
+        }
     const embeds = camHtml ? parseCameras(camHtml, CAM_URL) : []
+    const fromSnapshot = /snapshot/i.test(priceLoad.via)
 
     if (!items.length) {
       notes.push('Таблицы .common-price__table не распознаны или пусты')
+    }
+    if (fromSnapshot) {
+      notes.push(
+        `Цены из HTML-снимка (${priceLoad.via}), не live — дождитесь успешного Playwright в CI`,
+      )
+    } else if (priceLoad.via === 'playwright' || priceLoad.via === 'fetch') {
+      notes.push(`источник: ${priceLoad.via}`)
     }
 
     return {
@@ -300,7 +344,8 @@ export async function scrapeIgora() {
         resortId,
         sourceUrl: PRICE_URL,
         items,
-        status: items.length ? (priceLoad.via.includes('snapshot') ? 'partial' : 'ok') : 'partial',
+        // Snapshot-sourced tariffs stay partial until a live Playwright/fetch run succeeds.
+        status: items.length ? (fromSnapshot ? 'partial' : 'ok') : 'partial',
         note: notes.filter(Boolean).join('. ') || undefined,
       }),
       hours: hoursSnapshot({
@@ -310,7 +355,7 @@ export async function scrapeIgora() {
         periods: hours.periods,
         status: hours.status,
       }),
-      webcamUrl: embeds[0] || CAM_URL,
+      webcamUrl: (embeds[0] || CAM_URL).replace(/\?$/, ''),
       cameraEmbeds: embeds,
     }
   } catch (err) {

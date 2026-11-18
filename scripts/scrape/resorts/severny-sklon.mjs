@@ -21,18 +21,17 @@ export async function scrapeSevernySklon() {
     const $ = loadHtml(html)
     const text = cleanText($('body').text())
 
+    // Contacts only from live DOM — do not invent phone/email/address on regex miss.
     const phoneMatch = text.match(/\+7\s*\(?\s*911\s*\)?\s*924[-\s]?81[-\s]?81/)
-    const phone = phoneMatch ? cleanText(phoneMatch[0].replace(/\s+/g, ' ')) : '+7 (911) 924-81-81'
+    const phone = phoneMatch ? cleanText(phoneMatch[0].replace(/\s+/g, ' ')) : null
     const emailMatch = text.match(/sevsklon_toxovo@mail\.ru/i)
-    const email = emailMatch ? emailMatch[0] : 'sevsklon_toxovo@mail.ru'
+    const email = emailMatch ? emailMatch[0] : null
     const addressMatch = text.match(
       /Офицерская\s+ул\.,?\s*17Б(?:,\s*городской посёлок Токсово)?/i,
     )
-    const address = addressMatch
-      ? cleanText(addressMatch[0])
-      : 'Офицерская ул., 17Б, городской посёлок Токсово'
+    const address = addressMatch ? cleanText(addressMatch[0]) : null
 
-    // Restaurant hours (only published schedule on the marketing site).
+    // Restaurant hours (only published schedule on the marketing site) — not slope hours.
     const periods = []
     let summary = 'Часы горнолыжного склона на сайте не опубликованы'
     const restIdx = text.search(/Режим работы ресторана/i)
@@ -56,11 +55,13 @@ export async function scrapeSevernySklon() {
     }
 
     // Decorative "цены на ski pass" buttons have data-redactor-nohref — no actual price page.
+    // Do not scrape third-party aggregators for ski-pass numbers.
     const fakeSkiCta = /цены на ski pass/i.test(html) && /data-redactor-nohref/i.test(html)
+    const contacts = [phone, email, address].filter(Boolean).join(', ')
 
     const contactNote = [
-      `Контакты: ${phone}, ${email}, ${address}`,
-      'Цены ski-pass / подъёмников на официальном сайте (severnysklon.ru) не опубликованы',
+      contacts ? `Контакты с сайта: ${contacts}` : 'Контакты: см. severnysklon.ru',
+      'Цены ski-pass / подъёмников на официальном сайте не опубликованы — не подставляем чужие агрегаторы',
       fakeSkiCta ? 'Кнопки «цены на ski pass» без ссылки (Tilda nohref)' : null,
       'Не использовать устаревший sev-sklon.ru как источник прайса',
     ]
@@ -81,7 +82,7 @@ export async function scrapeSevernySklon() {
         sourceUrl: SITE_URL,
         summary,
         periods,
-        status: periods.length ? 'partial' : 'partial',
+        status: 'partial',
       }),
       webcamUrl: null,
       // Hint for seed patch in scrape.mjs

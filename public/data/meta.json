@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-18T11:30:35Z",
+  "updatedAt": "2026-11-18T13:20:50Z",
   "source": "scrape-wave1+wave2+wave3",
-  "note": "Волны 1–3: igora, severny-sklon; failed: нет",
+  "note": "Волны 1–3: igora; failed: нет",
   "resortsScraped": [
     {
       "id": "igora",
@@ -10,14 +10,6 @@
       "hours": "partial",
       "itemCount": 40,
       "summary": "Часы склонов уточняйте на https://igora.ru/working-hours/"
-    },
-    {
-      "id": "severny-sklon",
-      "error": null,
-      "prices": "unavailable",
-      "hours": "partial",
-      "itemCount": 0,
-      "summary": "Склон: часы не найдены на сайте. Ресторан: пн–чт (бар) 11:00–21:00; пт 11:00–21:00; сб–вс 10:00–22:00"
     }
   ]
 }
