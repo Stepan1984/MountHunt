@@ -78,19 +78,26 @@ npm run scrape
 ```bash
 npm run scrape -- --dry-run                 # без записи файлов
 npm run scrape -- --only=tuutari-park,snezhny
-npm run scrape -- --wave=2                  # только P2
+npm run scrape -- --wave=3                  # только P3
 npm run scrape -- --skip-optional           # без Красного озера
 SCRAPE_DELAY_MS=2000 npm run scrape         # пауза между хостами
+IGORA_HTML_DIR=data/snapshots/igora npm run scrape -- --only=igora   # offline snapshot
 ```
 
 **Волна 1 (P1):** `tuutari-park`, `zolotaya-dolina`, `lazurnye-ozera`, `puhtolova-gora`, `yukki` (PDF → `pdftotext` / OCR tesseract).  
 **Волна 2 (P2):** `krasnoe-ozero` (CSV цен + CSV графика), `snezhny`, `drop-park`, `okhta-park`.  
-**Позже (P3):** `igora` (Playwright), `severny-sklon` (manual/partial).
+**Волна 3 (P3):** `igora` (Playwright → cheerio `.common-price__table`; fallback `data/snapshots/igora`), `severny-sklon` (severnysklon.ru contacts/restaurant hours; ski-pass `unavailable`).
 
 Для Юкки локально желательны:
 
 ```bash
 sudo apt-get install -y poppler-utils tesseract-ocr tesseract-ocr-rus
+```
+
+Для Игоры (локально / CI):
+
+```bash
+npx playwright install --with-deps chromium
 ```
 
 Поведение при сбое: прошлый снимок в `public/data` сохраняется, у курорта `status: failed`.
@@ -108,8 +115,9 @@ npm run data:refresh
 `.github/workflows/daily-data-refresh.yml`:
 
 - **cron** `0 5 * * *` (05:00 UTC) + ручной `workflow_dispatch`
-- ставит poppler + tesseract, `npm ci`, `npm run scrape`
-- коммитит `public/data` (+ seed-фикс webcam Красного озера), если есть diff
+- ставит poppler + tesseract, `npm ci`, Playwright Chromium, `npm run scrape` (волны 1–3)
+- коммитит `public/data` (+ seed-фиксы), если есть diff
+- Igora: live Playwright; offline HTML — `IGORA_HTML_DIR` / `data/snapshots/igora` + `IGORA_ALLOW_SNAPSHOT=1`
 
 ---
 

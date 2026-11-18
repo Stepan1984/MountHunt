@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * MountHunt daily scrape — wave 1 (P1) + wave 2 (P2).
+ * MountHunt daily scrape — wave 1 (P1) + wave 2 (P2) + wave 3 (P3).
  *
  * Usage:
  *   npm run scrape
  *   npm run scrape -- --dry-run          # scrape but do not write files
  *   npm run scrape -- --only=tuutari-park,snezhny
- *   npm run scrape -- --wave=2           # only wave 2 targets
+ *   npm run scrape -- --wave=3           # only wave 3 targets
  *   SCRAPE_DELAY_MS=2000 npm run scrape
+ *   IGORA_HTML_DIR=data/snapshots/igora npm run scrape -- --only=igora
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -23,6 +24,8 @@ import { scrapeKrasnoeOzero } from './scrape/resorts/krasnoe-ozero.mjs'
 import { scrapeSnezhny } from './scrape/resorts/snezhny.mjs'
 import { scrapeDropPark } from './scrape/resorts/drop-park.mjs'
 import { scrapeOkhtaPark } from './scrape/resorts/okhta-park.mjs'
+import { scrapeIgora } from './scrape/resorts/igora.mjs'
+import { scrapeSevernySklon } from './scrape/resorts/severny-sklon.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const outDir = join(root, 'public', 'data')
@@ -38,10 +41,13 @@ const PARSERS = {
   snezhny: scrapeSnezhny,
   'drop-park': scrapeDropPark,
   'okhta-park': scrapeOkhtaPark,
+  igora: scrapeIgora,
+  'severny-sklon': scrapeSevernySklon,
 }
 
 const WAVE1 = ['tuutari-park', 'zolotaya-dolina', 'lazurnye-ozera', 'puhtolova-gora', 'yukki']
 const WAVE2 = ['krasnoe-ozero', 'snezhny', 'drop-park', 'okhta-park']
+const WAVE3 = ['igora', 'severny-sklon']
 
 function parseArgs(argv) {
   const args = { dryRun: false, only: null, skipOptional: false, wave: null }
@@ -139,6 +145,29 @@ function applySeedFixes(resorts) {
         'https://www.ohtapark.ru/webcam/',
       ],
     },
+    igora: {
+      prices_format: 'html_js',
+      prices_url: 'https://igora.ru/price/',
+      webcam_url: 'https://igora.ru/cam/',
+      sourcesAdd: [
+        'https://igora.ru/price/',
+        'https://igora.ru/en/working-hours/',
+        'https://igora.ru/cam/',
+        'https://igora.ru/slopes/',
+      ],
+      notes:
+        'Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. Цены — Playwright/SSR таблицы на /price/; часы — EN /en/working-hours/.',
+    },
+    'severny-sklon': {
+      website: 'https://severnysklon.ru/',
+      prices_format: 'none',
+      prices_url: null,
+      webcam_url: null,
+      sourcesAdd: ['https://severnysklon.ru/'],
+      sourcesDrop: [/sev-sklon\.ru/],
+      notes:
+        '4 склона у оз. Хепоярви; бугели. Актуальный сайт severnysklon.ru (Tilda): ski-pass на сайте не опубликован — статус unavailable; sev-sklon.ru устарел.',
+    },
   }
   return resorts.map((r) => {
     const p = patches[r.id]
@@ -160,7 +189,7 @@ function upsertImportant(list, items) {
   byId.set('mvp-data-note', {
     id: 'mvp-data-note',
     title: 'Данные обновляются ежедневно',
-    body: 'Цены и часы для части курортов собираются с официальных публичных страниц (волны 1–2). Это не оферта — перед выездом сверяйте с сайтом курорта.',
+    body: 'Цены и часы для части курортов собираются с официальных публичных страниц (волны 1–3). Это не оферта — перед выездом сверяйте с сайтом курорта.',
     severity: 'info',
     updatedAt: nowIso(),
   })
@@ -170,10 +199,11 @@ function upsertImportant(list, items) {
 function defaultTargets(args) {
   if (args.wave === '1') return [...WAVE1]
   if (args.wave === '2') return [...WAVE2]
-  // Default: wave1 + wave2. --skip-optional keeps historical meaning (omit krasnoe only in wave1 era);
-  // for wave2 krasnoe is first-class — skip-optional still runs full wave2 minus nothing else.
-  if (args.skipOptional) return [...WAVE1, ...WAVE2.filter((id) => id !== 'krasnoe-ozero')]
-  return [...WAVE1, ...WAVE2]
+  if (args.wave === '3') return [...WAVE3]
+  // Default: wave1 + wave2 + wave3. --skip-optional keeps historical meaning (omit krasnoe only in wave1 era);
+  // for wave2+ krasnoe is first-class — skip-optional still runs full wave2/3 minus nothing else.
+  if (args.skipOptional) return [...WAVE1, ...WAVE2.filter((id) => id !== 'krasnoe-ozero'), ...WAVE3]
+  return [...WAVE1, ...WAVE2, ...WAVE3]
 }
 
 async function main() {
@@ -254,8 +284,11 @@ async function main() {
       )
     }
 
-    if (result.webcamUrl) {
+    if (result.webcamUrl !== undefined) {
       resorts = resorts.map((r) => (r.id === id ? { ...r, webcam_url: result.webcamUrl } : r))
+    }
+    if (result.website) {
+      resorts = resorts.map((r) => (r.id === id ? { ...r, website: result.website } : r))
     }
     if (result.important?.length) importantAdds.push(...result.important)
 
@@ -282,8 +315,8 @@ async function main() {
 
   const meta = {
     updatedAt: nowIso(),
-    source: 'scrape-wave1+wave2',
-    note: `Волны 1–2: ${success.map((r) => r.id).join(', ') || 'нет успешных'}; failed: ${
+    source: 'scrape-wave1+wave2+wave3',
+    note: `Волны 1–3: ${success.map((r) => r.id).join(', ') || 'нет успешных'}; failed: ${
       failed.map((r) => r.id).join(', ') || 'нет'
     }`,
     resortsScraped: results,

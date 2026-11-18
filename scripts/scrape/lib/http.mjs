@@ -11,13 +11,16 @@ export function sleep(ms = DELAY_MS) {
 
 /**
  * @param {string} url
- * @param {{ as?: 'text' | 'buffer', retries?: number }} [opts]
+ * @param {{ as?: 'text' | 'buffer', retries?: number, timeoutMs?: number }} [opts]
  */
 export async function fetchUrl(url, opts = {}) {
   const as = opts.as || 'text'
   const retries = opts.retries ?? 2
+  const timeoutMs = opts.timeoutMs ?? Number(process.env.SCRAPE_FETCH_TIMEOUT_MS || 45_000)
   let lastErr
   for (let attempt = 0; attempt <= retries; attempt++) {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs)
     try {
       const res = await fetch(url, {
         headers: {
@@ -26,6 +29,7 @@ export async function fetchUrl(url, opts = {}) {
           'Accept-Language': 'ru,en;q=0.8',
         },
         redirect: 'follow',
+        signal: ctrl.signal,
       })
       if (!res.ok) {
         throw new Error(`HTTP ${res.status} for ${url}`)
@@ -35,10 +39,12 @@ export async function fetchUrl(url, opts = {}) {
       }
       return await res.text()
     } catch (err) {
-      lastErr = err
+      lastErr = err?.name === 'AbortError' ? new Error(`Timeout ${timeoutMs}ms for ${url}`) : err
       if (attempt < retries) {
         await sleep(1000 * (attempt + 1))
       }
+    } finally {
+      clearTimeout(timer)
     }
   }
   throw lastErr

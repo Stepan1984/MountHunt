@@ -20,11 +20,11 @@
   },
   {
     "resortId": "igora",
-    "scrapedAt": null,
-    "sourceUrl": "https://igora.ru/",
-    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "scrapedAt": "2026-11-18T11:30:33Z",
+    "sourceUrl": "https://igora.ru/price/",
+    "summary": "Часы склонов уточняйте на https://igora.ru/en/working-hours/",
     "periods": [],
-    "status": "pending"
+    "status": "partial"
   },
   {
     "resortId": "tuutari-park",
@@ -107,11 +107,27 @@
   },
   {
     "resortId": "severny-sklon",
-    "scrapedAt": null,
-    "sourceUrl": "https://sev-sklon.ru/",
-    "summary": "Часы работы появятся после ежедневного обновления данных",
-    "periods": [],
-    "status": "pending"
+    "scrapedAt": "2026-11-18T11:30:35Z",
+    "sourceUrl": "https://severnysklon.ru/",
+    "summary": "Склон: часы не найдены на сайте. Ресторан: пн–чт (бар) 11:00–21:00; пт 11:00–21:00; сб–вс 10:00–22:00",
+    "periods": [
+      {
+        "days": "пн–чт (бар)",
+        "open": "11:00",
+        "close": "21:00"
+      },
+      {
+        "days": "пт",
+        "open": "11:00",
+        "close": "21:00"
+      },
+      {
+        "days": "сб–вс",
+        "open": "10:00",
+        "close": "22:00"
+      }
+    ],
+    "status": "partial"
   },
   {
     "resortId": "puhtolova-gora",

@@ -41,7 +41,7 @@ export type PriceSnapshot = {
   sourceUrl: string | null
   currency: 'RUB'
   items: PriceItem[]
-  status: 'ok' | 'partial' | 'failed' | 'pending'
+  status: 'ok' | 'partial' | 'failed' | 'pending' | 'unavailable'
   note?: string
 }
 

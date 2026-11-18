@@ -28,14 +28,18 @@
     "lat": 60.5154,
     "lon": 30.2113,
     "website": "https://igora.ru/",
-    "webcam_url": "https://igora.ru/cam/",
-    "prices_format": "unknown",
+    "webcam_url": "https://webcam.exdesign.ru/igora-1/",
+    "prices_format": "html_js",
     "status": "active",
-    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м.",
+    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. Цены — Playwright/SSR таблицы на /price/; часы — EN /en/working-hours/.",
     "sources": [
       "https://igora.ru/",
-      "https://igora.ru/cam/"
-    ]
+      "https://igora.ru/cam/",
+      "https://igora.ru/price/",
+      "https://igora.ru/en/working-hours/",
+      "https://igora.ru/slopes/"
+    ],
+    "prices_url": "https://igora.ru/price/"
   },
   {
     "id": "tuutari-park",
@@ -63,7 +67,7 @@
     "lat": 60.5344,
     "lon": 29.7386,
     "website": "https://krasnoeozero.ru/",
-    "webcam_url": "https://open.ivideon.com/embed/v3/100-d029fa1f6111386709aaaf107f555963:720896",
+    "webcam_url": "https://krasnoeozero.ru/cam/",
     "prices_format": "csv",
     "prices_url": "https://krasnoeozero.ru/winter/skipass-and-lifts",
     "status": "active",
@@ -100,7 +104,7 @@
     "lat": 60.52665,
     "lon": 29.771853,
     "website": "https://snegny.ru/",
-    "webcam_url": "https://webcam.exdesign.ru/snegny-2/?fluid",
+    "webcam_url": "https://snegny.ru/",
     "prices_format": "html",
     "status": "active",
     "notes": "Координаты склонов с официального сайта; раздел веб-камеры на главной.",
@@ -118,14 +122,15 @@
     "city_or_district": "Токсово",
     "lat": 60.156425,
     "lon": 30.548145,
-    "website": "https://sev-sklon.ru/",
+    "website": "https://severnysklon.ru/",
     "webcam_url": null,
-    "prices_format": "unknown",
+    "prices_format": "none",
     "status": "active",
-    "notes": "4 склона у оз. Хепоярви; бугели; альтернативные домены severnysklon.ru / севсклон.рф.",
+    "notes": "4 склона у оз. Хепоярви; бугели. Актуальный сайт severnysklon.ru (Tilda): ski-pass на сайте не опубликован — статус unavailable; sev-sklon.ru устарел.",
     "sources": [
-      "https://sev-sklon.ru/"
-    ]
+      "https://severnysklon.ru/"
+    ],
+    "prices_url": null
   },
   {
     "id": "puhtolova-gora",
@@ -171,7 +176,7 @@
     "lat": 59.873182,
     "lon": 30.808842,
     "website": "https://lazoorsnow.ru/",
-    "webcam_url": "https://rtsp.me/embed/69yB8iF5/",
+    "webcam_url": "https://lazoorsnow.ru/",
     "prices_format": "html",
     "status": "active",
     "notes": "Небольшой учебный склон (~400 м). На сайте: «Сезон 2026 закрыт!» — уточнять открытие перед выездом.",
@@ -190,7 +195,7 @@
     "lat": 60.398298,
     "lon": 30.29769,
     "website": "https://drop-park.ru/",
-    "webcam_url": "https://rtsp.ru/embed/AebA57ah/",
+    "webcam_url": "https://drop-park.ru/snow-park",
     "prices_format": "html",
     "prices_url": "https://drop-park.ru/snow-park",
     "status": "active",
