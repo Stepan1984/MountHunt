@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ResortMap } from '../components/ResortMap'
 import {
@@ -5,6 +6,8 @@ import {
   hoursFor,
   localizePublicText,
   pricesFor,
+  publicPriceNote,
+  publicResortNotes,
   scrapeStatusLabel,
   slopesClosedHint,
   statusLabel,
@@ -12,9 +15,12 @@ import {
 } from '../lib/data'
 import type { SiteData } from '../types'
 
+const PRICE_PREVIEW = 8
+
 export function ResortPage({ data }: { data: SiteData }) {
   const { id } = useParams()
   const resort = data.resorts.find((r) => r.id === id)
+  const [showAllPrices, setShowAllPrices] = useState(false)
 
   if (!resort) {
     return (
@@ -33,6 +39,13 @@ export function ResortPage({ data }: { data: SiteData }) {
   const tariffsUrl = prices?.sourceUrl || resort.prices_url || resort.website || undefined
   const hoursSummary = hours?.summary ? localizePublicText(hours.summary) : 'Нет данных'
   const closed = slopesClosedHint(resort.id, hours, data.important)
+  const visitorNotes = publicResortNotes(resort.notes)
+  const visitorPriceNote = publicPriceNote(prices?.note)
+  const priceItems = prices?.items ?? []
+  const visiblePrices =
+    showAllPrices || priceItems.length <= PRICE_PREVIEW
+      ? priceItems
+      : priceItems.slice(0, PRICE_PREVIEW)
 
   return (
     <article className="section page-narrow resort-detail">
@@ -55,7 +68,7 @@ export function ResortPage({ data }: { data: SiteData }) {
         )}
       </header>
 
-      {resort.notes && <p className="resort-detail__notes">{resort.notes}</p>}
+      {visitorNotes && <p className="resort-detail__notes">{visitorNotes}</p>}
 
       <div className="resort-detail__actions" role="group" aria-label="Быстрые ссылки">
         {resort.website && (
@@ -141,27 +154,42 @@ export function ResortPage({ data }: { data: SiteData }) {
 
         <section>
           <h2>Цены</h2>
-          {prices?.items && prices.items.length > 0 ? (
-            <ul className="price-list">
-              {prices.items.map((item) => (
-                <li key={`${item.title}-${item.price}-${item.unit ?? ''}`}>
-                  <span>
-                    {item.title}
-                    {item.unit ? <span className="muted"> · {item.unit}</span> : null}
-                    {item.note ? <span className="price-list__note">{item.note}</span> : null}
-                  </span>
-                  <strong>
-                    {item.price != null
-                      ? `${item.price.toLocaleString('ru-RU')} ₽`
-                      : (item.rawText ?? '—')}
-                  </strong>
-                </li>
-              ))}
-            </ul>
+          {priceItems.length > 0 ? (
+            <>
+              <ul className="price-list">
+                {visiblePrices.map((item) => (
+                  <li key={`${item.title}-${item.price}-${item.unit ?? ''}`}>
+                    <span>
+                      {item.title}
+                      {item.unit ? <span className="muted"> · {item.unit}</span> : null}
+                      {item.note ? <span className="price-list__note">{item.note}</span> : null}
+                    </span>
+                    <strong>
+                      {item.price != null
+                        ? `${item.price.toLocaleString('ru-RU')} ₽`
+                        : (item.rawText ?? '—')}
+                    </strong>
+                  </li>
+                ))}
+              </ul>
+              {priceItems.length > PRICE_PREVIEW && (
+                <button
+                  type="button"
+                  className="price-list__more"
+                  onClick={() => setShowAllPrices((v) => !v)}
+                >
+                  {showAllPrices
+                    ? 'Свернуть список'
+                    : `Показать ещё ${priceItems.length - PRICE_PREVIEW}`}
+                </button>
+              )}
+            </>
           ) : (
-            <p>{prices?.note ?? 'Цены появятся после ежедневного обновления данных.'}</p>
+            <p>{visitorPriceNote ?? 'Цены появятся после ежедневного обновления данных.'}</p>
           )}
-          {prices?.note && prices.items?.length > 0 && <p className="muted">{prices.note}</p>}
+          {visitorPriceNote && priceItems.length > 0 && (
+            <p className="muted">{visitorPriceNote}</p>
+          )}
           {prices?.status === 'failed' && (
             <p className="muted">
               Последний сбор цен не удался — показан прошлый снимок, если он был.

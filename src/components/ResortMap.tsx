@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Resort } from '../types'
@@ -20,6 +19,11 @@ const markerIcon = L.divIcon({
   iconAnchor: [9, 9],
 })
 
+const resortPath = (id: string) => {
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '')
+  return `${base}/resort/${id}`
+}
+
 export function ResortMap({
   resorts,
   selectedId,
@@ -28,7 +32,6 @@ export function ResortMap({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
-  const navigate = useNavigate()
 
   const mappable = useMemo(
     () => resorts.filter((r) => r.status === 'active' && r.lat != null && r.lon != null),
@@ -75,12 +78,10 @@ export function ResortMap({
       const lon = resort.lon as number
       bounds.push([lat, lon])
       const marker = L.marker([lat, lon], { icon: markerIcon })
+      // Open popup on click (readable); navigate only via the link inside.
       marker.bindPopup(
-        `<strong>${resort.name}</strong><br/><span>${resort.city_or_district}</span><br/><em>Открыть карточку</em>`,
+        `<strong>${resort.name}</strong><br/><span>${resort.city_or_district}</span><br/><a class="map-popup__link" href="${resortPath(resort.id)}">Открыть карточку</a>`,
       )
-      marker.on('click', () => {
-        navigate(`/resort/${resort.id}`)
-      })
       if (selectedId === resort.id) {
         marker.openPopup()
       }
@@ -100,7 +101,7 @@ export function ResortMap({
     }
     // mappableKey tracks resort identity changes without depending on array identity
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mappableKey, navigate, selectedId, size])
+  }, [mappableKey, selectedId, size])
 
   const canvas = (
     <div className={`map-shell${size === 'detail' ? ' map-shell--detail' : ''}`}>
@@ -116,7 +117,7 @@ export function ResortMap({
     return (
       <div className="map-embedded">
         <p className="map-embedded__hint muted">
-          {mappable.length} точек · нажмите маркер, чтобы открыть курорт
+          {mappable.length} точек · маркер открывает подсказку, оттуда — карточку
         </p>
         {canvas}
       </div>

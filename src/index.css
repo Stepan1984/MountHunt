@@ -687,6 +687,29 @@ main {
   margin-top: 0.15rem;
 }
 
+.price-list__more {
+  margin-top: 0.55rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ice);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.price-list__more:hover {
+  color: var(--pine);
+}
+
+.leaflet-popup-content .map-popup__link {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-weight: 500;
+}
+
 .site-footer {
   margin-top: 3rem;
   border-top: 1px solid var(--line);
