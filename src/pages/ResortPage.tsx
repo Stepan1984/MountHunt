@@ -1,8 +1,11 @@
 import { Link, useParams } from 'react-router-dom'
+import { ResortMap } from '../components/ResortMap'
 import {
   formatUpdatedAt,
   hoursFor,
+  localizePublicText,
   pricesFor,
+  scrapeStatusLabel,
   statusLabel,
   yandexMapsUrl,
 } from '../lib/data'
@@ -26,6 +29,8 @@ export function ResortPage({ data }: { data: SiteData }) {
   const prices = pricesFor(resort.id, data.prices)
   const important = data.important.filter((i) => i.resortId === resort.id)
   const hasCoords = resort.lat != null && resort.lon != null
+  const tariffsUrl = prices?.sourceUrl || resort.prices_url || resort.website || undefined
+  const hoursSummary = hours?.summary ? localizePublicText(hours.summary) : 'Нет данных'
 
   return (
     <article className="section page-narrow resort-detail">
@@ -37,6 +42,7 @@ export function ResortPage({ data }: { data: SiteData }) {
 
       <header className="resort-detail__header">
         <div>
+          <p className="resort-detail__brand-kicker">MountHunt</p>
           <h1>{resort.name}</h1>
           <p className="resort-detail__area">{resort.area}</p>
         </div>
@@ -45,16 +51,85 @@ export function ResortPage({ data }: { data: SiteData }) {
 
       {resort.notes && <p className="resort-detail__notes">{resort.notes}</p>}
 
+      <div className="resort-detail__actions" role="group" aria-label="Быстрые ссылки">
+        {resort.website && (
+          <a className="btn btn--primary" href={resort.website} target="_blank" rel="noreferrer">
+            Официальный сайт
+          </a>
+        )}
+        {hasCoords && (
+          <a
+            className="btn btn--ghost"
+            href={yandexMapsUrl(resort.lat as number, resort.lon as number)}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Яндекс Карты
+          </a>
+        )}
+        {resort.webcam_url && (
+          <a className="btn btn--ghost" href={resort.webcam_url} target="_blank" rel="noreferrer">
+            Веб-камера
+          </a>
+        )}
+        {tariffsUrl && (
+          <a className="btn btn--ghost" href={tariffsUrl} target="_blank" rel="noreferrer">
+            Тарифы на сайте
+          </a>
+        )}
+      </div>
+
+      {important.length > 0 && (
+        <section className="resort-detail__important" aria-labelledby="resort-important-title">
+          <h2 id="resort-important-title">Важное</h2>
+          <ul className="important__list important__list--detail">
+            {important.map((item) => (
+              <li
+                key={item.id}
+                className={`important__item important__item--${item.severity}`}
+              >
+                <div className="important__meta">
+                  <span className="important__severity">
+                    {item.severity === 'warn' ? 'Внимание' : 'Инфо'}
+                  </span>
+                  <time dateTime={item.updatedAt}>{formatUpdatedAt(item.updatedAt)}</time>
+                </div>
+                <h3>{item.title}</h3>
+                {item.body && <p>{item.body}</p>}
+                {item.sourceUrl && (
+                  <a href={item.sourceUrl} target="_blank" rel="noreferrer">
+                    Источник
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="detail-grid">
         <section>
           <h2>Часы работы</h2>
-          <p>{hours?.summary ?? 'Нет данных'}</p>
+          <p className="detail-lead">{hoursSummary}</p>
+          {hours?.periods && hours.periods.length > 0 && (
+            <ul className="period-list">
+              {hours.periods.map((period) => (
+                <li key={`${period.days}-${period.open}-${period.close}`}>
+                  <span>{period.days}</span>
+                  <strong>
+                    {period.open}–{period.close}
+                  </strong>
+                </li>
+              ))}
+            </ul>
+          )}
           {hours?.status === 'failed' && (
-            <p className="muted">Последний сбор часов не удался — показаны прежние данные, если они были.</p>
+            <p className="muted">
+              Последний сбор часов не удался — показаны прежние данные, если они были.
+            </p>
           )}
           <p className="muted">
-            Актуальность: {formatUpdatedAt(hours?.scrapedAt)} · статус:{' '}
-            {hours?.status ?? 'pending'}
+            Актуальность: {formatUpdatedAt(hours?.scrapedAt)} · {scrapeStatusLabel(hours?.status)}
           </p>
         </section>
 
@@ -64,7 +139,11 @@ export function ResortPage({ data }: { data: SiteData }) {
             <ul className="price-list">
               {prices.items.map((item) => (
                 <li key={`${item.title}-${item.price}-${item.unit ?? ''}`}>
-                  <span>{item.title}</span>
+                  <span>
+                    {item.title}
+                    {item.unit ? <span className="muted"> · {item.unit}</span> : null}
+                    {item.note ? <span className="price-list__note">{item.note}</span> : null}
+                  </span>
                   <strong>
                     {item.price != null
                       ? `${item.price.toLocaleString('ru-RU')} ₽`
@@ -78,24 +157,16 @@ export function ResortPage({ data }: { data: SiteData }) {
           )}
           {prices?.note && prices.items?.length > 0 && <p className="muted">{prices.note}</p>}
           {prices?.status === 'failed' && (
-            <p className="muted">Последний сбор цен не удался — показан прошлый снимок, если он был.</p>
+            <p className="muted">
+              Последний сбор цен не удался — показан прошлый снимок, если он был.
+            </p>
           )}
           <p className="muted">
-            Актуальность: {formatUpdatedAt(prices?.scrapedAt)} · статус:{' '}
-            {prices?.status ?? 'pending'}
+            Актуальность: {formatUpdatedAt(prices?.scrapedAt)} · {scrapeStatusLabel(prices?.status)}
           </p>
-          {(prices?.sourceUrl || resort.prices_url || resort.website) && (
-            <a
-              href={prices?.sourceUrl || resort.prices_url || resort.website || undefined}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Смотреть тарифы на сайте курорта
-            </a>
-          )}
         </section>
 
-        <section>
+        <section className="detail-grid__wide">
           <h2>Локация</h2>
           <p>{resort.area}</p>
           {hasCoords ? (
@@ -104,13 +175,14 @@ export function ResortPage({ data }: { data: SiteData }) {
                 {resort.lat}, {resort.lon}
                 {resort.coords_precision === 'approximate' ? ' (приблизительно)' : ''}
               </p>
-              <a
-                href={yandexMapsUrl(resort.lat as number, resort.lon as number)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Открыть в Яндекс Картах
-              </a>
+              <div className="resort-detail__map">
+                <ResortMap
+                  resorts={[resort]}
+                  selectedId={resort.id}
+                  embedded
+                  size="detail"
+                />
+              </div>
             </>
           ) : (
             <p className="muted">Точные координаты пока не указаны.</p>
@@ -147,20 +219,6 @@ export function ResortPage({ data }: { data: SiteData }) {
           </ul>
         </section>
       </div>
-
-      {important.length > 0 && (
-        <section className="resort-detail__important">
-          <h2>Важное по курорту</h2>
-          <ul>
-            {important.map((item) => (
-              <li key={item.id}>
-                <strong>{item.title}</strong>
-                {item.body && <p>{item.body}</p>}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       <p className="muted resort-detail__meta">
         Данные каталога: {formatUpdatedAt(data.meta.updatedAt)}. Цены и часы — с официальных

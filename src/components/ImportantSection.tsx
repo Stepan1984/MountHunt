@@ -1,44 +1,65 @@
-import { formatUpdatedAt } from '../lib/data'
+import { Link } from 'react-router-dom'
+import { formatUpdatedAt, operationalImportant } from '../lib/data'
 import type { ImportantItem, Resort } from '../types'
 
 type Props = {
   items: ImportantItem[]
   resorts: Resort[]
+  /** Compact strip after hero — operational items only. */
+  variant?: 'full' | 'strip'
 }
 
-export function ImportantSection({ items, resorts }: Props) {
+export function ImportantSection({ items, resorts, variant = 'full' }: Props) {
   const nameById = new Map(resorts.map((r) => [r.id, r.name]))
+  const visible = operationalImportant(items)
+
+  if (visible.length === 0) return null
 
   return (
-    <section className="section important" id="important" aria-labelledby="important-title">
+    <section
+      className={`section important important--${variant}`}
+      id="important"
+      aria-labelledby="important-title"
+    >
       <div className="section__head">
         <h2 id="important-title">Важное</h2>
-        <p>Статусы и заметки по курортам — без персональных уведомлений.</p>
+        <p>Свежие статусы по курортам — без персональных уведомлений.</p>
       </div>
       <ul className="important__list">
-        {items.map((item) => (
-          <li
-            key={item.id}
-            className={`important__item important__item--${item.severity}`}
-          >
-            <div className="important__meta">
-              <span className="important__severity">
-                {item.severity === 'warn' ? 'Внимание' : 'Инфо'}
-              </span>
-              <time dateTime={item.updatedAt}>{formatUpdatedAt(item.updatedAt)}</time>
-            </div>
-            <h3>{item.title}</h3>
-            {item.resortId && (
-              <p className="important__resort">{nameById.get(item.resortId) ?? item.resortId}</p>
-            )}
-            {item.body && <p>{item.body}</p>}
-            {item.sourceUrl && (
-              <a href={item.sourceUrl} target="_blank" rel="noreferrer">
-                Источник
-              </a>
-            )}
-          </li>
-        ))}
+        {visible.map((item) => {
+          const resortName = item.resortId ? nameById.get(item.resortId) : undefined
+          return (
+            <li
+              key={item.id}
+              className={`important__item important__item--${item.severity}`}
+            >
+              <div className="important__meta">
+                <span className="important__severity">
+                  {item.severity === 'warn' ? 'Внимание' : 'Инфо'}
+                </span>
+                <time dateTime={item.updatedAt}>{formatUpdatedAt(item.updatedAt)}</time>
+              </div>
+              <h3>
+                {item.resortId ? (
+                  <Link to={`/resort/${item.resortId}`}>{item.title}</Link>
+                ) : (
+                  item.title
+                )}
+              </h3>
+              {resortName && item.resortId && (
+                <p className="important__resort">
+                  <Link to={`/resort/${item.resortId}`}>{resortName}</Link>
+                </p>
+              )}
+              {item.body && <p>{item.body}</p>}
+              {item.sourceUrl && (
+                <a href={item.sourceUrl} target="_blank" rel="noreferrer">
+                  Источник
+                </a>
+              )}
+            </li>
+          )
+        })}
       </ul>
     </section>
   )
