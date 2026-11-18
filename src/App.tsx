@@ -36,7 +36,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<HomePage data={state.data} />} />
               <Route path="/resort/:id" element={<ResortPage data={state.data} />} />
-              <Route path="/about" element={<AboutPage meta={state.data.meta} />} />
+              <Route path="/about" element={<AboutPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           )}

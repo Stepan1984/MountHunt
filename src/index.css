@@ -664,10 +664,38 @@ main {
 
 .price-list,
 .period-list,
-.link-list,
-.about-page ul {
+.link-list {
   margin: 0.4rem 0 0.8rem;
   padding-left: 1.1rem;
+}
+
+.about-page__lead {
+  font-size: 1.08rem;
+  max-width: 38rem;
+  margin-bottom: 1.5rem;
+}
+
+.about-page h2 {
+  font-size: 1.25rem;
+  margin-top: 1.75rem;
+}
+
+.about-page__list {
+  margin: 0.5rem 0 0.85rem;
+  padding-left: 1.15rem;
+  color: var(--graphite);
+}
+
+.about-page__list li {
+  margin: 0.35rem 0;
+}
+
+.about-page__list li::marker {
+  color: var(--pine-mid);
+}
+
+.about-page__actions {
+  margin-top: 2rem;
 }
 
 .price-list,

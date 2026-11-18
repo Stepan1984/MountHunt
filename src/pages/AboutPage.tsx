@@ -1,46 +1,41 @@
 import { Link } from 'react-router-dom'
-import { formatUpdatedAt } from '../lib/data'
-import type { Meta } from '../types'
 
-export function AboutPage({ meta }: { meta: Meta }) {
+const homeHash = (hash: string) => `${import.meta.env.BASE_URL}${hash}`
+
+export function AboutPage() {
   return (
-    <section className="section page-narrow about-page">
-      <h1>О проекте</h1>
-      <p>
-        <strong>MountHunt</strong> — агрегатор публичных горнолыжных курортов Санкт-Петербурга и
-        Ленинградской области. Цель MVP: быстро увидеть, где кататься, режим работы, ориентир по
-        ценам, камеры и официальные сайты — на одной странице с картой.
+    <section className="section page-narrow about-page" aria-labelledby="about-title">
+      <p className="resort-detail__brand-kicker">MountHunt</p>
+      <h1 id="about-title">О проекте</h1>
+      <p className="about-page__lead">
+        Агрегатор горнолыжных курортов Санкт-Петербурга и Ленинградской области — чтобы быстро
+        понять, куда ехать кататься, не обходя десятки сайтов.
       </p>
 
-      <h2>Откуда данные</h2>
-      <p>
-        Каталог курортов собран из публичных источников и официальных сайтов. Цены и часы работы
-        обновляются ежедневно через GitHub Actions (парсинг публичных страниц, волны 1–3: Туутари,
-        Золотая Долина, Лазурные озёра, Пухтолова гора, Юкки, Красное озеро, Охта-Парк, Drop Park,
-        Игора, Северный склон и др.). Если парсер ещё не покрывает курорт или сбой — заглушка и
-        ссылка на официальный сайт.
-      </p>
-      <p className="muted">
-        Снимок данных: {formatUpdatedAt(meta.updatedAt)} · источник: {meta.source}
-        {meta.note ? ` · ${meta.note}` : ''}
-      </p>
-
-      <h2>Дисклеймер</h2>
-      <p>
-        Информация носит справочный характер. Перед выездом проверяйте режим и цены на официальном
-        сайте курорта. MountHunt не связан с операторами склонов и не продаёт ски-пассы.
-      </p>
-
-      <h2>Вне MVP</h2>
-      <ul>
-        <li>Фильтры, избранное и сравнение</li>
-        <li>Email / Telegram и push-уведомления</li>
-        <li>Английская локаль</li>
+      <h2>Что вы найдёте</h2>
+      <ul className="about-page__list">
+        <li>Цены и ориентиры по ски-пассам</li>
+        <li>Часы работы комплексов</li>
+        <li>Карту курортов СПБ и ЛО</li>
+        <li>Ссылки на камеры и официальные сайты</li>
+        <li>Раздел «Важное» — статусы и заметки по склонам</li>
       </ul>
 
+      <h2>О данных</h2>
       <p>
-        <Link to="/">← Вернуться к курортам</Link>
+        Сведения собраны с публичных сайтов курортов и носят справочный характер. Перед выездом
+        уточняйте режим и цены на официальном сайте комплекса. MountHunt не связан с операторами
+        склонов и не продаёт ски-пассы.
       </p>
+
+      <div className="about-page__actions hero__actions">
+        <a className="btn btn--primary" href={homeHash('#explore')}>
+          К карте и карточкам
+        </a>
+        <Link className="btn btn--ghost" to="/">
+          На главную
+        </Link>
+      </div>
     </section>
   )
 }
