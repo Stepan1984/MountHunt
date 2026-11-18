@@ -48,6 +48,12 @@ export function ResortMap({
       attributionControl: true,
     }).setView([60.2, 30.3], 8)
 
+    // Leaflet 1.9+ injects a national-flag SVG into the default attribution prefix;
+    // keep Leaflet + OSM credit text only.
+    map.attributionControl.setPrefix(
+      '<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>',
+    )
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',

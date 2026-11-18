@@ -333,6 +333,11 @@ main {
   width: 100%;
 }
 
+/* Hide Leaflet's default attribution flag SVG if any prefix still includes it. */
+.leaflet-attribution-flag {
+  display: none;
+}
+
 .map-canvas--detail {
   height: 220px;
 }
