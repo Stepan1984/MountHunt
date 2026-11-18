@@ -68,7 +68,9 @@ function enrichLazurnye(snap) {
   for (const it of snap.items || []) {
     const m = it.title.match(/Ски-пасс\s+(.+?)\s+\((будни|выходные)\)/i)
     if (!m) continue
-    const duration = /час/i.test(m[1]) ? m[1].trim() : `${m[1].trim()} ч`
+    // Titles use «1 ч» or «1 час» — don't append another «ч» onto bare «ч».
+    const rawDur = m[1].trim()
+    const duration = /час|\bч\b/i.test(rawDur) ? rawDur : `${rawDur} ч`
     const row = byDur.get(duration) || {}
     const cell = { price: it.price, rawText: it.rawText }
     if (/будн/i.test(m[2])) row.weekday = cell

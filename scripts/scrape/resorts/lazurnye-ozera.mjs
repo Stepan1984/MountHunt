@@ -40,7 +40,9 @@ export async function scrapeLazurnyeOzera() {
         const weekday = parsePrice(row[1])
         const weekend = parsePrice(row[2])
         if (weekday == null && weekend == null) continue
-        const duration = /час/i.test(hours) ? cleanText(hours) : `${cleanText(hours)} ч`
+        // Cell may already be «1 ч» / «1 час» — avoid «1 ч ч».
+        const hoursLabel = cleanText(hours)
+        const duration = /час|\bч\b/i.test(hoursLabel) ? hoursLabel : `${hoursLabel} ч`
         skipassRows.push({
           name: 'Ски-пасс',
           duration,

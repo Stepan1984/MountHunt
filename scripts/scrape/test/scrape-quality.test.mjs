@@ -213,4 +213,20 @@ describe('skipass groups', () => {
     assert.ok((drop?.items || []).length > 0)
     assert.equal(drop?.groups?.length || 0, 0, 'drop-park stays flat (no invented categories)')
   })
+
+  it('lazurnye durations are not doubled «ч ч»', () => {
+    const prices = JSON.parse(readFileSync(join(root, 'public/data/prices.json'), 'utf8'))
+    const snap = prices.find((p) => p.resortId === 'lazurnye-ozera')
+    for (const g of snap?.groups || []) {
+      for (const row of g.rows || []) {
+        assert.ok(row.duration, 'expected duration')
+        assert.doesNotMatch(row.duration, /ч\s+ч/)
+        assert.match(row.duration, /^\d+\s*ч/)
+      }
+    }
+    const enrichSrc = readFileSync(join(root, 'scripts/enrich-skipass-groups.mjs'), 'utf8')
+    const scrapeSrc = readFileSync(join(root, 'scripts/scrape/resorts/lazurnye-ozera.mjs'), 'utf8')
+    assert.match(enrichSrc, /час\|\\bч\\b/)
+    assert.match(scrapeSrc, /час\|\\bч\\b/)
+  })
 })

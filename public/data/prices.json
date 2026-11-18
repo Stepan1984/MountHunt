@@ -2035,7 +2035,7 @@
         "rows": [
           {
             "name": "Ски-пасс",
-            "duration": "1 ч ч",
+            "duration": "1 ч",
             "prices": [
               {
                 "price": 900,
@@ -2049,7 +2049,7 @@
           },
           {
             "name": "Ски-пасс",
-            "duration": "2 ч ч",
+            "duration": "2 ч",
             "prices": [
               {
                 "price": 1400,
@@ -2063,7 +2063,7 @@
           },
           {
             "name": "Ски-пасс",
-            "duration": "3 ч ч",
+            "duration": "3 ч",
             "prices": [
               {
                 "price": 1800,
@@ -2077,7 +2077,7 @@
           },
           {
             "name": "Ски-пасс",
-            "duration": "4 ч ч",
+            "duration": "4 ч",
             "prices": [
               {
                 "price": 2000,
