@@ -1,0 +1,200 @@
+[
+  {
+    "resortId": "okhta-park",
+    "scrapedAt": null,
+    "sourceUrl": "https://www.ohtapark.ru/",
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "igora",
+    "scrapedAt": null,
+    "sourceUrl": "https://igora.ru/",
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "tuutari-park",
+    "scrapedAt": null,
+    "sourceUrl": "http://www.2-park.ru/prices/lift/",
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "krasnoe-ozero",
+    "scrapedAt": null,
+    "sourceUrl": "https://krasnoeozero.ru/winter/skipass-and-lifts",
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "zolotaya-dolina",
+    "scrapedAt": null,
+    "sourceUrl": "https://zoldol.ru/price-winter",
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "snezhny",
+    "scrapedAt": null,
+    "sourceUrl": "https://snegny.ru/",
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "severny-sklon",
+    "scrapedAt": null,
+    "sourceUrl": "https://sev-sklon.ru/",
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "puhtolova-gora",
+    "scrapedAt": null,
+    "sourceUrl": "https://puhgora.ru/",
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "yukki",
+    "scrapedAt": null,
+    "sourceUrl": "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/",
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "lazurnye-ozera",
+    "scrapedAt": null,
+    "sourceUrl": "https://lazoorsnow.ru/",
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "drop-park",
+    "scrapedAt": null,
+    "sourceUrl": "https://drop-park.ru/snow-park",
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "orekhovo",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "andreevsky",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "impuls",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "poligon",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "semeika",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "u-tramplina",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "voronya-gora",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "pulkovo-slope",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "mozhaiskaya",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "kavgolovo-utc",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
+    "resortId": "orlinaya-gora",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  }
+]
