@@ -151,6 +151,13 @@ export function priceHintFor(snapshot: PriceSnapshot | undefined): string {
   if (seasonal.length === withPrice.length) {
     const adult = seasonal.filter((i) => !isDiscountedFromPrice(i.title, i.unit, i.note))
     const pick = adult.length > 0 ? adult : seasonal
+    const dayClosed = /дневн[^.]*закрыт|закрыт до сезона|прейскурант[^.]*закрыт/i.test(
+      snapshot.note ?? '',
+    )
+    // Okhta-style: only seasonal presale while day tariffs are closed — never bare «от N ₽».
+    if (dayClosed) {
+      return `предпродажа · сезон от ${minPriceLabel(pick).toLocaleString('ru-RU')} ₽`
+    }
     return `сезон от ${minPriceLabel(pick).toLocaleString('ru-RU')} ₽`
   }
 
@@ -245,7 +252,10 @@ export function slopesClosedHint(
       /закрыт|сезон закрыт|склоны закрыты/i.test(`${i.title} ${i.body ?? ''}`),
   )
   if (warn) return 'Склоны закрыты'
-  if (hours?.summary && /склон\w*\s+закрыт|закрыты на летний|закрыты до сезона/i.test(hours.summary)) {
+  if (
+    hours?.summary &&
+    /сезон закрыт|склон\w*\s+закрыт|закрыты на летний|закрыты до сезона/i.test(hours.summary)
+  ) {
     return 'Склоны закрыты'
   }
   return null

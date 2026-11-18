@@ -66,8 +66,8 @@ jobs:
         run: npm run scrape
         env:
           SCRAPE_DELAY_MS: '1500'
-          # Live Playwright first. Do NOT set IGORA_HTML_DIR / IGORA_ALLOW_SNAPSHOT here —
-          # bundled snapshots are opt-in for local/dev fail-soft only (status stays partial).
+          # Live Playwright only. Do NOT set IGORA_HTML_DIR / IGORA_ALLOW_SNAPSHOT /
+          # SCRAPE_HTML_DIR — scraper also refuses snapshots when CI/GITHUB_ACTIONS is set.
           IGORA_TIMEOUT_MS: '120000'
 
       - name: Commit updated data if changed

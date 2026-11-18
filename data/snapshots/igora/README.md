@@ -15,9 +15,11 @@ IGORA_ALLOW_SNAPSHOT=1 npm run scrape -- --only=igora --dry-run
 
 ## CI policy
 
-Daily Actions **must not** set `IGORA_HTML_DIR` or `IGORA_ALLOW_SNAPSHOT`.
-Live Playwright is the only production refresh path; snapshot-sourced prices stay
-`status: partial` with an explicit note when used locally.
+Daily Actions **must not** set `IGORA_HTML_DIR`, `SCRAPE_HTML_DIR`, or `IGORA_ALLOW_SNAPSHOT`.
+The scraper also refuses snapshot / bundled HTML whenever `CI` or `GITHUB_ACTIONS` is set,
+so a misconfigured secret cannot ship stale tariffs. Live Playwright is the only
+production refresh path; snapshot-sourced prices stay `status: partial` with an
+explicit note when used locally.
 
 Refresh these HTML files periodically (manual) when the live `/price/` / `/cam/`
 DOM structure changes — they are not auto-updated by the scrape job.
