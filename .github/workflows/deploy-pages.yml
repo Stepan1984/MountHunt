@@ -10,9 +10,12 @@ permissions:
   pages: write
   id-token: write
 
+# One in-flight deploy at a time. Do not cancel mid-flight: a cancelled build can
+# still leave a github-pages artifact, and a later re-run then uploads a second
+# one → deploy-pages fails with "Multiple artifacts named github-pages".
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -41,10 +44,13 @@ jobs:
       - name: SPA fallback for GitHub Pages
         run: cp dist/index.html dist/404.html
 
+      # Unique per attempt: artifacts belong to the run, not the attempt, so a
+      # re-run would otherwise leave two artifacts both named github-pages.
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+          name: github-pages-${{ github.run_attempt }}
 
   deploy:
     needs: build
@@ -101,3 +107,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
