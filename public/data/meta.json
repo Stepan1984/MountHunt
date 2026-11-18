@@ -1,8 +1,80 @@
 {
-  "updatedAt": "2026-11-18T13:20:50Z",
+  "updatedAt": "2026-11-18T15:29:46Z",
   "source": "scrape-wave1+wave2+wave3",
-  "note": "Волны 1–3: igora; failed: нет",
+  "note": "Волны 1–3: tuutari-park, zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park, igora, severny-sklon; failed: нет. Igora в data — HTML-снимок (partial); live Playwright в CI (без IGORA_*_SNAPSHOT).",
   "resortsScraped": [
+    {
+      "id": "tuutari-park",
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 20,
+      "summary": "будни 12:00–22:00; выходные 10:00–22:00"
+    },
+    {
+      "id": "zolotaya-dolina",
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 20,
+      "summary": "Горнолыжные склоны закрыты на летний период (уточняйте открытие на сайте). Ближайший график (прочее): Понедельник: закрыто; Вторник: закрыто; Среда: 12:00–22:00…"
+    },
+    {
+      "id": "lazurnye-ozera",
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 8,
+      "summary": "Сезон закрыт. пн: выходной; вт–пт: 11:00–22:00; сб–вс: 10:00–22:00"
+    },
+    {
+      "id": "puhtolova-gora",
+      "error": null,
+      "prices": "partial",
+      "hours": "ok",
+      "itemCount": 0,
+      "summary": "ср., чт., пт. 15:00–21:00; сб., вс. 10:00–21:00; пн., вт.: выходной"
+    },
+    {
+      "id": "yukki",
+      "error": null,
+      "prices": "partial",
+      "hours": "ok",
+      "itemCount": 0,
+      "summary": "ежедневно 10:00–21:00"
+    },
+    {
+      "id": "krasnoe-ozero",
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 4,
+      "summary": "На 18.11.2026: склоны/подъёмники закрыты до сезона (CSV графика)"
+    },
+    {
+      "id": "snezhny",
+      "error": null,
+      "prices": "ok",
+      "hours": "partial",
+      "itemCount": 45,
+      "summary": "Режим склонов уточняйте на главной snegny.ru (виджет; HTML без JS недоступен)"
+    },
+    {
+      "id": "drop-park",
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 16,
+      "summary": "По прайсу snow-park: 10:00–21:00; 11:00–23:00"
+    },
+    {
+      "id": "okhta-park",
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 2,
+      "summary": "пн–пт: 11:00–21:00; сб–вс: 11:00–21:00"
+    },
     {
       "id": "igora",
       "error": null,
@@ -10,6 +82,14 @@
       "hours": "partial",
       "itemCount": 40,
       "summary": "Часы склонов уточняйте на https://igora.ru/working-hours/"
+    },
+    {
+      "id": "severny-sklon",
+      "error": null,
+      "prices": "unavailable",
+      "hours": "partial",
+      "itemCount": 0,
+      "summary": "Склон: часы не найдены на сайте. Ресторан: пн–чт (бар) 11:00–21:00; пт 11:00–21:00; сб–вс 10:00–22:00"
     }
   ]
 }

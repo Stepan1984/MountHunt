@@ -117,7 +117,7 @@ npm run data:refresh
 - **cron** `0 5 * * *` (05:00 UTC) + ручной `workflow_dispatch`
 - ставит poppler + tesseract, `npm ci`, Playwright Chromium, `npm run scrape` (волны 1–3)
 - коммитит `public/data` (+ seed-фиксы), если есть diff
-- Igora: live Playwright; offline HTML — `IGORA_HTML_DIR` / `data/snapshots/igora` + `IGORA_ALLOW_SNAPSHOT=1`
+- Igora: live Playwright only in Actions (no `IGORA_HTML_DIR` / `IGORA_ALLOW_SNAPSHOT`; scraper also refuses snapshots when `CI`/`GITHUB_ACTIONS` is set). Offline HTML remains local opt-in.
 
 ---
 

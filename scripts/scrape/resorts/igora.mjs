@@ -20,17 +20,38 @@ const CAM_URL = 'https://igora.ru/cam/'
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 const DEFAULT_SNAPSHOT_DIR = join(root, 'data', 'snapshots', 'igora')
 
+/** True in GitHub Actions / generic CI — never silent-fallback to bundled HTML. */
+function isCiEnv() {
+  return process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true'
+}
+
+/** Explicit opt-in for bundled/offline Igora HTML (local debug only). */
+function snapshotOptIn() {
+  return (
+    process.env.IGORA_ALLOW_SNAPSHOT === '1' ||
+    process.env.IGORA_ALLOW_SNAPSHOT === 'true' ||
+    Boolean(process.env.IGORA_HTML_DIR) ||
+    Boolean(process.env.SCRAPE_HTML_DIR)
+  )
+}
+
 /**
  * Resolve HTML for a URL: env snapshot dir → live Playwright → plain fetch →
  * optional bundled snapshot (`IGORA_ALLOW_SNAPSHOT=1`).
+ * In CI/Actions, bundled snapshot is never used unless explicitly opted in
+ * (Daily workflow must not set IGORA_* snapshot vars).
  * @param {string} url
  * @param {{ waitForSelector?: string, allowBundledSnapshot?: boolean }} [opts]
  */
 async function loadPageHtml(url, opts = {}) {
   const envDir = process.env.IGORA_HTML_DIR || process.env.SCRAPE_HTML_DIR || ''
-  const fromEnv = envDir ? readSnapshotHtml(url, envDir) : null
-  if (fromEnv) {
-    return { html: fromEnv, via: `snapshot:${envDir}` }
+  // Local/debug only — refuse IGORA_HTML_DIR / SCRAPE_HTML_DIR when running in CI/Actions
+  // so a mis-set secret cannot ship snapshot tariffs as "prod".
+  if (envDir && !isCiEnv()) {
+    const fromEnv = readSnapshotHtml(url, envDir)
+    if (fromEnv) {
+      return { html: fromEnv, via: `snapshot:${envDir}` }
+    }
   }
 
   /** @type {Error | undefined} */
@@ -60,7 +81,9 @@ async function loadPageHtml(url, opts = {}) {
     /* continue */
   }
 
+  // Bundled snapshot: local opt-in only. Never in CI/Actions (even if env is set by mistake).
   const allowSnap =
+    !isCiEnv() &&
     opts.allowBundledSnapshot !== false &&
     (process.env.IGORA_ALLOW_SNAPSHOT === '1' || process.env.IGORA_ALLOW_SNAPSHOT === 'true')
   if (allowSnap && existsSync(DEFAULT_SNAPSHOT_DIR)) {
@@ -77,6 +100,72 @@ async function loadPageHtml(url, opts = {}) {
   }
 
   throw pwErr || new Error(`Could not load ${url}`)
+}
+
+/**
+ * Closest preceding h3 (walk parents — tables sit inside .common-price__scroll).
+ * @param {import('cheerio').CheerioAPI} $
+ * @param {import('cheerio').Cheerio} $table
+ */
+function precedingH3($, $table) {
+  let $el = $table
+  for (let i = 0; i < 6; i++) {
+    const $h = $el.prevAll('h3').first()
+    if ($h.length) return cleanText($h.text())
+    const parent = $el.parent()
+    if (!parent.length || parent.is('body') || parent.is('html')) break
+    $el = parent
+  }
+  return ''
+}
+
+/**
+ * Prefer ONLINE instructor tariffs when cash + online tables share labels.
+ * Keeps the lower (online) price and annotates cash when different.
+ * @param {{ title: string, price: number, unit?: string, note?: string, rawText?: string, priority: number }[]} items
+ */
+export function preferInstructorOnline(items) {
+  const ski = []
+  /** @type {typeof items} */
+  const instructor = []
+  for (const it of items) {
+    if (/ · (?:будни|выходные)/i.test(it.title) || /\(инструктор/i.test(it.title)) {
+      instructor.push(it)
+    } else {
+      ski.push(it)
+    }
+  }
+  if (!instructor.length) return items
+
+  /** Strip trailing (section) so cash/online pairs share a key. */
+  const keyOf = (title) => title.replace(/\s*\([^)]*\)\s*$/u, '').trim()
+  /** @type {Map<string, typeof items>} */
+  const byKey = new Map()
+  for (const it of instructor) {
+    const k = keyOf(it.title)
+    const arr = byKey.get(k) || []
+    arr.push(it)
+    byKey.set(k, arr)
+  }
+
+  /** @type {typeof items} */
+  const collapsed = []
+  for (const [k, arr] of byKey) {
+    if (arr.length === 1) {
+      collapsed.push(arr[0])
+      continue
+    }
+    const prices = arr.map((a) => a.price)
+    const online = Math.min(...prices)
+    const cash = Math.max(...prices)
+    const base = arr.find((a) => a.price === online) || arr[0]
+    collapsed.push({
+      ...base,
+      title: `${k} (инструктор online)`,
+      note: cash !== online ? `в кассе ${cash} ₽` : base.note,
+    })
+  }
+  return [...ski, ...collapsed]
 }
 
 /**
@@ -117,9 +206,18 @@ export function parseIgoraPrices(html) {
     const faqTitle = cleanText(
       $table.closest('.faq-section__item, .js-collapse').find('.faq-section__item-title').first().text(),
     )
-    const h3 = cleanText($table.prevAll('h3').first().text())
-    const section = h3 || faqTitle || 'тариф'
+    const h3 = precedingH3($, $table)
     const sectionBlob = `${faqTitle} ${h3}`
+    const isInstructor = /инструктор/i.test(sectionBlob)
+    const isOnlineInstructor = isInstructor && /онлайн|online/i.test(h3)
+    // Prefer specific h3; mark online instructor tables so cash/online can collapse later.
+    const section = isOnlineInstructor
+      ? 'инструктор online'
+      : isInstructor
+        ? h3 && !/^цены на занятия/i.test(h3)
+          ? 'инструктор'
+          : faqTitle || 'инструктор'
+        : h3 || faqTitle || 'тариф'
 
     // Focus on ski-pass blocks; skip bulky rental/service catalogs for MVP noise control.
     const focus = /ски-?пасс|почасов|проход|абонемент|инструктор/i.test(sectionBlob)
@@ -136,7 +234,7 @@ export function parseIgoraPrices(html) {
       (durations.length >= 2 && durations.every((d) => /^\d+$/.test(d)))
     const kind = looksLikePasses ? 'passes' : /час/i.test(durations.join(' ')) ? 'hourly' : 'other'
     // Prefer hourly ski-pass, then pass packs, then instructor when capping output.
-    const priority = /инструктор/i.test(sectionBlob) ? 3 : kind === 'hourly' ? 1 : kind === 'passes' ? 2 : 4
+    const priority = isInstructor ? 3 : kind === 'hourly' ? 1 : kind === 'passes' ? 2 : 4
 
     for (const row of rows) {
       const label = row[0]
@@ -195,9 +293,9 @@ export function parseIgoraPrices(html) {
     }
   })
 
-  // Dedup, then prefer hourly ski-pass rows when callers slice
+  // Collapse cash+ONLINE instructor duplicates, then prefer hourly ski-pass when callers slice
   const seen = new Set()
-  return items
+  return preferInstructorOnline(items)
     .filter((it) => {
       const key = `${it.title}|${it.price}`
       if (seen.has(key)) return false
@@ -295,15 +393,16 @@ export async function scrapeIgora() {
     await sleep(400)
 
     let camHtml = ''
+    const allowCamSnap = snapshotOptIn() && !isCiEnv()
     try {
       const camLoad = await loadPageHtml(CAM_URL, {
         waitForSelector: 'iframe[src*="exdesign"], iframe[src*="ivideon"], iframe[src*="rtsp"]',
-        allowBundledSnapshot: Boolean(process.env.IGORA_ALLOW_SNAPSHOT || process.env.IGORA_HTML_DIR),
+        allowBundledSnapshot: allowCamSnap,
       })
       camHtml = camLoad.html
     } catch {
-      // bundled cam snapshot if explicitly allowed
-      if (process.env.IGORA_ALLOW_SNAPSHOT === '1' || process.env.IGORA_HTML_DIR) {
+      // bundled cam snapshot if explicitly allowed (never in CI)
+      if (allowCamSnap) {
         try {
           const camLoad = await loadPageHtml(CAM_URL, {
             waitForSelector: undefined,

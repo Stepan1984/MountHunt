@@ -28,10 +28,10 @@
     "lat": 60.5154,
     "lon": 30.2113,
     "website": "https://igora.ru/",
-    "webcam_url": "https://igora.ru/cam/",
+    "webcam_url": "https://webcam.exdesign.ru/igora-1/",
     "prices_format": "html_js",
     "status": "active",
-    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м.",
+    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. Цены — Playwright/SSR таблицы на /price/; часы — /working-hours/.",
     "sources": [
       "https://igora.ru/",
       "https://igora.ru/cam/",
@@ -126,7 +126,7 @@
     "webcam_url": null,
     "prices_format": "none",
     "status": "active",
-    "notes": "4 склона у оз. Хепоярви; бугели. Актуальный сайт severnysklon.ru (Tilda): ski-pass на сайте не опубликован — статус unavailable; sev-sklon.ru устарел.",
+    "notes": "4 склона у оз. Хепоярви; бугели. Официальный сайт severnysklon.ru — актуальные цены уточняйте там.",
     "sources": [
       "https://severnysklon.ru/"
     ],

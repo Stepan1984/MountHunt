@@ -43,7 +43,14 @@ export async function fetchRenderedHtml(url, opts = {}) {
     await page.goto(url, { waitUntil: 'commit', timeout: timeoutMs })
 
     if (opts.waitForSelector) {
-      await page.waitForSelector(opts.waitForSelector, { timeout: timeoutMs })
+      // Igora (and similar) keep tariff tables inside collapsed FAQ panels —
+      // require attached in the DOM, not visible, or Playwright times out forever.
+      await page.waitForSelector(opts.waitForSelector, {
+        timeout: timeoutMs,
+        state: 'attached',
+      })
+      // Give SPA a beat to finish filling SSR/hydration cells after attach.
+      await page.waitForTimeout(Math.min(2_500, Math.max(500, Math.floor(timeoutMs / 40))))
     } else {
       await page.waitForTimeout(Math.min(8_000, timeoutMs))
     }

@@ -166,7 +166,7 @@ function applySeedFixes(resorts) {
       sourcesAdd: ['https://severnysklon.ru/'],
       sourcesDrop: [/sev-sklon\.ru/],
       notes:
-        '4 склона у оз. Хепоярви; бугели. Актуальный сайт severnysklon.ru (Tilda): ski-pass на сайте не опубликован — статус unavailable; sev-sklon.ru устарел.',
+        '4 склона у оз. Хепоярви; бугели. Официальный сайт severnysklon.ru — актуальные цены уточняйте там.',
     },
   }
   return resorts.map((r) => {
@@ -313,13 +313,26 @@ async function main() {
   )
   const failed = results.filter((r) => r.error || r.prices === 'failed')
 
+  // When --only=…, merge into previous meta.resortsScraped so a partial refresh
+  // does not pretend the other resorts were not scraped.
+  const prevMeta = readJson(join(outDir, 'meta.json'), null)
+  let resortsScraped = results
+  if (args.only?.length && prevMeta?.resortsScraped?.length) {
+    const byId = new Map(prevMeta.resortsScraped.map((r) => [r.id, r]))
+    for (const r of results) byId.set(r.id, r)
+    resortsScraped = [...byId.values()]
+  }
+  const scrapedSuccess = resortsScraped.filter(
+    (r) => (r.prices && r.prices !== 'failed') || (r.hours && r.hours !== 'failed'),
+  )
+  const scrapedFailed = resortsScraped.filter((r) => r.error || r.prices === 'failed')
   const meta = {
     updatedAt: nowIso(),
     source: 'scrape-wave1+wave2+wave3',
-    note: `Волны 1–3: ${success.map((r) => r.id).join(', ') || 'нет успешных'}; failed: ${
-      failed.map((r) => r.id).join(', ') || 'нет'
+    note: `Волны 1–3: ${scrapedSuccess.map((r) => r.id).join(', ') || 'нет успешных'}; failed: ${
+      scrapedFailed.map((r) => r.id).join(', ') || 'нет'
     }`,
-    resortsScraped: results,
+    resortsScraped,
   }
 
   if (args.dryRun) {

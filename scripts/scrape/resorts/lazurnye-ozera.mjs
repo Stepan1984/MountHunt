@@ -55,7 +55,9 @@ export async function scrapeLazurnyeOzera() {
     const $h = loadHtml(homeHtml)
     const text = cleanText($h('body').text())
     const important = []
-    if (/Сезон\s*20\d{2}\s*закрыт/i.test(text) || /сезон.*закрыт/i.test(text)) {
+    const seasonClosed =
+      /Сезон\s*20\d{2}\s*закрыт/i.test(text) || /сезон.*закрыт/i.test(text)
+    if (seasonClosed) {
       important.push({
         id: 'lazurnye-season-closed',
         resortId,
@@ -89,6 +91,12 @@ export async function scrapeLazurnyeOzera() {
       summary = `пн: выходной; вт–пт: ${openWd}–${closeWd}; сб–вс: ${openWe}–${closeWe}`
     } else if (hoursMatch) {
       summary = `пн: выходной; вт–пт: ${norm(hoursMatch[1])}–${norm(hoursMatch[2])}; сб–вс: ${norm(hoursMatch[3])}–${norm(hoursMatch[4])}`
+    }
+    // Surface closed-season in hours so cards hide «от N ₽» even if Important is filtered.
+    if (seasonClosed) {
+      summary = summary && summary !== 'Режим уточняйте на сайте'
+        ? `Сезон закрыт. ${summary}`
+        : 'Сезон закрыт — уточняйте открытие на сайте'
     }
 
     const embeds = extractIframeSrcs($h, HOME_URL).filter((u) => /rtsp/i.test(u))
