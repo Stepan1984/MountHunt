@@ -49,6 +49,9 @@ export function ResortPage({ data }: { data: SiteData }) {
         <section>
           <h2>Часы работы</h2>
           <p>{hours?.summary ?? 'Нет данных'}</p>
+          {hours?.status === 'failed' && (
+            <p className="muted">Последний сбор часов не удался — показаны прежние данные, если они были.</p>
+          )}
           <p className="muted">
             Актуальность: {formatUpdatedAt(hours?.scrapedAt)} · статус:{' '}
             {hours?.status ?? 'pending'}
@@ -60,7 +63,7 @@ export function ResortPage({ data }: { data: SiteData }) {
           {prices?.items && prices.items.length > 0 ? (
             <ul className="price-list">
               {prices.items.map((item) => (
-                <li key={`${item.title}-${item.price}`}>
+                <li key={`${item.title}-${item.price}-${item.unit ?? ''}`}>
                   <span>{item.title}</span>
                   <strong>
                     {item.price != null
@@ -72,6 +75,10 @@ export function ResortPage({ data }: { data: SiteData }) {
             </ul>
           ) : (
             <p>{prices?.note ?? 'Цены появятся после ежедневного обновления данных.'}</p>
+          )}
+          {prices?.note && prices.items?.length > 0 && <p className="muted">{prices.note}</p>}
+          {prices?.status === 'failed' && (
+            <p className="muted">Последний сбор цен не удался — показан прошлый снимок, если он был.</p>
           )}
           <p className="muted">
             Актуальность: {formatUpdatedAt(prices?.scrapedAt)} · статус:{' '}
@@ -156,8 +163,9 @@ export function ResortPage({ data }: { data: SiteData }) {
       )}
 
       <p className="muted resort-detail__meta">
-        Данные каталога: {formatUpdatedAt(data.meta.updatedAt)}. Цены и часы не выдуманы — до
-        запуска парсеров показываем плейсхолдеры и ссылки на источники.
+        Данные каталога: {formatUpdatedAt(data.meta.updatedAt)}. Цены и часы — с официальных
+        публичных страниц (где парсер уже есть) либо плейсхолдер со ссылкой на сайт курорта. Не
+        оферта.
       </p>
     </article>
   )

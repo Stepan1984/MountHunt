@@ -2,9 +2,9 @@
 
 Агрегатор горнолыжных курортов Санкт-Петербурга и Ленинградской области.
 
-Сайт на русском: карточки курортов, интерактивная карта (Leaflet + OSM), раздел «Важное», страницы курортов со ссылками на сайт и камеры. Цены и часы пока — плейсхолдеры под ежедневный JSON.
+Сайт на русском: карточки курортов, интерактивная карта (Leaflet + OSM), раздел «Важное», страницы курортов со ссылками на сайт и камеры. Цены и часы — из ежедневного scrape официальных публичных страниц (волна 1) либо плейсхолдеры.
 
-**Стек:** Vite + React + TypeScript · статика для GitHub Pages.
+**Стек:** Vite + React + TypeScript · статика для GitHub Pages · Node scrapers (cheerio / PDF+OCR).
 
 ---
 
@@ -56,18 +56,46 @@ Workflow собирает `dist`, но **деплой падает с 404**, п�
 
 ---
 
-## Данные
+## Данные и scrape
 
 | Файл | Назначение |
 |------|------------|
 | `data/seed/resorts.json` | Исходный каталог курортов (seed) |
 | `public/data/resorts.json` | Публикуемый каталог |
-| `public/data/hours.json` | Часы работы (пока плейсхолдеры) |
-| `public/data/prices.json` | Цены (пока плейсхолдеры) |
+| `public/data/hours.json` | Часы работы |
+| `public/data/prices.json` | Цены |
 | `public/data/important.json` | Блок «Важное» |
-| `public/data/meta.json` | Время последнего обновления |
+| `public/data/meta.json` | Время последнего обновления + статус прогона |
 
-Обновить опубликованные данные из seed локально:
+### Локальный scrape
+
+```bash
+npm run scrape
+```
+
+Опции:
+
+```bash
+npm run scrape -- --dry-run                 # без записи файлов
+npm run scrape -- --only=tuutari-park,yukki
+npm run scrape -- --skip-optional           # без CSV Красного озера
+SCRAPE_DELAY_MS=2000 npm run scrape         # пауза между хостами
+```
+
+**Волна 1 (P1):** `tuutari-park`, `zolotaya-dolina`, `lazurnye-ozera`, `puhtolova-gora`, `yukki` (PDF → `pdftotext` / OCR tesseract).  
+**Опционально:** `krasnoe-ozero` (публичный Google Sheets CSV).
+
+Для Юкки локально желательны:
+
+```bash
+sudo apt-get install -y poppler-utils tesseract-ocr tesseract-ocr-rus
+```
+
+Поведение при сбое: прошлый снимок в `public/data` сохраняется, у курорта `status: failed`.
+
+User-Agent: `MountHuntBot/0.1 (+https://github.com/Stepan1984/MountHunt; …)`.
+
+Seed-обновление без сети:
 
 ```bash
 npm run data:refresh
@@ -78,11 +106,8 @@ npm run data:refresh
 `.github/workflows/daily-data-refresh.yml`:
 
 - **cron** `0 5 * * *` (05:00 UTC) + ручной `workflow_dispatch`
-- сейчас: `node scripts/refresh-seed.mjs` → копирует seed и обновляет `meta.json`
-- коммитит изменения в `public/data`, если есть diff
-- позже сюда подключатся парсеры официальных сайтов
-
-Живые цены **не выдумываются**: до парсеров в UI — «уточняется» и ссылка на сайт курорта.
+- ставит poppler + tesseract, `npm ci`, `npm run scrape`
+- коммитит `public/data` (+ seed-фикс webcam Красного озера), если есть diff
 
 ---
 
@@ -103,4 +128,5 @@ npm run data:refresh
 | `npm run dev` | Разработка |
 | `npm run build` | Production-сборка |
 | `npm run preview` | Просмотр сборки |
-| `npm run data:refresh` | Обновить `public/data` из seed |
+| `npm run scrape` | Сбор цен/часов → `public/data` |
+| `npm run data:refresh` | Обновить `public/data` из seed (без сети) |

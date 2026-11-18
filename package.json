@@ -8,10 +8,13 @@
     "build": "tsc -b && vite build && cp dist/index.html dist/404.html",
     "lint": "oxlint",
     "preview": "vite preview",
+    "scrape": "node scripts/scrape.mjs",
     "data:refresh": "node scripts/refresh-seed.mjs"
   },
   "dependencies": {
+    "cheerio": "^1.2.0",
     "leaflet": "^1.9.4",
+    "pdf-parse": "^2.4.5",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.5"

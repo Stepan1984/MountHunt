@@ -1,5 +1,55 @@
 {
-  "updatedAt": "2026-11-18T08:48:22Z",
-  "source": "seed-refresh",
-  "note": "Заглушка CI: seed скопирован в public/data. Парсеры ещё не подключены."
+  "updatedAt": "2026-11-18T09:38:46Z",
+  "source": "scrape-wave1",
+  "note": "Волна 1: tuutari-park, zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero; failed: нет",
+  "resortsScraped": [
+    {
+      "id": "tuutari-park",
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 20,
+      "summary": "будни 12:00–22:00; выходные 10:00–22:00"
+    },
+    {
+      "id": "zolotaya-dolina",
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 20,
+      "summary": "Горнолыжные склоны закрыты на летний период (уточняйте открытие на сайте). Ближайший график (прочее): Понедельник: закрыто; Вторник: закрыто; Среда: 12:00–22:00…"
+    },
+    {
+      "id": "lazurnye-ozera",
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 8,
+      "summary": "пн: выходной; вт–пт: 11:00–22:00; сб–вс: 10:00–22:00"
+    },
+    {
+      "id": "puhtolova-gora",
+      "error": null,
+      "prices": "partial",
+      "hours": "ok",
+      "itemCount": 0,
+      "summary": "ср., чт., пт. 15:00–21:00; сб., вс. 10:00–21:00; пн., вт.: выходной"
+    },
+    {
+      "id": "yukki",
+      "error": null,
+      "prices": "partial",
+      "hours": "ok",
+      "itemCount": 6,
+      "summary": "ежедневно 10:00–21:00"
+    },
+    {
+      "id": "krasnoe-ozero",
+      "error": null,
+      "prices": "ok",
+      "hours": null,
+      "itemCount": 4,
+      "summary": null
+    }
+  ]
 }
