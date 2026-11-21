@@ -120,11 +120,11 @@ export function ResortPage({ data }: { data: SiteData }) {
           <ul className="important__list important__list--detail">
             {important.map((item) => (
               <li key={item.id} className="important__item">
-                <div className="important__meta">
-                  {item.publishedAt ? (
+                {item.publishedAt ? (
+                  <div className="important__meta">
                     <time dateTime={item.publishedAt}>{formatImportantDate(item.publishedAt)}</time>
-                  ) : null}
-                </div>
+                  </div>
+                ) : null}
                 <h3>{item.title}</h3>
                 {item.body && (
                   <p>
