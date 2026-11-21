@@ -86,7 +86,7 @@
     "prices_format": "csv",
     "prices_url": "https://krasnoeozero.ru/winter/skipass-and-lifts",
     "status": "active",
-    "notes": "Крупнейший курорт кластера Коробицыно; ~13–18 трасс; цены и график из публичных CSV виджетов.",
+    "notes": "Крупнейший курорт кластера Коробицыно; ~13–18 трасс.",
     "sources": [
       "https://krasnoeozero.ru/",
       "https://krasnoeozero.ru/cam/",

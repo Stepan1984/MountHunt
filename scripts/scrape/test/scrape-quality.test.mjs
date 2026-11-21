@@ -198,6 +198,39 @@ describe('snezhny hours stay partial (no Playwright)', () => {
     assert.match(src, /status:\s*'partial'/)
     assert.doesNotMatch(src, /playwright|fetchRenderedHtml/i)
   })
+
+  it('hours summary is plain Russian without JS/виджет jargon', () => {
+    const src = readFileSync(join(root, 'scripts/scrape/resorts/snezhny.mjs'), 'utf8')
+    const hours = JSON.parse(readFileSync(join(root, 'public/data/hours.json'), 'utf8'))
+    const sne = hours.find((h) => h.resortId === 'snezhny')
+    assert.match(src, /Режим склонов уточняйте на сайте курорта…/)
+    assert.doesNotMatch(src, /виджет|без JS/i)
+    assert.equal(sne?.summary, 'Режим склонов уточняйте на сайте курорта…')
+  })
+})
+
+describe('visitor-facing copy avoids scrape jargon', () => {
+  it('committed hours/important/resorts avoid CSV/JS/виджет asides', () => {
+    const hours = JSON.parse(readFileSync(join(root, 'public/data/hours.json'), 'utf8'))
+    const important = JSON.parse(readFileSync(join(root, 'public/data/important.json'), 'utf8'))
+    const resorts = JSON.parse(readFileSync(join(root, 'public/data/resorts.json'), 'utf8'))
+    const jargon = /виджет|без JS|\bCSV\b|snow-park|ski-pass|playwright|Tilda|nohref/i
+    for (const h of hours) {
+      assert.doesNotMatch(h.summary || '', jargon, h.resortId)
+    }
+    for (const item of important) {
+      assert.doesNotMatch(`${item.title} ${item.body || ''}`, jargon, item.id)
+    }
+    for (const r of resorts) {
+      assert.doesNotMatch(r.notes || '', /CSV виджетов|без JS|виджет/i, r.id)
+    }
+  })
+
+  it('Krasnoe important detector uses plain Russian body', () => {
+    const src = readFileSync(join(root, 'scripts/scrape/lib/important.mjs'), 'utf8')
+    assert.match(src, /трассы и подъёмники отмечены как закрытые до сезона/)
+    assert.doesNotMatch(src, /публичному CSV графика/)
+  })
 })
 
 describe('closed-season card honesty signals', () => {

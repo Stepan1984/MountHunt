@@ -123,7 +123,7 @@ function extractHours(html) {
   let summary = 'Часы склона уточняйте на сайте'
   if (periods.length) {
     summary = periods.map((p) => `${p.open}–${p.close}`).join('; ')
-    summary = `По прайсу snow-park: ${summary}`
+    summary = `По прайсу сноупарка: ${summary}`
   }
   return { summary, periods, status: periods.length ? 'ok' : 'partial' }
 }
@@ -163,8 +163,8 @@ export async function scrapeDropPark() {
         items,
         status: items.length ? 'ok' : 'partial',
         note: items.length
-          ? 'Прайс snow-park (сезон / школа / прокат); дневной ski-pass уточняйте на месте'
-          : 'Блоки цен на /snow-park не распознаны',
+          ? 'Прайс сноупарка (сезон / школа / прокат); дневной ски-пасс уточняйте на месте'
+          : 'Цены на странице сноупарка не распознаны — смотрите сайт курорта',
       }),
       hours: hoursSnapshot({
         resortId,

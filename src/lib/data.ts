@@ -218,7 +218,7 @@ export function priceHintFor(snapshot: PriceSnapshot | undefined): string {
 }
 
 const SCRAPER_NOTE_MARKERS =
-  /playwright|\/ssr\b|\bssr\b|snapshot:|github actions|дождаться успешного|не live|status:\s*unavailable|status unavailable/i
+  /playwright|\/ssr\b|\bssr\b|snapshot:|github actions|дождаться успешного|не live|status:\s*unavailable|status unavailable|csv виджета|публичн\w*\s+csv|html-сним|\btilda\b|nohref|sev-sklon|без js|виджет на главной|извлечены\s+ocr/i
 
 /** Strip scrape/tooling clauses; keep visitor-facing blurb. */
 function stripScraperClauses(text: string): string {
@@ -258,7 +258,14 @@ export function publicResortNotes(notes: string | null | undefined): string | nu
 export function publicPriceNote(note: string | null | undefined): string | null {
   if (!note?.trim()) return null
   if (SCRAPER_NOTE_MARKERS.test(note)) return null
-  return note.trim()
+  // Soft-rewrite common tooling phrasing that still slipped into committed data.
+  const cleaned = note
+    .replace(/\bsnow-park\b/gi, 'сноупарка')
+    .replace(/\bski-?pass\b/gi, 'ски-пасс')
+    .replace(/\s*извлечены\s+ocr\s+из\s+скана\s+pdf[^.;]*/gi, ' со скана прейскуранта')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return cleaned || null
 }
 
 export function truncateText(text: string, max = 96): string {
@@ -275,6 +282,13 @@ export function localizePublicText(text: string): string {
   return text
     .replace(/https?:\/\/igora\.ru\/en\/working-hours\/?/gi, 'https://igora.ru/working-hours/')
     .replace(/\/en\/working-hours/gi, '/working-hours')
+    // Drop scrape/tooling asides that must never reach visitors.
+    .replace(/\s*\(виджет[^)]*\)/gi, '')
+    .replace(/\s*\(CSV[^)]*\)/gi, '')
+    .replace(/\s*;?\s*без\s+JS\s+недоступен/gi, '')
+    .replace(/\bsnow-park\b/gi, 'сноупарка')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 const IMPORTANT_CHROME_IDS = new Set(['mvp-data-note', 'map-note'])

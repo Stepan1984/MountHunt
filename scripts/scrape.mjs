@@ -103,7 +103,7 @@ function applySeedFixes(resorts) {
       sourcesAdd: ['https://krasnoeozero.ru/', 'https://krasnoeozero.ru/cam/', 'https://krasnoeozero.ru/grafik/'],
       sourcesDrop: [/cam\.html/],
       notes:
-        'Крупнейший курорт кластера Коробицыно; ~13–18 трасс; цены и график из публичных CSV виджетов.',
+        'Крупнейший курорт кластера Коробицыно; ~13–18 трасс.',
     },
     'lazurnye-ozera': {
       webcam_url: 'https://lazoorsnow.ru/',

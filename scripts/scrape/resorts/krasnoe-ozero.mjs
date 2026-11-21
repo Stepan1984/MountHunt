@@ -75,7 +75,7 @@ export function parseHoursFromCsv(csv) {
       hours: hoursSnapshot({
         resortId: 'krasnoe-ozero',
         sourceUrl: HOURS_PAGE_URL,
-        summary: 'Колонка даты в CSV графика не найдена',
+        summary: 'Режим склонов уточняйте на сайте курорта',
         status: 'partial',
       }),
       important: [],
@@ -125,9 +125,9 @@ export function parseHoursFromCsv(csv) {
     bits.push(`Трассы: ${sample.val || 'нет данных'} (${dateCol})`)
   }
 
-  let summary = bits.slice(0, 4).join('; ') || `График на ${dateCol} без ski-строк`
+  let summary = bits.slice(0, 4).join('; ') || `График на ${dateCol}: данные по склонам не найдены`
   if (closedUntilSeason || (allClosed && slopes.length)) {
-    summary = `На ${dateCol}: склоны/подъёмники закрыты до сезона (CSV графика)`
+    summary = `На ${dateCol}: склоны/подъёмники закрыты до сезона`
   }
 
   const important = detectKrasnoeImportantFromFlags(
@@ -236,7 +236,7 @@ export async function scrapeKrasnoeOzero() {
           hours: hoursSnapshot({
             resortId,
             sourceUrl: HOURS_PAGE_URL,
-            summary: 'CSV графика недоступен',
+            summary: 'Режим склонов уточняйте на сайте курорта',
             status: 'partial',
           }),
           important: [],
@@ -252,8 +252,8 @@ export async function scrapeKrasnoeOzero() {
         groups,
         status: groups.length ? 'ok' : 'partial',
         note: groups.length
-          ? 'Источник: публичный CSV виджета цен курорта'
-          : 'CSV получен, ski-pass строки не найдены',
+          ? undefined
+          : 'Цены на ски-пассы на сайте не найдены — уточняйте на странице тарифов',
       }),
       hours: hoursPack.hours,
       webcamUrl: WEBCAM_URL,

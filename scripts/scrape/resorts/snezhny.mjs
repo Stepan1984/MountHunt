@@ -145,7 +145,7 @@ export async function scrapeSnezhny() {
       hours: hoursSnapshot({
         resortId,
         sourceUrl: HOME_URL,
-        summary: 'Режим склонов уточняйте на сайте курорта (виджет на главной; без JS недоступен)',
+        summary: 'Режим склонов уточняйте на сайте курорта…',
         periods: [],
         status: 'partial',
       }),

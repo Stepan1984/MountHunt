@@ -147,7 +147,7 @@ export function detectKrasnoeImportantFromFlags(pack, sourceUrl) {
       id: 'krasnoe-slopes-closed',
       resortId: 'krasnoe-ozero',
       title: 'Красное озеро: склоны закрыты до сезона',
-      body: `По публичному CSV графика на ${pack.dateCol} трассы/подъёмники отмечены как закрытые до сезона.`,
+      body: `На ${pack.dateCol} трассы и подъёмники отмечены как закрытые до сезона.`,
       severity: 'warn',
       sourceUrl,
       ...(publishedAt ? { publishedAt } : {}),
