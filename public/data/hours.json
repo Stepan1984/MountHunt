@@ -21,8 +21,8 @@
   {
     "resortId": "igora",
     "scrapedAt": "2026-11-21T13:18:23Z",
-    "sourceUrl": "https://igora.ru/price/",
-    "summary": "Часы склонов уточняйте на https://igora.ru/working-hours/",
+    "sourceUrl": "https://igora.ru/working-hours/",
+    "summary": "Часы склонов уточняйте на сайте курорта",
     "periods": [],
     "status": "partial"
   },
@@ -101,7 +101,7 @@
     "resortId": "snezhny",
     "scrapedAt": "2026-11-21T13:15:59Z",
     "sourceUrl": "https://snegny.ru/",
-    "summary": "Режим склонов уточняйте на главной snegny.ru (виджет; HTML без JS недоступен)",
+    "summary": "Режим склонов уточняйте на сайте курорта (виджет на главной; без JS недоступен)",
     "periods": [],
     "status": "partial"
   },

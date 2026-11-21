@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { ExternalLink, LinkedText } from '../components/LinkedText'
 import { ResortMap } from '../components/ResortMap'
 import { SkipassTables } from '../components/SkipassTables'
 import { WebcamSection } from '../components/WebcamPlayer'
@@ -15,6 +16,7 @@ import {
   statusLabel,
   yandexMapsUrl,
 } from '../lib/data'
+import { linkLabelForUrl } from '../lib/links'
 import { resolveWebcamPlayers, webcamExternalLink } from '../lib/webcam'
 import type { SiteData } from '../types'
 
@@ -40,6 +42,7 @@ export function ResortPage({ data }: { data: SiteData }) {
   const important = data.important.filter((i) => i.resortId === resort.id)
   const hasCoords = resort.lat != null && resort.lon != null
   const tariffsUrl = prices?.sourceUrl || resort.prices_url || resort.website || undefined
+  const hoursSourceUrl = hours?.sourceUrl || undefined
   const hoursSummary = hours?.summary ? localizePublicText(hours.summary) : 'Нет данных'
   const closed = slopesClosedHint(resort.id, hours, data.important)
   const visitorNotes = publicResortNotes(resort.notes)
@@ -71,33 +74,40 @@ export function ResortPage({ data }: { data: SiteData }) {
         )}
       </header>
 
-      {visitorNotes && <p className="resort-detail__notes">{visitorNotes}</p>}
+      {visitorNotes && (
+        <p className="resort-detail__notes">
+          <LinkedText text={visitorNotes} />
+        </p>
+      )}
 
       <div className="resort-detail__actions" role="group" aria-label="Быстрые ссылки">
         {resort.website && (
-          <a className="btn btn--primary" href={resort.website} target="_blank" rel="noreferrer">
-            Официальный сайт
-          </a>
+          <ExternalLink className="btn btn--primary" href={resort.website}>
+            Сайт курорта
+          </ExternalLink>
         )}
         {hasCoords && (
-          <a
+          <ExternalLink
             className="btn btn--ghost"
             href={yandexMapsUrl(resort.lat as number, resort.lon as number)}
-            target="_blank"
-            rel="noreferrer"
           >
             Яндекс Карты
-          </a>
+          </ExternalLink>
         )}
         {webcamLink && (
-          <a className="btn btn--ghost" href={webcamLink} target="_blank" rel="noreferrer">
+          <ExternalLink className="btn btn--ghost" href={webcamLink}>
             Открыть трансляцию
-          </a>
+          </ExternalLink>
+        )}
+        {hoursSourceUrl && (
+          <ExternalLink className="btn btn--ghost" href={hoursSourceUrl}>
+            Часы работы
+          </ExternalLink>
         )}
         {tariffsUrl && (
-          <a className="btn btn--ghost" href={tariffsUrl} target="_blank" rel="noreferrer">
+          <ExternalLink className="btn btn--ghost" href={tariffsUrl}>
             Тарифы на сайте
-          </a>
+          </ExternalLink>
         )}
       </div>
 
@@ -126,11 +136,15 @@ export function ResortPage({ data }: { data: SiteData }) {
                   <time dateTime={item.updatedAt}>{formatUpdatedAt(item.updatedAt)}</time>
                 </div>
                 <h3>{item.title}</h3>
-                {item.body && <p>{item.body}</p>}
+                {item.body && (
+                  <p>
+                    <LinkedText text={item.body} />
+                  </p>
+                )}
                 {item.sourceUrl && (
-                  <a href={item.sourceUrl} target="_blank" rel="noreferrer">
-                    Источник
-                  </a>
+                  <ExternalLink href={item.sourceUrl}>
+                    {linkLabelForUrl(item.sourceUrl, 'Источник')}
+                  </ExternalLink>
                 )}
               </li>
             ))}
@@ -141,7 +155,9 @@ export function ResortPage({ data }: { data: SiteData }) {
       <div className="detail-grid">
         <section>
           <h2>Часы работы</h2>
-          <p className="detail-lead">{hoursSummary}</p>
+          <p className="detail-lead">
+            <LinkedText text={hoursSummary} />
+          </p>
           {hours?.periods && hours.periods.length > 0 && (
             <ul className="period-list">
               {hours.periods.map((period) => (
@@ -153,6 +169,11 @@ export function ResortPage({ data }: { data: SiteData }) {
                 </li>
               ))}
             </ul>
+          )}
+          {hoursSourceUrl && (
+            <p>
+              <ExternalLink href={hoursSourceUrl}>Часы работы</ExternalLink>
+            </p>
           )}
           {hours?.status === 'failed' && (
             <p className="muted">
@@ -175,10 +196,23 @@ export function ResortPage({ data }: { data: SiteData }) {
               onToggleShowAll={() => setShowAllPrices((v) => !v)}
             />
           ) : (
-            <p>{visitorPriceNote ?? 'Цены появятся после ежедневного обновления данных.'}</p>
+            <p>
+              {visitorPriceNote ? (
+                <LinkedText text={visitorPriceNote} />
+              ) : (
+                'Цены появятся после ежедневного обновления данных.'
+              )}
+            </p>
           )}
           {visitorPriceNote && (priceItems.length > 0 || hasSkipassTables) && (
-            <p className="muted">{visitorPriceNote}</p>
+            <p className="muted">
+              <LinkedText text={visitorPriceNote} />
+            </p>
+          )}
+          {tariffsUrl && (
+            <p>
+              <ExternalLink href={tariffsUrl}>Тарифы на сайте</ExternalLink>
+            </p>
           )}
           {prices?.status === 'failed' && (
             <p className="muted">
@@ -218,28 +252,36 @@ export function ResortPage({ data }: { data: SiteData }) {
           <ul className="link-list">
             {resort.website && (
               <li>
-                <a href={resort.website} target="_blank" rel="noreferrer">
-                  Официальный сайт
-                </a>
+                <ExternalLink href={resort.website}>Сайт курорта</ExternalLink>
               </li>
             )}
             {webcamLink && (
               <li>
-                <a href={webcamLink} target="_blank" rel="noreferrer">
-                  Открыть трансляцию
-                </a>
+                <ExternalLink href={webcamLink}>Открыть трансляцию</ExternalLink>
+              </li>
+            )}
+            {hoursSourceUrl && (
+              <li>
+                <ExternalLink href={hoursSourceUrl}>Часы работы</ExternalLink>
+              </li>
+            )}
+            {tariffsUrl && (
+              <li>
+                <ExternalLink href={tariffsUrl}>Тарифы на сайте</ExternalLink>
               </li>
             )}
             {resort.community_links?.map((url) => (
               <li key={url}>
-                <a href={url} target="_blank" rel="noreferrer">
-                  Сообщество
-                </a>
+                <ExternalLink href={url}>{linkLabelForUrl(url, 'Сообщество')}</ExternalLink>
               </li>
             ))}
-            {!resort.website && !webcamLink && !resort.community_links?.length && (
-              <li className="muted">Публичных ссылок пока нет</li>
-            )}
+            {!resort.website &&
+              !webcamLink &&
+              !hoursSourceUrl &&
+              !tariffsUrl &&
+              !resort.community_links?.length && (
+                <li className="muted">Публичных ссылок пока нет</li>
+              )}
           </ul>
         </section>
       </div>

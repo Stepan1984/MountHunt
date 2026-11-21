@@ -461,7 +461,6 @@ export async function scrapeIgora() {
     await sleep(500)
 
     let hoursHtml = ''
-    let hoursVia = ''
     // Skip fragile live hours when running against HTML snapshots only.
     if (!process.env.IGORA_HTML_DIR && !process.env.SCRAPE_HTML_DIR) {
       try {
@@ -470,7 +469,6 @@ export async function scrapeIgora() {
           allowBundledSnapshot: false,
         })
         hoursHtml = hoursLoad.html
-        hoursVia = hoursLoad.via
       } catch {
         hoursHtml = ''
       }
@@ -507,7 +505,7 @@ export async function scrapeIgora() {
     const hours = hoursHtml
       ? parseIgoraHours(hoursHtml)
       : {
-          summary: 'Часы склонов уточняйте на https://igora.ru/working-hours/',
+          summary: 'Часы склонов уточняйте на сайте курорта',
           periods: [],
           status: 'partial',
         }
@@ -538,7 +536,8 @@ export async function scrapeIgora() {
       }),
       hours: hoursSnapshot({
         resortId,
-        sourceUrl: hoursVia ? HOURS_URL : PRICE_URL,
+        // Always point visitors at the hours page (not /price/), even on fallback.
+        sourceUrl: HOURS_URL,
         summary: hours.summary,
         periods: hours.periods,
         status: hours.status,

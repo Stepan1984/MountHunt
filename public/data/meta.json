@@ -57,7 +57,7 @@
       "prices": "ok",
       "hours": "partial",
       "itemCount": 45,
-      "summary": "Режим склонов уточняйте на главной snegny.ru (виджет; HTML без JS недоступен)"
+      "summary": "Режим склонов уточняйте на сайте курорта (виджет на главной; без JS недоступен)"
     },
     {
       "id": "drop-park",
@@ -81,7 +81,7 @@
       "prices": "ok",
       "hours": "partial",
       "itemCount": 36,
-      "summary": "Часы склонов уточняйте на https://igora.ru/working-hours/"
+      "summary": "Часы склонов уточняйте на сайте курорта"
     },
     {
       "id": "severny-sklon",
