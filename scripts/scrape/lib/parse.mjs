@@ -273,13 +273,13 @@ export function mergeSnapshot(prev, next, resortId, blank) {
   if (next && next.status === 'failed' && (!prev || prev.status === 'pending')) return next
   if (!prev) return next || blank(resortId)
   if (!next) {
-    return { ...prev, status: 'failed', note: prev.note || 'Сбор данных не удался — показан прошлый снимок' }
+    return { ...prev, status: 'failed', note: prev.note || 'Сбор данных не удался — показаны прежние данные' }
   }
   // failed after having data: keep items/summary/scrapedAt from prev
   return {
     ...prev,
     status: 'failed',
     sourceUrl: next.sourceUrl || prev.sourceUrl,
-    note: next.note || prev.note || 'Сбор данных не удался — показан прошлый снимок',
+    note: next.note || prev.note || 'Сбор данных не удался — показаны прежние данные',
   }
 }

@@ -104,7 +104,7 @@ export async function scrapeLazurnyeOzera() {
         sourceUrl: PRICES_URL,
         groups,
         status: groups.length ? 'ok' : 'partial',
-        note: groups.length ? undefined : 'Таблица цен не распознана',
+        note: groups.length ? undefined : 'Таблицу цен не удалось прочитать',
       }),
       hours: hoursSnapshot({
         resortId,

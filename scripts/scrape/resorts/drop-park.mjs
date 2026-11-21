@@ -164,7 +164,7 @@ export async function scrapeDropPark() {
         status: items.length ? 'ok' : 'partial',
         note: items.length
           ? 'Прайс сноупарка (сезон / школа / прокат); дневной ски-пасс уточняйте на месте'
-          : 'Цены на странице сноупарка не распознаны — смотрите сайт курорта',
+          : 'Цены на странице сноупарка не удалось прочитать — смотрите сайт курорта',
       }),
       hours: hoursSnapshot({
         resortId,

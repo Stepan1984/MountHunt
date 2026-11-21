@@ -140,7 +140,7 @@ export async function scrapeSnezhny() {
         status: groups.length ? 'ok' : 'partial',
         note: groups.length
           ? 'Сезонные/подъёмные тарифы со страницы ски-пассов; уточняйте на сайте'
-          : 'Таблицы ски-пассов не распознаны',
+          : 'Таблицы ски-пассов не удалось прочитать',
       }),
       hours: hoursSnapshot({
         resortId,

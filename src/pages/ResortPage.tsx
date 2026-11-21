@@ -212,7 +212,7 @@ export function ResortPage({ data }: { data: SiteData }) {
           )}
           {prices?.status === 'failed' && (
             <p className="muted">
-              Последний сбор цен не удался — показан прошлый снимок, если он был.
+              Последний сбор цен не удался — показаны прежние данные, если они были.
             </p>
           )}
           <p className="muted">

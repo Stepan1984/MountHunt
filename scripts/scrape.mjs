@@ -119,7 +119,7 @@ function applySeedFixes(resorts) {
     yukki: {
       prices_format: 'pdf',
       notes:
-        'ГАУ ЛО СТЦ; учебный и основные склоны; VK https://vk.com/skyukki. Координаты приблизительные. Цены — PDF-прейскурант.',
+        'ГАУ ЛО СТЦ; учебный и основные склоны; VK https://vk.com/skyukki. Координаты приблизительные. Цены — прейскурант на сайте.',
     },
     snezhny: {
       prices_format: 'html',

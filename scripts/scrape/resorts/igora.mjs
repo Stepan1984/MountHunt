@@ -913,7 +913,7 @@ export async function scrapeIgora() {
 
     // Visitor-facing notes only — scrape/CI debug stays in meta/logs, not price.note.
     if (!items.length) {
-      notes.push('Таблицы цен не распознаны — смотрите сайт курорта')
+      notes.push('Таблицы цен не удалось прочитать — смотрите сайт курорта')
     }
     if (fromSnapshot || incompleteLive) {
       notes.push('Часть тарифов может быть неполной — уточняйте на сайте курорта')
