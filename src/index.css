@@ -137,7 +137,8 @@ main {
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 30;
+  /* Above Leaflet panes/controls (tiles 200 … popup 700, .leaflet-top/bottom 1000). */
+  z-index: 1100;
   backdrop-filter: blur(12px);
   background: rgba(244, 247, 249, 0.86);
   border-bottom: 1px solid var(--line);
