@@ -29,7 +29,7 @@ export function ImportantSection({ items, resorts, meta, variant = 'full' }: Pro
           Свежие статусы по курортам — без персональных уведомлений
           {refreshedAt ? (
             <>
-              . Снимок:{' '}
+              . Обновлено:{' '}
               <time dateTime={refreshedAt}>{formatUpdatedAt(refreshedAt)}</time>
             </>
           ) : (

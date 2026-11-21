@@ -49,7 +49,7 @@
     "resortId": "krasnoe-ozero",
     "scrapedAt": "2026-11-21T13:15:54Z",
     "sourceUrl": "https://krasnoeozero.ru/grafik/",
-    "summary": "На 21.11.2026: склоны/подъёмники закрыты до сезона (CSV графика)",
+    "summary": "На 21.11.2026: склоны/подъёмники закрыты до сезона",
     "periods": [],
     "status": "ok"
   },
@@ -101,7 +101,7 @@
     "resortId": "snezhny",
     "scrapedAt": "2026-11-21T13:15:59Z",
     "sourceUrl": "https://snegny.ru/",
-    "summary": "Режим склонов уточняйте на сайте курорта (виджет на главной; без JS недоступен)",
+    "summary": "Режим склонов уточняйте на сайте курорта…",
     "periods": [],
     "status": "partial"
   },
@@ -195,7 +195,7 @@
     "resortId": "drop-park",
     "scrapedAt": "2026-11-21T13:16:02Z",
     "sourceUrl": "https://drop-park.ru/snow-park",
-    "summary": "По прайсу snow-park: 10:00–21:00; 11:00–23:00",
+    "summary": "По прайсу сноупарка: 10:00–21:00; 11:00–23:00",
     "periods": [
       {
         "days": "полный день (по прайсу)",

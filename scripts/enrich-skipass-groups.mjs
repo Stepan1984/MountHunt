@@ -306,9 +306,8 @@ function enrichIgora(snap) {
     snap.status = 'partial'
   }
   if (merged.filledSkiPass) {
-    const extra =
-      'ски-пасс (почасовые/проходы) из HTML-снимка — live без таблиц абонементов'
-    if (!String(snap.note || '').includes('ски-пасс (почасовые/проходы) из HTML-снимка')) {
+    const extra = 'Часть тарифов может быть неполной — уточняйте на сайте курорта'
+    if (!String(snap.note || '').includes('Часть тарифов может быть неполной')) {
       snap.note = snap.note ? `${snap.note}. ${extra}` : extra
     }
   }

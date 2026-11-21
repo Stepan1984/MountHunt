@@ -59,11 +59,11 @@ export async function scrapeSevernySklon() {
     const fakeSkiCta = /цены на ski pass/i.test(html) && /data-redactor-nohref/i.test(html)
     const contacts = [phone, email, address].filter(Boolean).join(', ')
 
+    // Visitor-facing note only — scrape/CMS jargon stays in source comments above.
     const contactNote = [
-      contacts ? `Контакты с сайта: ${contacts}` : 'Контакты: см. severnysklon.ru',
-      'Цены ski-pass / подъёмников на официальном сайте не опубликованы — не подставляем чужие агрегаторы',
-      fakeSkiCta ? 'Кнопки «цены на ski pass» без ссылки (Tilda nohref)' : null,
-      'Не использовать устаревший sev-sklon.ru как источник прайса',
+      contacts ? `Контакты: ${contacts}` : 'Контакты уточняйте на сайте курорта',
+      'Цены на ски-пассы и подъёмники на официальном сайте не опубликованы — уточняйте у курорта',
+      fakeSkiCta ? 'На сайте нет рабочей ссылки на тарифы' : null,
     ]
       .filter(Boolean)
       .join('. ')

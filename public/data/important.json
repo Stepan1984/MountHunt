@@ -29,7 +29,7 @@
     "id": "krasnoe-slopes-closed",
     "resortId": "krasnoe-ozero",
     "title": "Красное озеро: склоны закрыты до сезона",
-    "body": "По публичному CSV графика на 21.11.2026 трассы/подъёмники отмечены как закрытые до сезона.",
+    "body": "На 21.11.2026 трассы и подъёмники отмечены как закрытые до сезона.",
     "severity": "warn",
     "updatedAt": "2026-11-21T17:53:53Z",
     "sourceUrl": "https://krasnoeozero.ru/grafik/",

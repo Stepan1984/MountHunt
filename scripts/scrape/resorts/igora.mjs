@@ -851,7 +851,7 @@ export async function scrapeIgora() {
   const notes = []
   try {
     const priceLoad = await loadPageHtml(PRICE_URL, { waitForSelector: '.common-price__table' })
-    if (priceLoad.note) notes.push(priceLoad.note)
+    // priceLoad.note is scrape/debug English — never copy into visitor price.note.
 
     await sleep(500)
 
@@ -911,20 +911,12 @@ export async function scrapeIgora() {
     const fromSnapshot = /snapshot/i.test(priceLoad.via)
     const incompleteLive = merged.filledSkiPass
 
+    // Visitor-facing notes only — scrape/CI debug stays in meta/logs, not price.note.
     if (!items.length) {
-      notes.push('Таблицы .common-price__table не распознаны или пусты')
+      notes.push('Таблицы цен не распознаны — смотрите сайт курорта')
     }
-    if (fromSnapshot) {
-      notes.push(
-        `Цены из HTML-снимка (${priceLoad.via}), не live — дождитесь успешного Playwright в CI`,
-      )
-    } else if (priceLoad.via === 'playwright' || priceLoad.via === 'fetch') {
-      notes.push(`источник: ${priceLoad.via}`)
-    }
-    if (incompleteLive) {
-      notes.push(
-        'ски-пасс (почасовые/проходы) из HTML-снимка — live-страница без таблиц абонементов',
-      )
+    if (fromSnapshot || incompleteLive) {
+      notes.push('Часть тарифов может быть неполной — уточняйте на сайте курорта')
     }
 
     const priceStatus = !items.length

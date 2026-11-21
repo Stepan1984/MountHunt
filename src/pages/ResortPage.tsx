@@ -266,7 +266,7 @@ export function ResortPage({ data }: { data: SiteData }) {
 
       <p className="muted resort-detail__meta">
         Данные каталога: {formatUpdatedAt(data.meta.updatedAt)}. Цены и часы — с официальных
-        публичных страниц (где парсер уже есть) либо заглушка со ссылкой на сайт курорта. Не оферта.
+        публичных страниц курортов; где данных ещё нет — смотрите ссылку на сайт. Не оферта.
       </p>
     </article>
   )
