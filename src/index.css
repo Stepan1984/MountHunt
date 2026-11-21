@@ -778,6 +778,24 @@ main {
   font-size: 1.12rem;
 }
 
+.detail-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.detail-section__head h2 {
+  margin: 0;
+}
+
+.detail-section__source {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
 .detail-lead {
   font-size: 1rem;
   line-height: 1.5;
