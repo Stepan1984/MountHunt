@@ -277,6 +277,38 @@ describe('closed-season card honesty signals', () => {
     assert.equal((sev?.items || []).length, 0)
     assert.equal(sne?.status, 'partial')
   })
+
+  it('Severny price note has no contacts/address; contacts live on resort', () => {
+    const prices = JSON.parse(readFileSync(join(root, 'public/data/prices.json'), 'utf8'))
+    const resorts = JSON.parse(readFileSync(join(root, 'public/data/resorts.json'), 'utf8'))
+    const sevPrice = prices.find((p) => p.resortId === 'severny-sklon')
+    const sev = resorts.find((r) => r.id === 'severny-sklon')
+    assert.ok(sevPrice?.note)
+    assert.doesNotMatch(sevPrice.note, /Контакты|924-81-81|@mail\.ru|Офицерская/i)
+    assert.match(sevPrice.note, /не опубликованы/i)
+    assert.match(sev?.phone || '', /924/)
+    assert.match(sev?.email || '', /@mail\.ru/i)
+  })
+})
+
+describe('resort page block semantics', () => {
+  it('Severny scraper keeps contacts off the prices note', () => {
+    const src = readFileSync(join(root, 'scripts/scrape/resorts/severny-sklon.mjs'), 'utf8')
+    assert.match(src, /contacts:\s*\{/)
+    assert.doesNotMatch(src, /Контакты: \$\{contacts\}/)
+    assert.match(src, /не опубликованы/)
+  })
+
+  it('ResortPage keeps shared order and address only under Локация', () => {
+    const src = readFileSync(join(root, 'src/pages/ResortPage.tsx'), 'utf8')
+    assert.match(src, /hours → prices → contacts → location → links/)
+    assert.match(src, /city_or_district \|\| resort\.area/)
+    assert.match(src, /resort-contacts-title/)
+    assert.match(src, /resort-location-title/)
+    // Address hyperlink appears once (Location), not also in the header.
+    const addressLinks = src.match(/resort-detail__address/g) || []
+    assert.equal(addressLinks.length, 1)
+  })
 })
 
 describe('Igora Playwright waits for attached tables', () => {

@@ -880,6 +880,31 @@ main {
   padding-left: 1.1rem;
 }
 
+.contact-list {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.contact-list li {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.contact-list__label {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.contact-list a {
+  font-weight: 600;
+  word-break: break-word;
+}
+
 .about-page__lead {
   font-size: 1rem;
   line-height: 1.5;

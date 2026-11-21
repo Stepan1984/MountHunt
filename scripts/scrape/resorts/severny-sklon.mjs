@@ -11,7 +11,8 @@ const SITE_URL = 'https://severnysklon.ru/'
 
 /**
  * Ski-pass prices are not published on the official site (audit 2026-11-18).
- * Scrape contacts + restaurant hours that do exist; mark lift prices unavailable.
+ * Contacts (phone/email) go on the resort record — never into the prices note.
+ * Address stays in resort.area (Location section); do not duplicate it here.
  * @returns {Promise<object>}
  */
 export async function scrapeSevernySklon() {
@@ -21,15 +22,11 @@ export async function scrapeSevernySklon() {
     const $ = loadHtml(html)
     const text = cleanText($('body').text())
 
-    // Contacts only from live DOM — do not invent phone/email/address on regex miss.
+    // Contacts only from live DOM — do not invent phone/email on regex miss.
     const phoneMatch = text.match(/\+7\s*\(?\s*911\s*\)?\s*924[-\s]?81[-\s]?81/)
     const phone = phoneMatch ? cleanText(phoneMatch[0].replace(/\s+/g, ' ')) : null
     const emailMatch = text.match(/sevsklon_toxovo@mail\.ru/i)
     const email = emailMatch ? emailMatch[0] : null
-    const addressMatch = text.match(
-      /Офицерская\s+ул\.,?\s*17Б(?:,\s*городской посёлок Токсово)?/i,
-    )
-    const address = addressMatch ? cleanText(addressMatch[0]) : null
 
     // Restaurant hours (only published schedule on the marketing site) — not slope hours.
     const periods = []
@@ -57,11 +54,9 @@ export async function scrapeSevernySklon() {
     // Decorative "цены на ski pass" buttons have data-redactor-nohref — no actual price page.
     // Do not scrape third-party aggregators for ski-pass numbers.
     const fakeSkiCta = /цены на ski pass/i.test(html) && /data-redactor-nohref/i.test(html)
-    const contacts = [phone, email, address].filter(Boolean).join(', ')
 
-    // Visitor-facing note only — scrape/CMS jargon stays in source comments above.
-    const contactNote = [
-      contacts ? `Контакты: ${contacts}` : 'Контакты уточняйте на сайте курорта',
+    // Price note = tariffs only. Contacts → resort.phone/email; address → resort.area.
+    const priceNote = [
       'Цены на ски-пассы и подъёмники на официальном сайте не опубликованы — уточняйте у курорта',
       fakeSkiCta ? 'На сайте нет рабочей ссылки на тарифы' : null,
     ]
@@ -70,12 +65,16 @@ export async function scrapeSevernySklon() {
 
     return {
       resortId,
+      contacts: {
+        ...(phone ? { phone } : {}),
+        ...(email ? { email } : {}),
+      },
       prices: priceSnapshot({
         resortId,
         sourceUrl: SITE_URL,
         items: [],
         status: 'unavailable',
-        note: contactNote,
+        note: priceNote,
       }),
       hours: hoursSnapshot({
         resortId,

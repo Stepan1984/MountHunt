@@ -26,6 +26,11 @@ import type { SiteData } from '../types'
 
 const PRICE_PREVIEW = 8
 
+/**
+ * Shared resort-detail section order (all resorts):
+ * header → notes → site → webcam → important → hours → prices → contacts → location → links
+ * Address lives only under «Локация» (Yandex link); phone/email only under «Контакты».
+ */
 export function ResortPage({ data }: { data: SiteData }) {
   const { id } = useParams()
   const resort = data.resorts.find((r) => r.id === id)
@@ -67,11 +72,15 @@ export function ResortPage({ data }: { data: SiteData }) {
   const webcamStreams = resolveWebcamPlayers(resort.webcam_url, resort.webcam_embeds)
   const webcamLink = webcamExternalLink(resort.webcam_url, resort.webcam_embeds)
   const communityLinks = resort.community_links ?? []
+  const phone = resort.phone?.trim() || null
+  const email = resort.email?.trim() || null
+  const hasContacts = Boolean(phone || email)
   const mapsUrl = yandexMapsUrl({
     lat: resort.lat,
     lon: resort.lon,
     query: resortAddressQuery(resort),
   })
+  const telHref = phone ? `tel:${phone.replace(/[^\d+]/g, '')}` : undefined
 
   return (
     <article className="section page-narrow resort-detail">
@@ -85,15 +94,8 @@ export function ResortPage({ data }: { data: SiteData }) {
         <div>
           <p className="resort-detail__brand-kicker">MountHunt</p>
           <h1>{resort.name}</h1>
-          {mapsUrl ? (
-            <p className="resort-detail__area">
-              <ExternalLink className="resort-detail__address" href={mapsUrl}>
-                {resort.area}
-              </ExternalLink>
-            </p>
-          ) : (
-            <p className="resort-detail__area">{resort.area}</p>
-          )}
+          {/* District only — full street address is sole under «Локация». */}
+          <p className="resort-detail__area">{resort.city_or_district || resort.area}</p>
         </div>
         {closed ? (
           <span className="badge badge--warn">Склоны закрыты</span>
@@ -155,9 +157,9 @@ export function ResortPage({ data }: { data: SiteData }) {
       )}
 
       <div className="detail-grid">
-        <section>
+        <section aria-labelledby="resort-hours-title">
           <div className="detail-section__head">
-            <h2>Часы работы</h2>
+            <h2 id="resort-hours-title">Часы работы</h2>
             {hoursLink && (
               <ExternalLink className="detail-section__source" href={hoursLink}>
                 Расписание на сайте
@@ -203,9 +205,12 @@ export function ResortPage({ data }: { data: SiteData }) {
           </p>
         </section>
 
-        <section className={hasSkipassTables ? 'detail-grid__wide' : undefined}>
+        <section
+          className={hasSkipassTables ? 'detail-grid__wide' : undefined}
+          aria-labelledby="resort-prices-title"
+        >
           <div className="detail-section__head">
-            <h2>Цены</h2>
+            <h2 id="resort-prices-title">Цены</h2>
             {tariffsLink && (
               <ExternalLink className="detail-section__source" href={tariffsLink}>
                 Тарифы на сайте
@@ -244,10 +249,33 @@ export function ResortPage({ data }: { data: SiteData }) {
           </p>
         </section>
 
-        <section className="detail-grid__wide">
+        {hasContacts && (
+          <section aria-labelledby="resort-contacts-title">
+            <div className="detail-section__head">
+              <h2 id="resort-contacts-title">Контакты</h2>
+            </div>
+            <ul className="contact-list">
+              {phone && telHref && (
+                <li>
+                  <span className="contact-list__label">Телефон</span>
+                  <a href={telHref}>{phone}</a>
+                </li>
+              )}
+              {email && (
+                <li>
+                  <span className="contact-list__label">Почта</span>
+                  <a href={`mailto:${email}`}>{email}</a>
+                </li>
+              )}
+            </ul>
+          </section>
+        )}
+
+        <section className="detail-grid__wide" aria-labelledby="resort-location-title">
           <div className="detail-section__head">
-            <h2>Локация</h2>
+            <h2 id="resort-location-title">Локация</h2>
           </div>
+          {/* Address once here — hyperlink to Яндекс Карты (#37); not repeated in header. */}
           {mapsUrl ? (
             <p>
               <ExternalLink className="resort-detail__address" href={mapsUrl}>
@@ -278,8 +306,8 @@ export function ResortPage({ data }: { data: SiteData }) {
         </section>
 
         {communityLinks.length > 0 && (
-          <section>
-            <h2>Ссылки</h2>
+          <section aria-labelledby="resort-links-title">
+            <h2 id="resort-links-title">Ссылки</h2>
             <ul className="link-list">
               {communityLinks.map((url) => (
                 <li key={url}>
