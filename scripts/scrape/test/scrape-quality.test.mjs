@@ -307,6 +307,18 @@ describe('skipass groups', () => {
     )
   })
 
+  it('committed Snezhny keeps season and unified groups', () => {
+    const prices = JSON.parse(readFileSync(join(root, 'public/data/prices.json'), 'utf8'))
+    const sne = prices.find((p) => p.resortId === 'snezhny')
+    assert.ok(sne?.groups?.some((g) => /^Абонементы$/i.test(g.category)))
+    assert.ok(sne?.groups?.some((g) => /Единый ски-пасс/i.test(g.category)))
+    const lift = sne?.groups?.find((g) => /часы и проходы/i.test(g.category))
+    assert.ok(lift?.rows?.some((r) => r.duration === '1 проход'), 'duration without redundant «Ски-пасс ·»')
+    assert.ok(
+      (sne?.groups?.find((g) => /^Абонементы$/i.test(g.category))?.rows || []).length >= 3,
+    )
+  })
+
   it('lazurnye durations are not doubled «ч ч»', () => {
     const prices = JSON.parse(readFileSync(join(root, 'public/data/prices.json'), 'utf8'))
     const snap = prices.find((p) => p.resortId === 'lazurnye-ozera')

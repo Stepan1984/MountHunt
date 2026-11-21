@@ -147,9 +147,12 @@ function enrichSnezhny(snap) {
   const unified = []
 
   for (const it of snap.items || []) {
-    const liftM = it.title.match(/^(.+?)\s+\((будни|выходные),\s*(льготный|взрослый)\)$/i)
+    // Flat titles: «Ски-пасс · 1 проход (Будни, льготный)» or legacy bare duration.
+    const liftM = it.title.match(
+      /^(?:Ски-пасс\s*·\s*)?(.+?)\s+\((будни|выходные),\s*(льготный|взрослый)\)$/i,
+    )
     if (liftM) {
-      const duration = liftM[1]
+      const duration = liftM[1].replace(/^Ски-пасс\s*·\s*/i, '').trim()
       const col =
         /будн/i.test(liftM[2]) && /льгот/i.test(liftM[3])
           ? 0
@@ -162,9 +165,25 @@ function enrichSnezhny(snap) {
       lift.get(duration)[col] = { price: it.price, rawText: it.rawText }
       continue
     }
-    if (/^Абонемент:/i.test(it.title)) {
+    // Flat: «Абонемент «Взрослый» · сезон» (also legacy «Абонемент: …»).
+    // No \b — JS word boundaries are ASCII-only and miss Cyrillic.
+    if (/^Абонемент(?=$|[^\p{L}\p{N}])/iu.test(it.title)) {
+      let name = it.title.replace(/\s*·\s*сезон\s*$/i, '').trim()
+      if (/^Абонемент:\s*/i.test(name)) {
+        name = `Абонемент ${name.replace(/^Абонемент:\s*/i, '').trim()}`
+      }
       season.push({
-        name: it.title.replace(/^Абонемент:\s*/i, ''),
+        name,
+        duration: 'сезон',
+        prices: [{ price: it.price, rawText: it.rawText }],
+      })
+      continue
+    }
+    // Flat unified (category omitted when column is «Цена»): «Взрослый · сезон».
+    const uniFlat = it.title.match(/^(Взрослый|Детский)\s*·\s*сезон$/i)
+    if (uniFlat) {
+      unified.push({
+        name: uniFlat[1],
         duration: 'сезон',
         prices: [{ price: it.price, rawText: it.rawText }],
       })
@@ -172,11 +191,26 @@ function enrichSnezhny(snap) {
     }
     if (/^Единый ски-пасс/i.test(it.title)) {
       unified.push({
-        name: it.title.replace(/^Единый ски-пасс Снежный\/Золотая Долина:\s*/i, ''),
+        name: it.title
+          .replace(/^Единый ски-пасс Снежный\/Золотая Долина:\s*/i, '')
+          .replace(/\s*·\s*сезон\s*$/i, '')
+          .trim(),
         duration: 'сезон',
         prices: [{ price: it.price, rawText: it.rawText }],
       })
     }
+  }
+
+  // Fail-soft: if items still used old titles, keep prior season/unified rows.
+  if (!season.length) {
+    const prev = (snap.groups || []).find(
+      (g) => /абонемент/i.test(g.category || '') && !/единый/i.test(g.category || ''),
+    )
+    if (prev?.rows?.length) season.push(...prev.rows)
+  }
+  if (!unified.length) {
+    const prev = (snap.groups || []).find((g) => /единый/i.test(g.category || ''))
+    if (prev?.rows?.length) unified.push(...prev.rows)
   }
 
   const groups = []
