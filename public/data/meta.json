@@ -1,15 +1,15 @@
 {
-  "updatedAt": "2026-11-20T13:54:12Z",
+  "updatedAt": "2026-11-21T13:18:25Z",
   "source": "scrape-wave1+wave2+wave3",
-  "note": "Волны 1–3: zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park, igora, severny-sklon; failed: tuutari-park",
+  "note": "Волны 1–3: tuutari-park, zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park, igora, severny-sklon; failed: нет",
   "resortsScraped": [
     {
       "id": "tuutari-park",
-      "error": "fetch failed",
-      "prices": "failed",
-      "hours": "failed",
-      "itemCount": 0,
-      "summary": "Не удалось обновить часы"
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 20,
+      "summary": "будни 12:00–18:00; выходные 10:00–18:00"
     },
     {
       "id": "zolotaya-dolina",
@@ -49,7 +49,7 @@
       "prices": "ok",
       "hours": "ok",
       "itemCount": 4,
-      "summary": "На 20.11.2026: склоны/подъёмники закрыты до сезона (CSV графика)"
+      "summary": "На 21.11.2026: склоны/подъёмники закрыты до сезона (CSV графика)"
     },
     {
       "id": "snezhny",
@@ -73,7 +73,7 @@
       "prices": "ok",
       "hours": "ok",
       "itemCount": 2,
-      "summary": "пн–пт: 9:00–22:30; сб–вс: 9:00–22:30"
+      "summary": "пн–пт: 11:00–22:30; сб–вс: 9:00–22:30"
     },
     {
       "id": "igora",
