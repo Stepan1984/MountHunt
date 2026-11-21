@@ -49,6 +49,9 @@ export function linkLabelForUrl(url: string, fallback = 'Открыть ссыл
   ) {
     return 'Тарифы на сайте'
   }
+  if (/naduvnoe-prizemlenie|progression.?spot/i.test(haystack)) {
+    return 'О подушке на сайте'
+  }
   if (path === '/' || path === '') return 'Сайт курорта'
   return 'Сайт курорта'
 }
