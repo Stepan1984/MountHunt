@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-21T13:18:25Z",
+  "updatedAt": "2026-11-21T22:54:18Z",
   "source": "scrape-wave1+wave2+wave3",
   "note": "Волны 1–3: tuutari-park, zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park, igora, severny-sklon; failed: нет · Важное 2026-11-21T22:43:54Z",
   "resortsScraped": [
@@ -63,9 +63,9 @@
       "id": "drop-park",
       "error": null,
       "prices": "ok",
-      "hours": "ok",
-      "itemCount": 16,
-      "summary": "По прайсу сноупарка: 10:00–21:00; 11:00–23:00"
+      "hours": "partial",
+      "itemCount": 25,
+      "summary": "По прайсу сноупарка — будни: 11:00–23:00; выходные и праздники: 10:00–21:00"
     },
     {
       "id": "okhta-park",
