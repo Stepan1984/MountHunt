@@ -5,6 +5,7 @@ import { ResortMap } from '../components/ResortMap'
 import { SkipassTables } from '../components/SkipassTables'
 import { WebcamSection } from '../components/WebcamPlayer'
 import {
+  formatImportantDate,
   formatUpdatedAt,
   hoursFor,
   hoursLeadText,
@@ -126,7 +127,9 @@ export function ResortPage({ data }: { data: SiteData }) {
                   <span className="important__severity">
                     {item.severity === 'warn' ? 'Внимание' : 'Инфо'}
                   </span>
-                  <time dateTime={item.updatedAt}>{formatUpdatedAt(item.updatedAt)}</time>
+                  {item.publishedAt ? (
+                    <time dateTime={item.publishedAt}>{formatImportantDate(item.publishedAt)}</time>
+                  ) : null}
                 </div>
                 <h3>{item.title}</h3>
                 {item.body && (

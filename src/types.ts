@@ -87,6 +87,12 @@ export type ImportantItem = {
   title: string
   body?: string
   severity: 'info' | 'warn'
+  /**
+   * News / schedule / page publication date from the source (shown on cards).
+   * Prefer over scrape time — never display scrape stamps on Important cards.
+   */
+  publishedAt?: string | null
+  /** Scrape/write stamp (internal / sort fallback). Not shown on Important cards. */
   updatedAt: string
   sourceUrl?: string
 }

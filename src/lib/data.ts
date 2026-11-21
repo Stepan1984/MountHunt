@@ -71,6 +71,26 @@ export function formatUpdatedAt(iso: string | null | undefined): string {
   }
 }
 
+/** News/publication date on Important cards — date-only when source had no time. */
+export function formatImportantDate(iso: string | null | undefined): string {
+  if (!iso) return ''
+  try {
+    const dateOnly = /T00:00:00(\.000)?Z$/.test(iso)
+    return new Intl.DateTimeFormat('ru-RU', {
+      dateStyle: 'medium',
+      ...(dateOnly ? {} : { timeStyle: 'short' }),
+      timeZone: 'Europe/Moscow',
+    }).format(new Date(iso))
+  } catch {
+    return iso
+  }
+}
+
+/** Prefer publication date for ordering; fall back to scrape stamp. */
+export function importantDateIso(item: { publishedAt?: string | null; updatedAt: string }): string {
+  return item.publishedAt || item.updatedAt
+}
+
 export function yandexMapsUrl(lat: number, lon: number): string {
   return `https://yandex.ru/maps/?pt=${lon},${lat}&z=14&l=map`
 }
@@ -265,6 +285,10 @@ export function operationalImportant(items: ImportantItem[]): ImportantItem[] {
 
   const sorted = [...items].sort((a, b) => {
     if (a.severity !== b.severity) return a.severity === 'warn' ? -1 : 1
+    // Prefer real publication dates over scrape stamps when ordering.
+    const aPub = a.publishedAt ? new Date(a.publishedAt).getTime() : 0
+    const bPub = b.publishedAt ? new Date(b.publishedAt).getTime() : 0
+    if (aPub !== bPub) return bPub - aPub
     return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   })
 

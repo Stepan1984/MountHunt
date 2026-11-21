@@ -13,7 +13,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { DELAY_MS, fetchUrl, sleep } from './scrape/lib/http.mjs'
+import { DELAY_MS, fetchUrlResult, sleep } from './scrape/lib/http.mjs'
 import {
   detectLazurnyeImportant,
   detectOkhtaImportant,
@@ -57,29 +57,30 @@ const CHECKERS = [
   {
     id: 'zolotaya-dolina',
     async run() {
-      const html = await fetchUrl(ZOLDOL_HOURS_URL)
-      return detectZoldolImportant(html, ZOLDOL_HOURS_URL)
+      const { body, lastModified } = await fetchUrlResult(ZOLDOL_HOURS_URL)
+      return detectZoldolImportant(body, ZOLDOL_HOURS_URL, { lastModified })
     },
   },
   {
     id: 'lazurnye-ozera',
     async run() {
-      const html = await fetchUrl(LAZURNYE_HOME_URL)
-      return detectLazurnyeImportant(html, LAZURNYE_HOME_URL)
+      const { body, lastModified } = await fetchUrlResult(LAZURNYE_HOME_URL)
+      return detectLazurnyeImportant(body, LAZURNYE_HOME_URL, { lastModified })
     },
   },
   {
     id: 'krasnoe-ozero',
     async run() {
-      const csv = await fetchUrl(KRASNOE_HOURS_CSV_URL)
-      return parseHoursFromCsv(csv).important || []
+      const { body } = await fetchUrlResult(KRASNOE_HOURS_CSV_URL)
+      // publishedAt comes from the CSV date column inside the detector.
+      return parseHoursFromCsv(body).important || []
     },
   },
   {
     id: 'okhta-park',
     async run() {
-      const html = await fetchUrl(OKHTA_TRAILS_URL)
-      return detectOkhtaImportant(html, OKHTA_WINTER_URL)
+      const { body, lastModified } = await fetchUrlResult(OKHTA_TRAILS_URL)
+      return detectOkhtaImportant(body, OKHTA_WINTER_URL, { lastModified })
     },
   },
 ]

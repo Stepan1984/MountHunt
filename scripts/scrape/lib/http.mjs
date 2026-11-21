@@ -12,8 +12,9 @@ export function sleep(ms = DELAY_MS) {
 /**
  * @param {string} url
  * @param {{ as?: 'text' | 'buffer', retries?: number, timeoutMs?: number }} [opts]
+ * @returns {Promise<{ body: string | Buffer, lastModified: string | null }>}
  */
-export async function fetchUrl(url, opts = {}) {
+export async function fetchUrlResult(url, opts = {}) {
   const as = opts.as || 'text'
   const retries = opts.retries ?? 2
   const timeoutMs = opts.timeoutMs ?? Number(process.env.SCRAPE_FETCH_TIMEOUT_MS || 45_000)
@@ -34,10 +35,11 @@ export async function fetchUrl(url, opts = {}) {
       if (!res.ok) {
         throw new Error(`HTTP ${res.status} for ${url}`)
       }
+      const lastModified = res.headers.get('last-modified')
       if (as === 'buffer') {
-        return Buffer.from(await res.arrayBuffer())
+        return { body: Buffer.from(await res.arrayBuffer()), lastModified }
       }
-      return await res.text()
+      return { body: await res.text(), lastModified }
     } catch (err) {
       lastErr = err?.name === 'AbortError' ? new Error(`Timeout ${timeoutMs}ms for ${url}`) : err
       if (attempt < retries) {
@@ -48,4 +50,13 @@ export async function fetchUrl(url, opts = {}) {
     }
   }
   throw lastErr
+}
+
+/**
+ * @param {string} url
+ * @param {{ as?: 'text' | 'buffer', retries?: number, timeoutMs?: number }} [opts]
+ */
+export async function fetchUrl(url, opts = {}) {
+  const { body } = await fetchUrlResult(url, opts)
+  return body
 }
