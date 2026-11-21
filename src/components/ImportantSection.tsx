@@ -45,11 +45,11 @@ export function ImportantSection({ items, resorts, meta, variant = 'full' }: Pro
             const resortName = item.resortId ? nameById.get(item.resortId) : undefined
             return (
               <li key={item.id} className="important__item">
-                <div className="important__meta">
-                  {item.publishedAt ? (
+                {item.publishedAt ? (
+                  <div className="important__meta">
                     <time dateTime={item.publishedAt}>{formatImportantDate(item.publishedAt)}</time>
-                  ) : null}
-                </div>
+                  </div>
+                ) : null}
                 <h3>
                   {item.resortId ? (
                     <Link to={`/resort/${item.resortId}`}>{item.title}</Link>
