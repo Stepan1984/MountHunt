@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import type { ClassifiedWebcam } from '../lib/webcam'
+import { ExternalLink } from './LinkedText'
 import { WebcamErrorBoundary } from './WebcamErrorBoundary'
 
 type Props = {
@@ -188,9 +189,9 @@ export function WebcamSection({ resortName, externalUrl, streams }: SectionProps
     <section className="detail-grid__wide webcam-section" aria-labelledby={`${baseId}-title`}>
       <div className="webcam-section__head">
         <h2 id={`${baseId}-title`}>Веб-камера</h2>
-        <a className="webcam-section__open" href={externalUrl} target="_blank" rel="noreferrer">
+        <ExternalLink className="webcam-section__open" href={externalUrl}>
           Открыть трансляцию
-        </a>
+        </ExternalLink>
       </div>
 
       {streams.length > 1 && showPlayer && (

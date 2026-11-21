@@ -1,3 +1,24 @@
+/** True when two external URLs point at the same page (ignore trailing slash / www). */
+export function sameExternalUrl(
+  a: string | null | undefined,
+  b: string | null | undefined,
+): boolean {
+  if (!a || !b) return false
+  const norm = (raw: string): string | null => {
+    try {
+      const u = new URL(raw)
+      const host = u.hostname.replace(/^www\./i, '').toLowerCase()
+      const path = (u.pathname.replace(/\/+$/, '') || '/').toLowerCase()
+      return `${u.protocol}//${host}${path}${u.search}`
+    } catch {
+      return null
+    }
+  }
+  const left = norm(a)
+  const right = norm(b)
+  return Boolean(left && right && left === right)
+}
+
 /** Human-readable Russian label for an external URL shown in the UI. */
 export function linkLabelForUrl(url: string, fallback = 'Открыть ссылку'): string {
   let parsed: URL

@@ -7,6 +7,7 @@ import { WebcamSection } from '../components/WebcamPlayer'
 import {
   formatUpdatedAt,
   hoursFor,
+  hoursLeadText,
   localizePublicText,
   pricesFor,
   publicPriceNote,
@@ -16,7 +17,7 @@ import {
   statusLabel,
   yandexMapsUrl,
 } from '../lib/data'
-import { linkLabelForUrl } from '../lib/links'
+import { linkLabelForUrl, sameExternalUrl } from '../lib/links'
 import { resolveWebcamPlayers, webcamExternalLink } from '../lib/webcam'
 import type { SiteData } from '../types'
 
@@ -41,9 +42,19 @@ export function ResortPage({ data }: { data: SiteData }) {
   const prices = pricesFor(resort.id, data.prices)
   const important = data.important.filter((i) => i.resortId === resort.id)
   const hasCoords = resort.lat != null && resort.lon != null
-  const tariffsUrl = prices?.sourceUrl || resort.prices_url || resort.website || undefined
+  // Dedicated tariff page only — do not fall back to homepage (already «Сайт курорта»).
+  const tariffsUrl = prices?.sourceUrl || resort.prices_url || undefined
   const hoursSourceUrl = hours?.sourceUrl || undefined
-  const hoursSummary = hours?.summary ? localizePublicText(hours.summary) : 'Нет данных'
+  // Skip section source links when they duplicate the official homepage button.
+  const hoursLink =
+    hoursSourceUrl && !sameExternalUrl(hoursSourceUrl, resort.website)
+      ? hoursSourceUrl
+      : undefined
+  const tariffsLink =
+    tariffsUrl && !sameExternalUrl(tariffsUrl, resort.website) ? tariffsUrl : undefined
+  const hoursSummaryRaw = hours?.summary ? localizePublicText(hours.summary) : null
+  const hoursLead = hoursLeadText(hoursSummaryRaw, hours?.periods)
+  const hoursSummary = hoursLead ?? (hours?.periods?.length ? null : 'Нет данных')
   const closed = slopesClosedHint(resort.id, hours, data.important)
   const visitorNotes = publicResortNotes(resort.notes)
   const visitorPriceNote = publicPriceNote(prices?.note)
@@ -52,6 +63,10 @@ export function ResortPage({ data }: { data: SiteData }) {
   const hasSkipassTables = priceGroups.some((g) => g.rows?.length > 0)
   const webcamStreams = resolveWebcamPlayers(resort.webcam_url, resort.webcam_embeds)
   const webcamLink = webcamExternalLink(resort.webcam_url, resort.webcam_embeds)
+  const communityLinks = resort.community_links ?? []
+  const mapsUrl = hasCoords
+    ? yandexMapsUrl(resort.lat as number, resort.lon as number)
+    : undefined
 
   return (
     <article className="section page-narrow resort-detail">
@@ -80,36 +95,14 @@ export function ResortPage({ data }: { data: SiteData }) {
         </p>
       )}
 
-      <div className="resort-detail__actions" role="group" aria-label="Быстрые ссылки">
-        {resort.website && (
+      {/* Top CTA: only the official site — hours / tariffs / cam live in their sections. */}
+      {resort.website && (
+        <div className="resort-detail__actions" role="group" aria-label="Сайт курорта">
           <ExternalLink className="btn btn--primary" href={resort.website}>
             Сайт курорта
           </ExternalLink>
-        )}
-        {hasCoords && (
-          <ExternalLink
-            className="btn btn--ghost"
-            href={yandexMapsUrl(resort.lat as number, resort.lon as number)}
-          >
-            Яндекс Карты
-          </ExternalLink>
-        )}
-        {webcamLink && (
-          <ExternalLink className="btn btn--ghost" href={webcamLink}>
-            Открыть трансляцию
-          </ExternalLink>
-        )}
-        {hoursSourceUrl && (
-          <ExternalLink className="btn btn--ghost" href={hoursSourceUrl}>
-            Часы работы
-          </ExternalLink>
-        )}
-        {tariffsUrl && (
-          <ExternalLink className="btn btn--ghost" href={tariffsUrl}>
-            Тарифы на сайте
-          </ExternalLink>
-        )}
-      </div>
+        </div>
+      )}
 
       {webcamLink && (
         <WebcamSection
@@ -154,10 +147,19 @@ export function ResortPage({ data }: { data: SiteData }) {
 
       <div className="detail-grid">
         <section>
-          <h2>Часы работы</h2>
-          <p className="detail-lead">
-            <LinkedText text={hoursSummary} />
-          </p>
+          <div className="detail-section__head">
+            <h2>Часы работы</h2>
+            {hoursLink && (
+              <ExternalLink className="detail-section__source" href={hoursLink}>
+                Расписание на сайте
+              </ExternalLink>
+            )}
+          </div>
+          {hoursSummary && (
+            <p className="detail-lead">
+              <LinkedText text={hoursSummary} />
+            </p>
+          )}
           {hours?.periods && hours.periods.length > 0 && (
             <ul className="period-list">
               {hours.periods.map((period) => (
@@ -170,11 +172,6 @@ export function ResortPage({ data }: { data: SiteData }) {
               ))}
             </ul>
           )}
-          {hoursSourceUrl && (
-            <p>
-              <ExternalLink href={hoursSourceUrl}>Часы работы</ExternalLink>
-            </p>
-          )}
           {hours?.status === 'failed' && (
             <p className="muted">
               Последний сбор часов не удался — показаны прежние данные, если они были.
@@ -186,7 +183,14 @@ export function ResortPage({ data }: { data: SiteData }) {
         </section>
 
         <section className={hasSkipassTables ? 'detail-grid__wide' : undefined}>
-          <h2>Цены</h2>
+          <div className="detail-section__head">
+            <h2>Цены</h2>
+            {tariffsLink && (
+              <ExternalLink className="detail-section__source" href={tariffsLink}>
+                Тарифы на сайте
+              </ExternalLink>
+            )}
+          </div>
           {priceItems.length > 0 || hasSkipassTables ? (
             <SkipassTables
               groups={priceGroups}
@@ -209,11 +213,6 @@ export function ResortPage({ data }: { data: SiteData }) {
               <LinkedText text={visitorPriceNote} />
             </p>
           )}
-          {tariffsUrl && (
-            <p>
-              <ExternalLink href={tariffsUrl}>Тарифы на сайте</ExternalLink>
-            </p>
-          )}
           {prices?.status === 'failed' && (
             <p className="muted">
               Последний сбор цен не удался — показан прошлый снимок, если он был.
@@ -225,7 +224,14 @@ export function ResortPage({ data }: { data: SiteData }) {
         </section>
 
         <section className="detail-grid__wide">
-          <h2>Локация</h2>
+          <div className="detail-section__head">
+            <h2>Локация</h2>
+            {mapsUrl && (
+              <ExternalLink className="detail-section__source" href={mapsUrl}>
+                Яндекс Карты
+              </ExternalLink>
+            )}
+          </div>
           <p>{resort.area}</p>
           {hasCoords ? (
             <>
@@ -247,43 +253,18 @@ export function ResortPage({ data }: { data: SiteData }) {
           )}
         </section>
 
-        <section>
-          <h2>Ссылки</h2>
-          <ul className="link-list">
-            {resort.website && (
-              <li>
-                <ExternalLink href={resort.website}>Сайт курорта</ExternalLink>
-              </li>
-            )}
-            {webcamLink && (
-              <li>
-                <ExternalLink href={webcamLink}>Открыть трансляцию</ExternalLink>
-              </li>
-            )}
-            {hoursSourceUrl && (
-              <li>
-                <ExternalLink href={hoursSourceUrl}>Часы работы</ExternalLink>
-              </li>
-            )}
-            {tariffsUrl && (
-              <li>
-                <ExternalLink href={tariffsUrl}>Тарифы на сайте</ExternalLink>
-              </li>
-            )}
-            {resort.community_links?.map((url) => (
-              <li key={url}>
-                <ExternalLink href={url}>{linkLabelForUrl(url, 'Сообщество')}</ExternalLink>
-              </li>
-            ))}
-            {!resort.website &&
-              !webcamLink &&
-              !hoursSourceUrl &&
-              !tariffsUrl &&
-              !resort.community_links?.length && (
-                <li className="muted">Публичных ссылок пока нет</li>
-              )}
-          </ul>
-        </section>
+        {communityLinks.length > 0 && (
+          <section>
+            <h2>Ссылки</h2>
+            <ul className="link-list">
+              {communityLinks.map((url) => (
+                <li key={url}>
+                  <ExternalLink href={url}>{linkLabelForUrl(url, 'Сообщество')}</ExternalLink>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
 
       <p className="muted resort-detail__meta">

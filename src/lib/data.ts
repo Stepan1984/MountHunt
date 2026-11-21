@@ -79,6 +79,39 @@ export function hoursFor(resortId: string, hours: HoursSnapshot[]): HoursSnapsho
   return hours.find((h) => h.resortId === resortId)
 }
 
+type HoursPeriod = NonNullable<HoursSnapshot['periods']>[number]
+
+/** Collapse «10:00–21:00» / «10:00-21:00» noise for equality checks. */
+function normHoursBlob(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[.:;,/|()[\]«»"'\s–—−-]+/g, '')
+    .replace(/выходной|закрыто/g, '')
+}
+
+/**
+ * Visitor-facing hours lead: omit summary when it only restates `periods`
+ * (avoids «ежедневно 10:00–21:00» twice in the same block).
+ */
+export function hoursLeadText(
+  summary: string | null | undefined,
+  periods: HoursPeriod[] | undefined,
+): string | null {
+  const lead = summary?.trim() || null
+  if (!lead) return null
+  if (!periods?.length) return lead
+
+  const fromPeriods = periods.map((p) => `${p.days}${p.open}${p.close}`).join('')
+  if (normHoursBlob(lead) === normHoursBlob(fromPeriods)) return null
+
+  // Colon/semicolon variants of the same schedule (Okhta-style summary).
+  const looseLead = normHoursBlob(lead.replace(/:/g, ' '))
+  const loosePeriods = normHoursBlob(fromPeriods.replace(/:/g, ' '))
+  if (looseLead === loosePeriods) return null
+
+  return lead
+}
+
 export function pricesFor(resortId: string, prices: PriceSnapshot[]): PriceSnapshot | undefined {
   return prices.find((p) => p.resortId === resortId)
 }

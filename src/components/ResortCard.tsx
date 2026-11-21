@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { ExternalLink } from './LinkedText'
 import {
   hoursFor,
   localizePublicText,
@@ -65,14 +64,9 @@ export function ResortCard({
           <dd>{priceHint}</dd>
         </div>
       </dl>
+      {/* Single CTA: detail page owns site / cam / tariffs links. */}
       <div className="resort-card__links">
         <Link to={`/resort/${resort.id}`}>Подробнее</Link>
-        {resort.website && (
-          <ExternalLink href={resort.website}>Сайт курорта</ExternalLink>
-        )}
-        {resort.webcam_url && (
-          <ExternalLink href={resort.webcam_url}>Открыть трансляцию</ExternalLink>
-        )}
       </div>
     </article>
   )
