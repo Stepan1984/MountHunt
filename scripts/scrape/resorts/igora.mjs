@@ -278,7 +278,10 @@ export function parseIgoraPriceTables(html) {
           if (!durRaw && kind === 'passes') continue
           const dur = formatDurationLabel(durRaw || `${Math.floor(i / 2) + 1}`, kind)
           const unit = kind === 'passes' || /^\d+\s*проход/i.test(dur) ? 'проход' : /час/i.test(dur) ? 'час' : 'тариф'
-          const note = cash != null && online != null && cash !== online ? `в кассе ${cash} ₽` : undefined
+          // Льготные often have empty ONLINE cells — site sells them only at the desk.
+          let note
+          if (cash != null && online != null && cash !== online) note = `в кассе ${cash} ₽`
+          else if (cash != null && online == null) note = 'только в кассе'
           entry.cells.set(dur, { price, note, rawText: cells[i + 1] || cells[i] })
           items.push({
             title: `${name} · ${dur} (${section})`,
@@ -382,6 +385,114 @@ export function parseIgoraPriceTables(html) {
   }
 
   return { items: flat, groups }
+}
+
+/**
+ * @param {string | undefined} category
+ * @returns {'hourly' | 'passes' | 'instructor' | 'other'}
+ */
+export function igoraGroupKind(category) {
+  const c = cleanText(category || '')
+  if (/инструктор/i.test(c)) return 'instructor'
+  if (/почасов/i.test(c)) return 'hourly'
+  if (/проход/i.test(c)) return 'passes'
+  return 'other'
+}
+
+/** @param {{ title?: string }} item */
+export function isInstructorPriceItem(item) {
+  return / · (?:будни|выходные)/i.test(item?.title || '') || /\(инструктор/i.test(item?.title || '')
+}
+
+/**
+ * Apply visitor wording («с тренером») on flat items + group row names.
+ * @param {{ items?: object[], groups?: object[] }} parsed
+ */
+export function clarifyIgoraParsed(parsed) {
+  const items = (parsed.items || []).map((it) => ({
+    ...it,
+    title: typeof it.title === 'string' ? clarifyInstructorLabel(it.title) : it.title,
+  }))
+  const groups = (parsed.groups || []).map((g) => ({
+    ...g,
+    rows: (g.rows || []).map((row) => ({
+      ...row,
+      name: typeof row.name === 'string' ? clarifyInstructorLabel(row.name) : row.name,
+    })),
+  }))
+  return { items, groups }
+}
+
+/**
+ * Merge live parse with fallback (bundled snapshot): keep live instructor when
+ * present; fill missing ski-pass (hourly / passes) groups from fallback.
+ * Live-only instructor scrapes must not wipe ski-pass categories.
+ * @param {{ items?: object[], groups?: object[] }} primary
+ * @param {{ items?: object[], groups?: object[] }} fallback
+ */
+export function mergeIgoraPriceTables(primary, fallback) {
+  const p = clarifyIgoraParsed(primary || {})
+  const f = clarifyIgoraParsed(fallback || {})
+  /** @type {object[]} */
+  const groups = []
+  /** @type {string[]} */
+  const filled = []
+
+  for (const kind of /** @type {const} */ (['hourly', 'passes', 'instructor'])) {
+    const fromP = (p.groups || []).filter((g) => igoraGroupKind(g.category) === kind)
+    const fromF = (f.groups || []).filter((g) => igoraGroupKind(g.category) === kind)
+    if (fromP.length) groups.push(...fromP)
+    else if (fromF.length) {
+      groups.push(...fromF)
+      if (kind !== 'instructor') filled.push(kind)
+    }
+  }
+
+  const primaryHasSki = (p.groups || []).some((g) => {
+    const k = igoraGroupKind(g.category)
+    return k === 'hourly' || k === 'passes'
+  })
+  const primaryHasInstr =
+    (p.groups || []).some((g) => igoraGroupKind(g.category) === 'instructor') ||
+    (p.items || []).some(isInstructorPriceItem)
+
+  const skiItems = (primaryHasSki ? p.items : f.items || []).filter((it) => !isInstructorPriceItem(it))
+  const instrItems = (primaryHasInstr ? p.items : f.items || []).filter(isInstructorPriceItem)
+
+  const seen = new Set()
+  const items = [...skiItems, ...instrItems].filter((it) => {
+    const key = `${it.title}|${it.price}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+
+  return {
+    items,
+    groups,
+    filledSkiPass: filled.length > 0,
+    filledKinds: filled,
+  }
+}
+
+/**
+ * If live HTML missed ski-pass tables, fold in bundled snapshot categories.
+ * Safe in CI: only fills gaps; status/note stay honest (partial).
+ * @param {{ items: object[], groups: object[] }} parsed
+ */
+export function supplementIgoraSkiPassFromSnapshot(parsed) {
+  const hasSki = (parsed.groups || []).some((g) => {
+    const k = igoraGroupKind(g.category)
+    return k === 'hourly' || k === 'passes'
+  })
+  if (hasSki || !existsSync(DEFAULT_SNAPSHOT_DIR)) {
+    return { ...clarifyIgoraParsed(parsed), filledSkiPass: false, filledKinds: [] }
+  }
+  const snapHtml = readSnapshotHtml(PRICE_URL, DEFAULT_SNAPSHOT_DIR)
+  if (!snapHtml) {
+    return { ...clarifyIgoraParsed(parsed), filledSkiPass: false, filledKinds: [] }
+  }
+  return mergeIgoraPriceTables(parsed, parseIgoraPriceTables(snapHtml))
 }
 
 /**
@@ -499,9 +610,12 @@ export async function scrapeIgora() {
       }
     }
 
-    const parsed = parseIgoraPriceTables(priceLoad.html)
-    const items = parsed.items.slice(0, 40)
-    const groups = parsed.groups
+    const liveParsed = parseIgoraPriceTables(priceLoad.html)
+    // Live often returns instructor-only (truncated /price/ body). Fill ski-pass
+    // categories from the committed HTML snapshot — fail-soft, never silent ok.
+    const merged = supplementIgoraSkiPassFromSnapshot(liveParsed)
+    const items = merged.items.slice(0, 80)
+    const groups = merged.groups
     const hours = hoursHtml
       ? parseIgoraHours(hoursHtml)
       : {
@@ -511,6 +625,7 @@ export async function scrapeIgora() {
         }
     const embeds = camHtml ? parseCameras(camHtml, CAM_URL) : []
     const fromSnapshot = /snapshot/i.test(priceLoad.via)
+    const incompleteLive = merged.filledSkiPass
 
     if (!items.length) {
       notes.push('Таблицы .common-price__table не распознаны или пусты')
@@ -522,6 +637,17 @@ export async function scrapeIgora() {
     } else if (priceLoad.via === 'playwright' || priceLoad.via === 'fetch') {
       notes.push(`источник: ${priceLoad.via}`)
     }
+    if (incompleteLive) {
+      notes.push(
+        'ски-пасс (почасовые/проходы) из HTML-снимка — live-страница без таблиц абонементов',
+      )
+    }
+
+    const priceStatus = !items.length
+      ? 'partial'
+      : fromSnapshot || incompleteLive
+        ? 'partial'
+        : 'ok'
 
     return {
       resortId,
@@ -530,8 +656,7 @@ export async function scrapeIgora() {
         sourceUrl: PRICE_URL,
         items,
         groups,
-        // Snapshot-sourced tariffs stay partial until a live Playwright/fetch run succeeds.
-        status: items.length ? (fromSnapshot ? 'partial' : 'ok') : 'partial',
+        status: priceStatus,
         note: notes.filter(Boolean).join('. ') || undefined,
       }),
       hours: hoursSnapshot({

@@ -7,7 +7,11 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { flattenSkipassGroups } from './scrape/lib/parse.mjs'
-import { clarifyInstructorLabel, parseIgoraPriceTables } from './scrape/resorts/igora.mjs'
+import {
+  clarifyInstructorLabel,
+  mergeIgoraPriceTables,
+  parseIgoraPriceTables,
+} from './scrape/resorts/igora.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const pricesPath = join(root, 'public/data/prices.json')
@@ -17,7 +21,8 @@ const prices = JSON.parse(readFileSync(pricesPath, 'utf8'))
 function setGroups(snap, groups) {
   const clean = (groups || []).filter((g) => g?.rows?.length)
   if (!clean.length) {
-    delete snap.groups
+    // Fail-soft: keep previously committed groups when rebuild finds nothing
+    // (title formats drift; don't wipe tuutari/zolotaya tables).
     return
   }
   snap.groups = clean
@@ -142,9 +147,12 @@ function enrichSnezhny(snap) {
   const unified = []
 
   for (const it of snap.items || []) {
-    const liftM = it.title.match(/^(.+?)\s+\((будни|выходные),\s*(льготный|взрослый)\)$/i)
+    // Flat titles: «Ски-пасс · 1 проход (Будни, льготный)» or legacy bare duration.
+    const liftM = it.title.match(
+      /^(?:Ски-пасс\s*·\s*)?(.+?)\s+\((будни|выходные),\s*(льготный|взрослый)\)$/i,
+    )
     if (liftM) {
-      const duration = liftM[1]
+      const duration = liftM[1].replace(/^Ски-пасс\s*·\s*/i, '').trim()
       const col =
         /будн/i.test(liftM[2]) && /льгот/i.test(liftM[3])
           ? 0
@@ -157,9 +165,25 @@ function enrichSnezhny(snap) {
       lift.get(duration)[col] = { price: it.price, rawText: it.rawText }
       continue
     }
-    if (/^Абонемент:/i.test(it.title)) {
+    // Flat: «Абонемент «Взрослый» · сезон» (also legacy «Абонемент: …»).
+    // No \b — JS word boundaries are ASCII-only and miss Cyrillic.
+    if (/^Абонемент(?=$|[^\p{L}\p{N}])/iu.test(it.title)) {
+      let name = it.title.replace(/\s*·\s*сезон\s*$/i, '').trim()
+      if (/^Абонемент:\s*/i.test(name)) {
+        name = `Абонемент ${name.replace(/^Абонемент:\s*/i, '').trim()}`
+      }
       season.push({
-        name: it.title.replace(/^Абонемент:\s*/i, ''),
+        name,
+        duration: 'сезон',
+        prices: [{ price: it.price, rawText: it.rawText }],
+      })
+      continue
+    }
+    // Flat unified (category omitted when column is «Цена»): «Взрослый · сезон».
+    const uniFlat = it.title.match(/^(Взрослый|Детский)\s*·\s*сезон$/i)
+    if (uniFlat) {
+      unified.push({
+        name: uniFlat[1],
         duration: 'сезон',
         prices: [{ price: it.price, rawText: it.rawText }],
       })
@@ -167,11 +191,26 @@ function enrichSnezhny(snap) {
     }
     if (/^Единый ски-пасс/i.test(it.title)) {
       unified.push({
-        name: it.title.replace(/^Единый ски-пасс Снежный\/Золотая Долина:\s*/i, ''),
+        name: it.title
+          .replace(/^Единый ски-пасс Снежный\/Золотая Долина:\s*/i, '')
+          .replace(/\s*·\s*сезон\s*$/i, '')
+          .trim(),
         duration: 'сезон',
         prices: [{ price: it.price, rawText: it.rawText }],
       })
     }
+  }
+
+  // Fail-soft: if items still used old titles, keep prior season/unified rows.
+  if (!season.length) {
+    const prev = (snap.groups || []).find(
+      (g) => /абонемент/i.test(g.category || '') && !/единый/i.test(g.category || ''),
+    )
+    if (prev?.rows?.length) season.push(...prev.rows)
+  }
+  if (!unified.length) {
+    const prev = (snap.groups || []).find((g) => /единый/i.test(g.category || ''))
+    if (prev?.rows?.length) unified.push(...prev.rows)
   }
 
   const groups = []
@@ -248,12 +287,26 @@ function enrichOkhta(snap) {
 
 function enrichIgora(snap) {
   const snapHtml = join(root, 'data/snapshots/igora/price.html')
-  if (existsSync(snapHtml)) {
-    const { groups } = parseIgoraPriceTables(readFileSync(snapHtml, 'utf8'))
-    setGroups(snap, groups)
+  const snapshotParsed = existsSync(snapHtml)
+    ? parseIgoraPriceTables(readFileSync(snapHtml, 'utf8'))
+    : { items: [], groups: [] }
+  // Keep live instructor prices when present; restore missing ski-pass groups
+  // from the committed HTML snapshot (daily live often drops them).
+  const liveParsed = { items: snap.items || [], groups: snap.groups || [] }
+  const merged = mergeIgoraPriceTables(liveParsed, snapshotParsed)
+  setGroups(snap, merged.groups)
+  snap.items = merged.items.slice(0, 80)
+  if (merged.filledSkiPass && snap.status === 'ok') {
+    snap.status = 'partial'
   }
-  // Fail-soft: clarify visitor wording on flat items too (live scrape titles
-  // may still say «с профи» until the next successful parse).
+  if (merged.filledSkiPass) {
+    const extra =
+      'ски-пасс (почасовые/проходы) из HTML-снимка — live без таблиц абонементов'
+    if (!String(snap.note || '').includes('ски-пасс (почасовые/проходы) из HTML-снимка')) {
+      snap.note = snap.note ? `${snap.note}. ${extra}` : extra
+    }
+  }
+  // Fail-soft: clarify visitor wording («с тренером») on any leftover labels.
   for (const it of snap.items || []) {
     if (typeof it.title === 'string') it.title = clarifyInstructorLabel(it.title)
   }
