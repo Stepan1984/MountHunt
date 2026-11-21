@@ -155,8 +155,7 @@ function applySeedFixes(resorts) {
         'https://igora.ru/cam/',
         'https://igora.ru/slopes/',
       ],
-      notes:
-        'Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. Цены — Playwright/SSR таблицы на /price/; часы — /working-hours/.',
+      notes: 'Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м.',
     },
     'severny-sklon': {
       website: 'https://severnysklon.ru/',
@@ -165,8 +164,7 @@ function applySeedFixes(resorts) {
       webcam_url: null,
       sourcesAdd: ['https://severnysklon.ru/'],
       sourcesDrop: [/sev-sklon\.ru/],
-      notes:
-        '4 склона у оз. Хепоярви; бугели. Официальный сайт severnysklon.ru — актуальные цены уточняйте там.',
+      notes: '4 склона у оз. Хепоярви; бугели. Актуальные цены уточняйте на сайте курорта.',
     },
   }
   return resorts.map((r) => {

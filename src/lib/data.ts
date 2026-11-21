@@ -176,6 +176,11 @@ function stripScraperClauses(text: string): string {
     .replace(/\s*[—–-]\s*статус unavailable/gi, '')
     .replace(/\s*статус unavailable[^.;]*/gi, '')
     .replace(/\s*часы\s*[—–-]\s*\/working-hours\/\.?/gi, '')
+    .replace(/\s*цены\s*[—–-]\s*playwright\/ssr[^.]*\/price\/\.?/gi, '')
+    .replace(/\s*на\s*\/price\/\.?/gi, '')
+    .replace(/\s*\/working-hours\/\.?/gi, '')
+    .replace(/\s*\/price\/\.?/gi, '')
+    .replace(/https?:\/\/[^\s.;]+/gi, '')
     .replace(/\s*:\s*;/g, ';')
     .replace(/\s*;\s*;/g, ';')
     .replace(/[;:\s]+$/g, '')
@@ -209,7 +214,10 @@ export function truncateText(text: string, max = 96): string {
   return `${trimmed.slice(0, max - 1).trimEnd()}…`
 }
 
-/** Strip accidental /en/ paths from user-visible Russian copy. */
+/**
+ * Normalize accidental /en/ paths in user-visible Russian copy.
+ * Raw URLs are turned into hyperlinks by LinkedText / ExternalLink — not shown as slash text.
+ */
 export function localizePublicText(text: string): string {
   return text
     .replace(/https?:\/\/igora\.ru\/en\/working-hours\/?/gi, 'https://igora.ru/working-hours/')

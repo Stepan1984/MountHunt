@@ -41,7 +41,7 @@
     "webcam_url": "https://igora.ru/cam/",
     "prices_format": "html_js",
     "status": "active",
-    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. Цены — Playwright/SSR таблицы на /price/; часы — /working-hours/.",
+    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м.",
     "sources": [
       "https://igora.ru/",
       "https://igora.ru/cam/",
@@ -64,7 +64,7 @@
     "prices_format": "html",
     "prices_url": "http://www.2-park.ru/prices/lift/",
     "status": "active",
-    "notes": "5–6 трасс 400–600 м; зеркало/партнёрский сайт tuutari.ru.",
+    "notes": "5–6 трасс 400–600 м; есть зеркальный партнёрский сайт.",
     "sources": [
       "https://www.2-park.ru/",
       "https://tuutari.ru/"
@@ -144,7 +144,7 @@
     "webcam_url": null,
     "prices_format": "none",
     "status": "active",
-    "notes": "4 склона у оз. Хепоярви; бугели. Официальный сайт severnysklon.ru — актуальные цены уточняйте там.",
+    "notes": "4 склона у оз. Хепоярви; бугели. Актуальные цены уточняйте на сайте курорта.",
     "sources": [
       "https://severnysklon.ru/"
     ],
@@ -182,7 +182,10 @@
     "webcam_url": null,
     "prices_format": "pdf",
     "status": "active",
-    "notes": "ГАУ ЛО СТЦ; учебный и основные склоны; VK https://vk.com/skyukki. Координаты приблизительные. Цены — PDF-прейскурант.",
+    "notes": "ГАУ ЛО СТЦ; учебный и основные склоны. Координаты приблизительные. Цены — PDF-прейскурант.",
+    "community_links": [
+      "https://vk.com/skyukki"
+    ],
     "sources": [
       "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/"
     ]

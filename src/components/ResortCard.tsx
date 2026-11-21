@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ExternalLink } from './LinkedText'
 import {
   hoursFor,
   localizePublicText,
@@ -8,6 +9,7 @@ import {
   statusLabel,
   truncateText,
 } from '../lib/data'
+import { stripUrlsFromText } from '../lib/links'
 import type { HoursSnapshot, ImportantItem, PriceSnapshot, Resort } from '../types'
 
 type Props = {
@@ -28,7 +30,9 @@ export function ResortCard({
   const h = hoursFor(resort.id, hours)
   const p = pricesFor(resort.id, prices)
   const rawHours = h?.summary ? localizePublicText(h.summary) : null
-  const hoursText = rawHours ? truncateText(rawHours, compact ? 72 : 110) : 'нет данных'
+  // Never show raw URLs/paths on cards — strip them, keep a short human summary.
+  const hoursPlain = rawHours ? stripUrlsFromText(rawHours) || 'уточняйте на сайте' : null
+  const hoursText = hoursPlain ? truncateText(hoursPlain, compact ? 72 : 110) : 'нет данных'
   const closed = slopesClosedHint(resort.id, h, important)
   // When slopes are closed, don't advertise a live «от N ₽» next to the warn badge.
   const priceHint = closed ? 'сезон закрыт' : priceHintFor(p)
@@ -54,7 +58,7 @@ export function ResortCard({
       <dl className="resort-card__facts">
         <div>
           <dt>Часы</dt>
-          <dd title={rawHours ?? undefined}>{hoursText}</dd>
+          <dd title={hoursPlain ?? undefined}>{hoursText}</dd>
         </div>
         <div>
           <dt>Цены</dt>
@@ -64,14 +68,10 @@ export function ResortCard({
       <div className="resort-card__links">
         <Link to={`/resort/${resort.id}`}>Подробнее</Link>
         {resort.website && (
-          <a href={resort.website} target="_blank" rel="noreferrer">
-            Сайт
-          </a>
+          <ExternalLink href={resort.website}>Сайт курорта</ExternalLink>
         )}
         {resort.webcam_url && (
-          <a href={resort.webcam_url} target="_blank" rel="noreferrer">
-            Трансляция
-          </a>
+          <ExternalLink href={resort.webcam_url}>Открыть трансляцию</ExternalLink>
         )}
       </div>
     </article>

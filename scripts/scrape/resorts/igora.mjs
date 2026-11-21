@@ -507,7 +507,7 @@ export async function scrapeIgora() {
     const hours = hoursHtml
       ? parseIgoraHours(hoursHtml)
       : {
-          summary: 'Часы склонов уточняйте на https://igora.ru/working-hours/',
+          summary: 'Часы склонов уточняйте на сайте курорта',
           periods: [],
           status: 'partial',
         }
@@ -538,7 +538,8 @@ export async function scrapeIgora() {
       }),
       hours: hoursSnapshot({
         resortId,
-        sourceUrl: hoursVia ? HOURS_URL : PRICE_URL,
+        // Always point visitors at the hours page (not /price/), even on fallback.
+        sourceUrl: HOURS_URL,
         summary: hours.summary,
         periods: hours.periods,
         status: hours.status,

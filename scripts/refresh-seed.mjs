@@ -58,16 +58,31 @@ function ensureHours() {
   const next = resorts.map((r) => {
     const prev = byId.get(r.id)
     if (prev) {
-      // Keep scrape data; only scrub EN paths from user-visible summary.
-      if (typeof prev.summary === 'string' && prev.summary.includes('/en/')) {
-        return {
-          ...prev,
-          summary: prev.summary.replaceAll('https://igora.ru/en/working-hours/', 'https://igora.ru/working-hours/'),
-          sourceUrl:
-            typeof prev.sourceUrl === 'string'
-              ? prev.sourceUrl.replace('/en/working-hours/', '/working-hours/')
-              : prev.sourceUrl,
-        }
+      let summary = prev.summary
+      let sourceUrl = prev.sourceUrl
+      // Keep scrape data; scrub raw URLs / EN paths from visitor-facing summary.
+      if (typeof summary === 'string') {
+        summary = summary
+          .replaceAll('https://igora.ru/en/working-hours/', 'https://igora.ru/working-hours/')
+          .replace(
+            /Часы склонов уточняйте на https?:\/\/igora\.ru\/(?:en\/)?working-hours\/?/gi,
+            'Часы склонов уточняйте на сайте курорта',
+          )
+          .replace(
+            /Режим склонов уточняйте на главной snegny\.ru[^.!]*/gi,
+            'Режим склонов уточняйте на сайте курорта',
+          )
+          .replace(/https?:\/\/[^\s]+/gi, '')
+          .replace(/\s{2,}/g, ' ')
+          .replace(/\s+([.,;:!?])/g, '$1')
+          .trim()
+        if (!summary) summary = 'Часы работы уточняйте на сайте курорта'
+      }
+      if (typeof sourceUrl === 'string') {
+        sourceUrl = sourceUrl.replace('/en/working-hours/', '/working-hours/')
+      }
+      if (summary !== prev.summary || sourceUrl !== prev.sourceUrl) {
+        return { ...prev, summary, sourceUrl }
       }
       return prev
     }
