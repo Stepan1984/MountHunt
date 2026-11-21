@@ -323,7 +323,12 @@ function enrichIgora(snap) {
 }
 
 function enrichDropPark(snap) {
-  // Tilda freeform — no reliable site categories; leave flat (fail soft).
+  // Prefer groups already emitted by scrapeDropPark / parseDropParkPriceList.
+  // If only flat items remain (older commit), leave them — do not invent categories.
+  if (Array.isArray(snap.groups) && snap.groups.some((g) => g?.rows?.length)) {
+    snap.groups = snap.groups.filter((g) => g?.rows?.length)
+    return
+  }
   delete snap.groups
 }
 
