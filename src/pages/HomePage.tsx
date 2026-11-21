@@ -54,13 +54,20 @@ export function HomePage({ data }: { data: SiteData }) {
       </section>
 
       {secondary.length > 0 && (
-        <section className="section resorts resorts--secondary" aria-labelledby="secondary-title">
+        <section
+          className="section resorts resorts--secondary"
+          id="secondary"
+          aria-labelledby="secondary-title"
+        >
           <div className="section__head">
             <h2 id="secondary-title">Дикие, неясные и закрытые</h2>
             <p>
-              Не показываются на карте по умолчанию. Статус или доступность могут быть сомнительны —
-              уточняйте перед выездом.
+              Отдельная карта с серыми метками — только эти склоны (действующие остаются на карте
+              выше). Статус или доступность могут быть сомнительны — уточняйте перед выездом.
             </p>
+          </div>
+          <div className="secondary-map" id="map-inactive">
+            <ResortMap resorts={data.resorts} variant="inactive" embedded />
           </div>
           <div className="resort-grid">
             {secondary.map((resort) => (

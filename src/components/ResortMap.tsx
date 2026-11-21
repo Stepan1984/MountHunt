@@ -3,6 +3,8 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Resort } from '../types'
 
+type MapVariant = 'active' | 'inactive'
+
 type Props = {
   resorts: Resort[]
   selectedId?: string | null
@@ -10,11 +12,23 @@ type Props = {
   embedded?: boolean
   /** Taller/shorter canvas for detail pages. */
   size?: 'default' | 'detail'
+  /**
+   * active (default): pine/ice markers for действующих комплексов.
+   * inactive: gray markers for диких / неясных / закрытых.
+   */
+  variant?: MapVariant
 }
 
-const markerIcon = L.divIcon({
+const brandMarkerIcon = L.divIcon({
   className: 'map-pin',
   html: '<span class="map-pin__dot"></span>',
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+})
+
+const mutedMarkerIcon = L.divIcon({
+  className: 'map-pin map-pin--muted',
+  html: '<span class="map-pin__dot map-pin__dot--muted"></span>',
   iconSize: [18, 18],
   iconAnchor: [9, 9],
 })
@@ -24,21 +38,40 @@ const resortPath = (id: string) => {
   return `${base}/resort/${id}`
 }
 
+/** Russian plural for «N точка/точки/точек». */
+function pointsLabel(n: number): string {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return `${n} точка`
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${n} точки`
+  return `${n} точек`
+}
+
+function matchesVariant(resort: Resort, variant: MapVariant): boolean {
+  if (variant === 'active') return resort.status === 'active'
+  return resort.status !== 'active'
+}
+
 export function ResortMap({
   resorts,
   selectedId,
   embedded = false,
   size = 'default',
+  variant = 'active',
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
 
   const mappable = useMemo(
-    () => resorts.filter((r) => r.status === 'active' && r.lat != null && r.lon != null),
-    [resorts],
+    () =>
+      resorts.filter(
+        (r) => matchesVariant(r, variant) && r.lat != null && r.lon != null,
+      ),
+    [resorts, variant],
   )
 
-  const mappableKey = mappable.map((r) => r.id).join(',')
+  const mappableKey = `${variant}:${mappable.map((r) => r.id).join(',')}`
+  const markerIcon = variant === 'inactive' ? mutedMarkerIcon : brandMarkerIcon
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
@@ -108,7 +141,7 @@ export function ResortMap({
     }
     // mappableKey tracks resort identity changes without depending on array identity
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mappableKey, selectedId, size])
+  }, [mappableKey, selectedId, size, variant])
 
   const canvas = (
     <div className={`map-shell${size === 'detail' ? ' map-shell--detail' : ''}`}>
@@ -120,14 +153,32 @@ export function ResortMap({
     </div>
   )
 
+  const hint =
+    variant === 'inactive'
+      ? `${pointsLabel(mappable.length)} · серые метки · подсказка ведёт в карточку`
+      : `${pointsLabel(mappable.length)} · маркер открывает подсказку, оттуда — карточку`
+
   if (embedded) {
     return (
-      <div className="map-embedded">
-        <p className="map-embedded__hint muted">
-          {mappable.length} точек · маркер открывает подсказку, оттуда — карточку
-        </p>
+      <div className={`map-embedded${variant === 'inactive' ? ' map-embedded--inactive' : ''}`}>
+        <p className="map-embedded__hint muted">{hint}</p>
         {canvas}
       </div>
+    )
+  }
+
+  if (variant === 'inactive') {
+    return (
+      <section className="section map-section" id="map-inactive" aria-labelledby="map-inactive-title">
+        <div className="section__head">
+          <h2 id="map-inactive-title">Карта диких и закрытых</h2>
+          <p>
+            Отдельная карта — {mappable.length} склонов с координатами, серые метки. Действующие
+            комплексы остаются на основной карте.
+          </p>
+        </div>
+        {canvas}
+      </section>
     )
   }
 
@@ -136,8 +187,8 @@ export function ResortMap({
       <div className="section__head">
         <h2 id="map-title">Карта курортов</h2>
         <p>
-          На карте — {mappable.length} действующих комплексов с координатами. Дикие и закрытые
-          склоны по умолчанию скрыты.
+          На карте — {mappable.length} действующих комплексов с координатами. Дикие и закрытые —
+          на отдельной карте ниже, серыми метками.
         </p>
       </div>
       {canvas}

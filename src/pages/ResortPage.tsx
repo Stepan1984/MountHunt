@@ -297,6 +297,7 @@ export function ResortPage({ data }: { data: SiteData }) {
                   selectedId={resort.id}
                   embedded
                   size="detail"
+                  variant={resort.status === 'active' ? 'active' : 'inactive'}
                 />
               </div>
             </>
