@@ -214,7 +214,7 @@ describe('visitor-facing copy avoids scrape jargon', () => {
     const hours = JSON.parse(readFileSync(join(root, 'public/data/hours.json'), 'utf8'))
     const important = JSON.parse(readFileSync(join(root, 'public/data/important.json'), 'utf8'))
     const resorts = JSON.parse(readFileSync(join(root, 'public/data/resorts.json'), 'utf8'))
-    const jargon = /виджет|без JS|\bCSV\b|snow-park|ski-pass|playwright|Tilda|nohref/i
+    const jargon = /виджет|без JS|\bCSV\b|snow-park|ski-pass|playwright|Tilda|nohref|PDF-прейскурант/i
     for (const h of hours) {
       assert.doesNotMatch(h.summary || '', jargon, h.resortId)
     }
@@ -222,7 +222,24 @@ describe('visitor-facing copy avoids scrape jargon', () => {
       assert.doesNotMatch(`${item.title} ${item.body || ''}`, jargon, item.id)
     }
     for (const r of resorts) {
-      assert.doesNotMatch(r.notes || '', /CSV виджетов|без JS|виджет/i, r.id)
+      assert.doesNotMatch(r.notes || '', /CSV виджетов|без JS|виджет|PDF-прейскурант/i, r.id)
+    }
+    const yukki = resorts.find((r) => r.id === 'yukki')
+    assert.match(yukki?.notes || '', /прейскурант на сайте/)
+  })
+
+  it('fallback price notes avoid «не распознан» tooling phrasing', () => {
+    const files = [
+      'scripts/scrape/resorts/drop-park.mjs',
+      'scripts/scrape/resorts/igora.mjs',
+      'scripts/scrape/resorts/snezhny.mjs',
+      'scripts/scrape/resorts/yukki.mjs',
+      'scripts/scrape/resorts/lazurnye-ozera.mjs',
+      'scripts/scrape/resorts/tuutari-park.mjs',
+    ]
+    for (const rel of files) {
+      const src = readFileSync(join(root, rel), 'utf8')
+      assert.doesNotMatch(src, /не распознан/i, rel)
     }
   })
 

@@ -120,7 +120,7 @@ export async function scrapeTuutari() {
         sourceUrl: PRICES_URL,
         groups,
         status: groups.length ? 'ok' : 'partial',
-        note: groups.length ? undefined : 'Таблицы цен не распознаны',
+        note: groups.length ? undefined : 'Таблицы цен не удалось прочитать',
       }),
       hours: hoursSnapshot({
         resortId,
