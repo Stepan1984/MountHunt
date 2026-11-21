@@ -2,18 +2,20 @@ import { Link } from 'react-router-dom'
 import { ExternalLink, LinkedText } from './LinkedText'
 import { formatUpdatedAt, operationalImportant } from '../lib/data'
 import { linkLabelForUrl } from '../lib/links'
-import type { ImportantItem, Resort } from '../types'
+import type { ImportantItem, Meta, Resort } from '../types'
 
 type Props = {
   items: ImportantItem[]
   resorts: Resort[]
+  meta?: Pick<Meta, 'importantScrapedAt' | 'updatedAt'>
   /** Compact strip after hero — operational items only. */
   variant?: 'full' | 'strip'
 }
 
-export function ImportantSection({ items, resorts, variant = 'full' }: Props) {
+export function ImportantSection({ items, resorts, meta, variant = 'full' }: Props) {
   const nameById = new Map(resorts.map((r) => [r.id, r.name]))
   const visible = operationalImportant(items)
+  const refreshedAt = meta?.importantScrapedAt || meta?.updatedAt
 
   return (
     <section
@@ -23,7 +25,17 @@ export function ImportantSection({ items, resorts, variant = 'full' }: Props) {
     >
       <div className="section__head">
         <h2 id="important-title">Важное</h2>
-        <p>Свежие статусы по курортам — без персональных уведомлений.</p>
+        <p>
+          Свежие статусы по курортам — без персональных уведомлений
+          {refreshedAt ? (
+            <>
+              . Снимок:{' '}
+              <time dateTime={refreshedAt}>{formatUpdatedAt(refreshedAt)}</time>
+            </>
+          ) : (
+            '.'
+          )}
+        </p>
       </div>
       {visible.length === 0 ? (
         <p className="muted">Сейчас нет срочных заметок по склонам.</p>

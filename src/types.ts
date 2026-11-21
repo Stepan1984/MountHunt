@@ -95,6 +95,9 @@ export type Meta = {
   updatedAt: string
   source: string
   note?: string
+  /** Last successful «Важное» scrape (2h job). */
+  importantScrapedAt?: string
+  importantNote?: string
 }
 
 export type SiteData = {

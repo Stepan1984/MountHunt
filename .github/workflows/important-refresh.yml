@@ -1,0 +1,48 @@
+# Лёгкий сбор блока «Важное» с сайтов курортов → public/data/important.json.
+# Cron: каждые 2 часа (UTC). Fail-soft: сбой одного курорта не роняет job.
+name: Important refresh (2h)
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-important:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # HTTP-only lightweight fetch (no browser, no OCR). Keep polite delay.
+      - name: Scrape «Важное»
+        run: npm run scrape:important
+        env:
+          SCRAPE_DELAY_MS: '1200'
+          SCRAPE_FETCH_TIMEOUT_MS: '45000'
+        # Fail-soft at script level; still fail the step on orchestration/I/O errors.
+        continue-on-error: false
+
+      - name: Commit important.json if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/important.json public/data/meta.json
+          if git diff --staged --quiet; then
+            echo "Нет изменений «Важного»"
+          else
+            git commit -m "chore(data): обновление блока Важное (2h)"
+            git push
+          fi
