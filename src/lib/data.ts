@@ -279,17 +279,46 @@ export function publicResortNotes(notes: string | null | undefined): string | nu
   return cleaned || null
 }
 
+/**
+ * Drop contact/address sentences that belong in «Контакты» / «Локация»,
+ * not under «Цены» (defense if a scraper regresses).
+ */
+function stripContactClausesFromPriceNote(note: string): string {
+  return note
+    .split(/(?<=[.!])\s+/)
+    .map((part) => part.trim())
+    .filter((part) => {
+      if (!part) return false
+      // Whole «Контакты: …» blobs (Severny historically stuffed phone/email/address here).
+      if (/^контакты\s*:/i.test(part)) return false
+      if (/\bконтакты\s+уточняйте\b/i.test(part)) return false
+      // Phone / email / street fragments that are not price copy.
+      if (/\+7[\d\s()/-]{8,}/.test(part) && /@|ул\.|улиц|посёл|посел|городск/i.test(part)) {
+        return false
+      }
+      if (/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(part) && !/цен|тариф|ски|пасс|₽|руб/i.test(part)) {
+        return false
+      }
+      return true
+    })
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 /** Hide scrape-internal price footnotes from the public detail page. */
 export function publicPriceNote(note: string | null | undefined): string | null {
   if (!note?.trim()) return null
   if (SCRAPER_NOTE_MARKERS.test(note)) return null
   // Soft-rewrite common tooling phrasing that still slipped into committed data.
-  const cleaned = note
-    .replace(/\bsnow-park\b/gi, 'сноупарка')
-    .replace(/\bski-?pass\b/gi, 'ски-пасс')
-    .replace(/\s*извлечены\s+ocr\s+из\s+скана\s+pdf[^.;]*/gi, ' со скана прейскуранта')
-    .replace(/\s+/g, ' ')
-    .trim()
+  const cleaned = stripContactClausesFromPriceNote(
+    note
+      .replace(/\bsnow-park\b/gi, 'сноупарка')
+      .replace(/\bski-?pass\b/gi, 'ски-пасс')
+      .replace(/\s*извлечены\s+ocr\s+из\s+скана\s+pdf[^.;]*/gi, ' со скана прейскуранта')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  )
   return cleaned || null
 }
 

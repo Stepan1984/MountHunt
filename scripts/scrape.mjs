@@ -163,6 +163,8 @@ function applySeedFixes(resorts) {
       prices_format: 'none',
       prices_url: null,
       webcam_url: null,
+      phone: '+7 (911) 924-81-81',
+      email: 'sevsklon_toxovo@mail.ru',
       sourcesAdd: ['https://severnysklon.ru/'],
       sourcesDrop: [/sev-sklon\.ru/],
       notes: '4 склона у оз. Хепоярви; бугели. Актуальные цены уточняйте на сайте курорта.',
@@ -278,6 +280,17 @@ async function main() {
     }
     if (result.website) {
       resorts = resorts.map((r) => (r.id === id ? { ...r, website: result.website } : r))
+    }
+    // Contacts belong on the resort record («Контакты»), never in prices.note.
+    if (result.contacts && typeof result.contacts === 'object') {
+      const { phone, email } = result.contacts
+      resorts = resorts.map((r) => {
+        if (r.id !== id) return r
+        const next = { ...r }
+        if (phone) next.phone = phone
+        if (email) next.email = email
+        return next
+      })
     }
     if (result.important?.length) importantAdds.push(...result.important)
 

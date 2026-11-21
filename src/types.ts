@@ -3,6 +3,7 @@ export type ResortStatus = 'active' | 'unclear' | 'closed'
 export type Resort = {
   id: string
   name: string
+  /** Full address / locality for the Location section (single place). */
   area: string
   city_or_district: string
   lat: number | null
@@ -13,6 +14,9 @@ export type Resort = {
   /** Direct player URLs (iframe/HLS/MJPEG). Page links stay in webcam_url. */
   webcam_embeds?: string[]
   community_links?: string[]
+  /** Visitor contacts — own «Контакты» block; never mix into prices notes. */
+  phone?: string | null
+  email?: string | null
   prices_format: string
   prices_url?: string
   status: ResortStatus
