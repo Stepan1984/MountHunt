@@ -25,16 +25,24 @@ export function ResortCard({
   important = [],
   compact = false,
 }: Props) {
+  const inactive = resort.status !== 'active'
   const h = hoursFor(resort.id, hours)
   const p = pricesFor(resort.id, prices)
   const rawHours = h?.summary ? localizePublicText(h.summary) : null
   // Never show raw URLs/paths on cards — strip them, keep the human summary.
-  const hoursText = rawHours
-    ? stripUrlsFromText(rawHours) || 'уточняйте на сайте'
-    : 'нет данных'
+  // Дикие / неясные / закрытые: no live hours/prices — show «отсутствует», not placeholders.
+  const hoursText = inactive
+    ? 'отсутствует'
+    : rawHours
+      ? stripUrlsFromText(rawHours) || 'уточняйте на сайте'
+      : 'нет данных'
   const closed = slopesClosedHint(resort.id, h, important)
   // When slopes are closed, don't advertise a live «от N ₽» next to the warn badge.
-  const priceHint = closed ? 'сезон закрыт' : priceHintFor(p)
+  const priceHint = inactive
+    ? 'отсутствует'
+    : closed
+      ? 'сезон закрыт'
+      : priceHintFor(p)
 
   return (
     <article className={`resort-card resort-card--${resort.status}${compact ? ' resort-card--compact' : ''}${closed ? ' resort-card--slopes-closed' : ''}`}>
