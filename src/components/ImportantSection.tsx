@@ -25,17 +25,12 @@ export function ImportantSection({ items, resorts, meta, variant = 'full' }: Pro
     >
       <div className="section__head">
         <h2 id="important-title">Важное</h2>
-        <p>
-          Свежие статусы по курортам — без персональных уведомлений
-          {refreshedAt ? (
-            <>
-              . Обновлено:{' '}
-              <time dateTime={refreshedAt}>{formatUpdatedAt(refreshedAt)}</time>
-            </>
-          ) : (
-            '.'
-          )}
-        </p>
+        {refreshedAt ? (
+          <p>
+            Обновлено:{' '}
+            <time dateTime={refreshedAt}>{formatUpdatedAt(refreshedAt)}</time>
+          </p>
+        ) : null}
       </div>
       {visible.length === 0 ? (
         <p className="muted">Сейчас нет срочных заметок по склонам.</p>
