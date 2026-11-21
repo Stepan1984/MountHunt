@@ -6,7 +6,6 @@ import {
   pricesFor,
   slopesClosedHint,
   statusLabel,
-  truncateText,
 } from '../lib/data'
 import { stripUrlsFromText } from '../lib/links'
 import type { HoursSnapshot, ImportantItem, PriceSnapshot, Resort } from '../types'
@@ -29,9 +28,10 @@ export function ResortCard({
   const h = hoursFor(resort.id, hours)
   const p = pricesFor(resort.id, prices)
   const rawHours = h?.summary ? localizePublicText(h.summary) : null
-  // Never show raw URLs/paths on cards — strip them, keep a short human summary.
-  const hoursPlain = rawHours ? stripUrlsFromText(rawHours) || 'уточняйте на сайте' : null
-  const hoursText = hoursPlain ? truncateText(hoursPlain, compact ? 72 : 110) : 'нет данных'
+  // Never show raw URLs/paths on cards — strip them, keep the human summary.
+  const hoursText = rawHours
+    ? stripUrlsFromText(rawHours) || 'уточняйте на сайте'
+    : 'нет данных'
   const closed = slopesClosedHint(resort.id, h, important)
   // When slopes are closed, don't advertise a live «от N ₽» next to the warn badge.
   const priceHint = closed ? 'сезон закрыт' : priceHintFor(p)
@@ -57,7 +57,7 @@ export function ResortCard({
       <dl className="resort-card__facts">
         <div>
           <dt>Часы</dt>
-          <dd title={hoursPlain ?? undefined}>{hoursText}</dd>
+          <dd>{hoursText}</dd>
         </div>
         <div>
           <dt>Цены</dt>
