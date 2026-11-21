@@ -52,6 +52,25 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Sticky header offset for in-page hash targets (nav: Курорты/Карта/Важное). */
+#explore,
+#map,
+#resorts,
+#important,
+#about-title {
+  scroll-margin-top: 5.75rem;
+}
+
+@media (max-width: 640px) {
+  #explore,
+  #map,
+  #resorts,
+  #important,
+  #about-title {
+    scroll-margin-top: 7.25rem;
+  }
+}
+
 body {
   margin: 0;
   min-width: 320px;

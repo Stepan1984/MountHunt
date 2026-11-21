@@ -1,6 +1,28 @@
-import { Link, NavLink } from 'react-router-dom'
+import type { ReactNode } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 
-const homeHash = (hash: string) => `${import.meta.env.BASE_URL}${hash}`
+function HomeHashNavLink({
+  hash,
+  children,
+}: {
+  hash: string
+  children: ReactNode
+}) {
+  const location = useLocation()
+  const targetHash = hash.startsWith('#') ? hash : `#${hash}`
+  const onHome = location.pathname === '/' || location.pathname === ''
+  const isHashActive = onHome && location.hash === targetHash
+
+  return (
+    <Link
+      to={{ pathname: '/', hash: targetHash }}
+      className={isHashActive ? 'active' : undefined}
+      aria-current={isHashActive ? 'page' : undefined}
+    >
+      {children}
+    </Link>
+  )
+}
 
 export function Header() {
   return (
@@ -10,11 +32,9 @@ export function Header() {
           MountHunt
         </Link>
         <nav className="site-nav" aria-label="Основная навигация">
-          <NavLink to="/" end>
-            Курорты
-          </NavLink>
-          <a href={homeHash('#explore')}>Карта</a>
-          <a href={homeHash('#important')}>Важное</a>
+          <HomeHashNavLink hash="#resorts">Курорты</HomeHashNavLink>
+          <HomeHashNavLink hash="#map">Карта</HomeHashNavLink>
+          <HomeHashNavLink hash="#important">Важное</HomeHashNavLink>
           <NavLink to="/about">О проекте</NavLink>
         </nav>
       </div>
