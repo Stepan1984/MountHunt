@@ -1,4 +1,5 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
+import { detectOkhtaImportant } from '../lib/important.mjs'
 import {
   cleanText,
   hoursSnapshot,
@@ -7,9 +8,11 @@ import {
   priceSnapshot,
 } from '../lib/parse.mjs'
 
-const TRAILS_URL =
+export const OKHTA_TRAILS_URL =
   'https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/'
-const WINTER_URL = 'https://winter.ohtapark.ru/'
+export const OKHTA_WINTER_URL = 'https://winter.ohtapark.ru/'
+const TRAILS_URL = OKHTA_TRAILS_URL
+const WINTER_URL = OKHTA_WINTER_URL
 const WEBCAM_URL = 'https://www.ohtapark.ru/webcam/'
 
 /**
@@ -146,18 +149,7 @@ export async function scrapeOkhtaPark() {
       notes.push('Дневной прейскурант подъёмников часто закрыт до сезона — смотрите страницу трасс')
     }
 
-    const important = []
-    if (trailHours.preSale) {
-      important.push({
-        id: 'okhta-presale',
-        resortId,
-        title: 'Охта-Парк: предпродажа ски-пассов',
-        body: 'На сайте курорта открыта предпродажа сезонных ски-пассов. Дневные тарифы уточняйте ближе к сезону.',
-        severity: 'info',
-        updatedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
-        sourceUrl: WINTER_URL,
-      })
-    }
+    const important = detectOkhtaImportant(trailsHtml, WINTER_URL)
 
     return {
       resortId,

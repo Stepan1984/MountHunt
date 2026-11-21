@@ -119,6 +119,15 @@ npm run data:refresh
 - коммитит `public/data` (+ seed-фиксы), если есть diff
 - Igora: live Playwright only in Actions (no `IGORA_HTML_DIR` / `IGORA_ALLOW_SNAPSHOT`; scraper also refuses snapshots when `CI`/`GITHUB_ACTIONS` is set). Offline HTML remains local opt-in.
 
+### «Важное» каждые 2 часа
+
+`.github/workflows/important-refresh.yml`:
+
+- **cron** `0 */2 * * *` (каждые 2 часа UTC) + `workflow_dispatch`
+- лёгкий HTTP-only scrape (`npm run scrape:important`) — без Playwright/OCR
+- обновляет `public/data/important.json` (+ метка в `meta.json`)
+- **fail-soft**: сбой одного курорта сохраняет прошлые пункты по нему; job не валится из‑за частичных ошибок
+
 ---
 
 ## Структура страниц
@@ -139,4 +148,5 @@ npm run data:refresh
 | `npm run build` | Production-сборка |
 | `npm run preview` | Просмотр сборки |
 | `npm run scrape` | Сбор цен/часов → `public/data` |
+| `npm run scrape:important` | Лёгкий сбор блока «Важное» → `important.json` |
 | `npm run data:refresh` | Обновить `public/data` из seed (без сети) |

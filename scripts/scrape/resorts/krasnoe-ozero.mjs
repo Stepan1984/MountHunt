@@ -1,4 +1,5 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
+import { detectKrasnoeImportantFromFlags } from '../lib/important.mjs'
 import {
   cleanText,
   hoursSnapshot,
@@ -11,9 +12,11 @@ import {
 const PAGE_URL = 'https://krasnoeozero.ru/winter/skipass-and-lifts'
 const CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSuTEvLg230S45pOu7aSVs--gOtknAPG2vYD6HwVEMcwTHhAd33FlU6aGrWAmQB68F4uDWeYkgzuWbj/pub?gid=1912036084&single=true&output=csv'
-const HOURS_PAGE_URL = 'https://krasnoeozero.ru/grafik/'
-const HOURS_CSV_URL =
+export const KRASNOE_HOURS_PAGE_URL = 'https://krasnoeozero.ru/grafik/'
+export const KRASNOE_HOURS_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSuTEvLg230S45pOu7aSVs--gOtknAPG2vYD6HwVEMcwTHhAd33FlU6aGrWAmQB68F4uDWeYkgzuWbj/pub?gid=1367114585&single=true&output=csv'
+const HOURS_PAGE_URL = KRASNOE_HOURS_PAGE_URL
+const HOURS_CSV_URL = KRASNOE_HOURS_CSV_URL
 const WEBCAM_URL = 'https://krasnoeozero.ru/cam/'
 
 /** @param {string} h */
@@ -64,7 +67,7 @@ function pickScheduleDateColumn(header) {
 /**
  * @param {string} csv
  */
-function parseHoursFromCsv(csv) {
+export function parseHoursFromCsv(csv) {
   const { header, rows } = parseCsv(csv)
   const dateCol = pickScheduleDateColumn(header)
   if (!dateCol) {
@@ -127,18 +130,15 @@ function parseHoursFromCsv(csv) {
     summary = `На ${dateCol}: склоны/подъёмники закрыты до сезона (CSV графика)`
   }
 
-  const important = []
-  if (closedUntilSeason || (allClosed && slopes.length)) {
-    important.push({
-      id: 'krasnoe-slopes-closed',
-      resortId: 'krasnoe-ozero',
-      title: 'Красное озеро: склоны закрыты до сезона',
-      body: `По публичному CSV графика на ${dateCol} трассы/подъёмники отмечены как закрытые до сезона.`,
-      severity: 'warn',
-      updatedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
-      sourceUrl: HOURS_PAGE_URL,
-    })
-  }
+  const important = detectKrasnoeImportantFromFlags(
+    {
+      closedUntilSeason,
+      allClosed,
+      slopesCount: slopes.length,
+      dateCol,
+    },
+    HOURS_PAGE_URL,
+  )
 
   return {
     hours: hoursSnapshot({

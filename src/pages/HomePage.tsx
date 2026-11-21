@@ -13,7 +13,12 @@ export function HomePage({ data }: { data: SiteData }) {
     <>
       <Hero activeCount={active.length} />
 
-      <ImportantSection items={data.important} resorts={data.resorts} variant="strip" />
+      <ImportantSection
+        items={data.important}
+        resorts={data.resorts}
+        meta={data.meta}
+        variant="strip"
+      />
 
       <section className="section explore" id="explore" aria-labelledby="explore-title">
         <div className="section__head">

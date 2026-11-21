@@ -14,6 +14,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DELAY_MS, sleep } from './scrape/lib/http.mjs'
+import { mergeImportantFromDailyScrape } from './scrape/lib/important.mjs'
 import { mergeSnapshot, nowIso } from './scrape/lib/parse.mjs'
 import { scrapeTuutari } from './scrape/resorts/tuutari-park.mjs'
 import { scrapeZolotayaDolina } from './scrape/resorts/zolotaya-dolina.mjs'
@@ -179,21 +180,6 @@ function applySeedFixes(resorts) {
   })
 }
 
-function upsertImportant(list, items) {
-  const byId = new Map(list.map((i) => [i.id, i]))
-  for (const item of items) {
-    byId.set(item.id, item)
-  }
-  byId.set('mvp-data-note', {
-    id: 'mvp-data-note',
-    title: 'Данные обновляются ежедневно',
-    body: 'Цены и часы для части курортов собираются с официальных публичных страниц (волны 1–3). Это не оферта — перед выездом сверяйте с сайтом курорта.',
-    severity: 'info',
-    updatedAt: nowIso(),
-  })
-  return [...byId.values()]
-}
-
 function defaultTargets(args) {
   if (args.wave === '1') return [...WAVE1]
   if (args.wave === '2') return [...WAVE2]
@@ -309,7 +295,7 @@ async function main() {
 
   const prices = resorts.map((r) => pricesById.get(r.id) || blankPrice(r.id, resorts))
   const hours = resorts.map((r) => hoursById.get(r.id) || blankHours(r.id, resorts))
-  const important = upsertImportant(prevImportant, importantAdds)
+  const important = mergeImportantFromDailyScrape(prevImportant, importantAdds, results)
 
   const success = results.filter(
     (r) => (r.prices && r.prices !== 'failed') || (r.hours && r.hours !== 'failed'),

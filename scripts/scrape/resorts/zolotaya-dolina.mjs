@@ -1,4 +1,5 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
+import { detectZoldolImportant } from '../lib/important.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -9,7 +10,8 @@ import {
 } from '../lib/parse.mjs'
 
 const PRICES_URL = 'https://zoldol.ru/price-winter'
-const HOURS_URL = 'https://zoldol.ru/vremya-raboty'
+export const ZOLDOL_HOURS_URL = 'https://zoldol.ru/vremya-raboty'
+const HOURS_URL = ZOLDOL_HOURS_URL
 const WEBCAM_URL = 'https://zoldol.ru/webcamera'
 
 const COLUMNS = ['Детский · будни', 'Взрослый · будни', 'Детский · выходные', 'Взрослый · выходные']
@@ -67,21 +69,12 @@ export async function scrapeZolotayaDolina() {
 
     const $h = loadHtml(hoursHtml)
     const text = cleanText($h('body').text())
-    const important = []
+    const important = detectZoldolImportant(hoursHtml, HOURS_URL)
     let summary = 'См. график на сайте'
     const periods = []
 
-    if (/Горнолыжные склоны закрыты/i.test(text)) {
+    if (important.length) {
       summary = 'Горнолыжные склоны закрыты на летний период (уточняйте открытие на сайте)'
-      important.push({
-        id: 'zoldol-slopes-closed',
-        resortId,
-        title: 'Золотая Долина: склоны закрыты',
-        body: 'На странице часов работы указано, что горнолыжные склоны закрыты на летний период.',
-        severity: 'warn',
-        updatedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
-        sourceUrl: HOURS_URL,
-      })
     }
 
     const dayLines = [...text.matchAll(

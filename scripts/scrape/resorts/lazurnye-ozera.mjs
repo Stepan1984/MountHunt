@@ -1,4 +1,5 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
+import { detectLazurnyeImportant } from '../lib/important.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -10,7 +11,8 @@ import {
 } from '../lib/parse.mjs'
 
 const PRICES_URL = 'https://lazoorsnow.ru/ceny'
-const HOME_URL = 'https://lazoorsnow.ru/'
+export const LAZURNYE_HOME_URL = 'https://lazoorsnow.ru/'
+const HOME_URL = LAZURNYE_HOME_URL
 
 /**
  * @returns {Promise<object>}
@@ -63,20 +65,8 @@ export async function scrapeLazurnyeOzera() {
 
     const $h = loadHtml(homeHtml)
     const text = cleanText($h('body').text())
-    const important = []
-    const seasonClosed =
-      /Сезон\s*20\d{2}\s*закрыт/i.test(text) || /сезон.*закрыт/i.test(text)
-    if (seasonClosed) {
-      important.push({
-        id: 'lazurnye-season-closed',
-        resortId,
-        title: 'Лазурные озёра: сезон закрыт',
-        body: 'На сайте курорта есть сообщение о закрытии сезона. Перед выездом проверьте актуальность.',
-        severity: 'warn',
-        updatedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
-        sourceUrl: HOME_URL,
-      })
-    }
+    const important = detectLazurnyeImportant(homeHtml, HOME_URL)
+    const seasonClosed = important.length > 0
 
     let summary = 'Режим уточняйте на сайте'
     const periods = []
