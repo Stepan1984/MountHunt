@@ -119,14 +119,8 @@ export function ResortPage({ data }: { data: SiteData }) {
           <h2 id="resort-important-title">Важное</h2>
           <ul className="important__list important__list--detail">
             {important.map((item) => (
-              <li
-                key={item.id}
-                className={`important__item important__item--${item.severity}`}
-              >
+              <li key={item.id} className="important__item">
                 <div className="important__meta">
-                  <span className="important__severity">
-                    {item.severity === 'warn' ? 'Внимание' : 'Инфо'}
-                  </span>
                   {item.publishedAt ? (
                     <time dateTime={item.publishedAt}>{formatImportantDate(item.publishedAt)}</time>
                   ) : null}

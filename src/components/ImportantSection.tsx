@@ -44,14 +44,8 @@ export function ImportantSection({ items, resorts, meta, variant = 'full' }: Pro
           {visible.map((item) => {
             const resortName = item.resortId ? nameById.get(item.resortId) : undefined
             return (
-              <li
-                key={item.id}
-                className={`important__item important__item--${item.severity}`}
-              >
+              <li key={item.id} className="important__item">
                 <div className="important__meta">
-                  <span className="important__severity">
-                    {item.severity === 'warn' ? 'Внимание' : 'Инфо'}
-                  </span>
                   {item.publishedAt ? (
                     <time dateTime={item.publishedAt}>{formatImportantDate(item.publishedAt)}</time>
                   ) : null}
