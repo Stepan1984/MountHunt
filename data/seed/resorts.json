@@ -337,9 +337,8 @@
     "name": "Орехово",
     "area": "ЛО, Приозерский р-н, у ж/д ст. Орехово",
     "city_or_district": "Орехово",
-    "lat": 60.49,
-    "lon": 30.26,
-    "coords_precision": "approximate",
+    "lat": 60.4648,
+    "lon": 30.2508,
     "website": null,
     "community_links": [
       "https://t.me/orehovosklon"
@@ -410,9 +409,8 @@
     "name": "Семейка",
     "area": "ЛО, Токсово, у трамплинов",
     "city_or_district": "Токсово",
-    "lat": 60.1625,
-    "lon": 30.5475,
-    "coords_precision": "approximate",
+    "lat": 60.1635,
+    "lon": 30.5464,
     "website": null,
     "webcam_url": null,
     "prices_format": "unknown",
