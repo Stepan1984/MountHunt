@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { flattenSkipassGroups } from './scrape/lib/parse.mjs'
-import { parseIgoraPriceTables } from './scrape/resorts/igora.mjs'
+import { clarifyInstructorLabel, parseIgoraPriceTables } from './scrape/resorts/igora.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const pricesPath = join(root, 'public/data/prices.json')
@@ -248,9 +248,20 @@ function enrichOkhta(snap) {
 
 function enrichIgora(snap) {
   const snapHtml = join(root, 'data/snapshots/igora/price.html')
-  if (!existsSync(snapHtml)) return
-  const { groups } = parseIgoraPriceTables(readFileSync(snapHtml, 'utf8'))
-  setGroups(snap, groups)
+  if (existsSync(snapHtml)) {
+    const { groups } = parseIgoraPriceTables(readFileSync(snapHtml, 'utf8'))
+    setGroups(snap, groups)
+  }
+  // Fail-soft: clarify visitor wording on flat items too (live scrape titles
+  // may still say «с профи» until the next successful parse).
+  for (const it of snap.items || []) {
+    if (typeof it.title === 'string') it.title = clarifyInstructorLabel(it.title)
+  }
+  for (const g of snap.groups || []) {
+    for (const row of g.rows || []) {
+      if (typeof row.name === 'string') row.name = clarifyInstructorLabel(row.name)
+    }
+  }
 }
 
 function enrichDropPark(snap) {

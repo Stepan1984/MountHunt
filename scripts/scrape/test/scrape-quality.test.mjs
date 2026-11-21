@@ -8,7 +8,11 @@ import { dirname, join } from 'node:path'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { flattenSkipassGroups, mergeSnapshot, parsePrice } from '../lib/parse.mjs'
-import { parseIgoraPrices, parseIgoraPriceTables } from '../resorts/igora.mjs'
+import {
+  clarifyInstructorLabel,
+  parseIgoraPrices,
+  parseIgoraPriceTables,
+} from '../resorts/igora.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 
@@ -88,6 +92,33 @@ describe('parseIgoraPrices', () => {
     for (const [k, n] of byBase) {
       assert.equal(n, 1, `duplicate instructor key after collapse: ${k}`)
     }
+  })
+
+  it('rewrites site jargon «с профи» to clear «с тренером»', () => {
+    assert.equal(clarifyInstructorLabel('1 человек с профи'), '1 человек с тренером')
+    assert.equal(clarifyInstructorLabel('2 человека с профи'), '2 человека с тренером')
+    assert.equal(
+      clarifyInstructorLabel('3 человека и более с профи'),
+      '3 человека и более с тренером',
+    )
+    assert.equal(clarifyInstructorLabel('1 человек'), '1 человек')
+
+    const html = readFileSync(join(root, 'data/snapshots/igora/price.html'), 'utf8')
+    const { items, groups } = parseIgoraPriceTables(html)
+    const withTrainer = items.filter((i) => /с тренером/i.test(i.title))
+    assert.ok(withTrainer.length >= 6, 'expected instructor «с тренером» tariffs')
+    for (const it of items) {
+      assert.doesNotMatch(it.title, /\bпрофи\b/i, `visitor title must not keep «профи»: ${it.title}`)
+    }
+    const instrGroup = groups.find((g) => /инструктор/i.test(g.category))
+    assert.ok(instrGroup, 'expected Инструктор group')
+    for (const row of instrGroup.rows || []) {
+      assert.doesNotMatch(row.name || '', /\bпрофи\b/i, `group row must not keep «профи»: ${row.name}`)
+    }
+    assert.ok(
+      (instrGroup.rows || []).some((r) => /1 человек с тренером/i.test(r.name || '')),
+      'expected «1 человек с тренером» in instructor table',
+    )
   })
 })
 
@@ -212,6 +243,20 @@ describe('skipass groups', () => {
     const drop = prices.find((p) => p.resortId === 'drop-park')
     assert.ok((drop?.items || []).length > 0)
     assert.equal(drop?.groups?.length || 0, 0, 'drop-park stays flat (no invented categories)')
+
+    const igora = prices.find((p) => p.resortId === 'igora')
+    for (const it of igora?.items || []) {
+      assert.doesNotMatch(it.title || '', /\bпрофи\b/i, `committed Igora item: ${it.title}`)
+    }
+    for (const g of igora?.groups || []) {
+      for (const row of g.rows || []) {
+        assert.doesNotMatch(row.name || '', /\bпрофи\b/i, `committed Igora row: ${row.name}`)
+      }
+    }
+    assert.ok(
+      (igora?.items || []).some((i) => /с тренером/i.test(i.title || '')),
+      'committed Igora items should use «с тренером»',
+    )
   })
 
   it('lazurnye durations are not doubled «ч ч»', () => {
