@@ -10,8 +10,10 @@ import { fileURLToPath } from 'node:url'
 import { flattenSkipassGroups, mergeSnapshot, parsePrice } from '../lib/parse.mjs'
 import {
   clarifyInstructorLabel,
+  mergeIgoraPriceTables,
   parseIgoraPrices,
   parseIgoraPriceTables,
+  supplementIgoraSkiPassFromSnapshot,
 } from '../resorts/igora.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
@@ -119,6 +121,45 @@ describe('parseIgoraPrices', () => {
       (instrGroup.rows || []).some((r) => /1 человек с тренером/i.test(r.name || '')),
       'expected «1 человек с тренером» in instructor table',
     )
+  })
+
+  it('merges instructor-only live with snapshot ski-pass (fail-soft)', () => {
+    const html = readFileSync(join(root, 'data/snapshots/igora/price.html'), 'utf8')
+    const full = parseIgoraPriceTables(html)
+    const liveOnly = {
+      items: full.items.filter((i) => / · (?:будни|выходные)/i.test(i.title)),
+      groups: full.groups.filter((g) => /инструктор/i.test(g.category)),
+    }
+    assert.equal(liveOnly.groups.length, 1)
+    assert.ok(liveOnly.items.length >= 12)
+
+    const merged = mergeIgoraPriceTables(liveOnly, full)
+    assert.equal(merged.filledSkiPass, true)
+    assert.ok(merged.groups.some((g) => /почасов/i.test(g.category)))
+    assert.ok(merged.groups.some((g) => /проход/i.test(g.category)))
+    assert.ok(merged.groups.some((g) => /инструктор/i.test(g.category)))
+    assert.ok(merged.items.some((i) => /Базовый · 1 час/i.test(i.title)))
+    assert.ok(merged.items.some((i) => /1 человек · 1 час · будни/i.test(i.title)))
+    // Prefer live instructor prices over snapshot when both present
+    const livePrice = liveOnly.items.find((i) => /^1 человек · 1 час · будни/i.test(i.title))?.price
+    const mergedPrice = merged.items.find((i) => /^1 человек · 1 час · будни/i.test(i.title))?.price
+    assert.equal(mergedPrice, livePrice)
+
+    const supplemented = supplementIgoraSkiPassFromSnapshot(liveOnly)
+    assert.equal(supplemented.filledSkiPass, true)
+    assert.ok(supplemented.groups.length >= 3)
+  })
+
+  it('marks льготный cash-only cells', () => {
+    const html = readFileSync(join(root, 'data/snapshots/igora/price.html'), 'utf8')
+    const { items, groups } = parseIgoraPriceTables(html)
+    const lgot = items.find((i) => /Льготный\* · 1 час/i.test(i.title))
+    assert.ok(lgot)
+    assert.match(lgot.note || '', /только в кассе/i)
+    const hourly = groups.find((g) => /почасов/i.test(g.category))
+    const row = hourly?.rows?.find((r) => /льгот/i.test(r.name || ''))
+    assert.ok(row)
+    assert.match(row.prices?.[0]?.note || '', /только в кассе/i)
   })
 })
 
@@ -245,6 +286,13 @@ describe('skipass groups', () => {
     assert.equal(drop?.groups?.length || 0, 0, 'drop-park stays flat (no invented categories)')
 
     const igora = prices.find((p) => p.resortId === 'igora')
+    assert.ok(igora?.groups?.some((g) => /почасов/i.test(g.category)), 'Igora hourly group')
+    assert.ok(igora?.groups?.some((g) => /проход/i.test(g.category)), 'Igora passes group')
+    assert.ok(igora?.groups?.some((g) => /инструктор/i.test(g.category)), 'Igora instructor group')
+    assert.ok(
+      (igora?.items || []).some((i) => /Базовый · 1 час/i.test(i.title || '')),
+      'committed Igora items should include ski-pass hourly',
+    )
     for (const it of igora?.items || []) {
       assert.doesNotMatch(it.title || '', /\bпрофи\b/i, `committed Igora item: ${it.title}`)
     }

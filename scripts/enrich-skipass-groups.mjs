@@ -7,7 +7,11 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { flattenSkipassGroups } from './scrape/lib/parse.mjs'
-import { clarifyInstructorLabel, parseIgoraPriceTables } from './scrape/resorts/igora.mjs'
+import {
+  clarifyInstructorLabel,
+  mergeIgoraPriceTables,
+  parseIgoraPriceTables,
+} from './scrape/resorts/igora.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const pricesPath = join(root, 'public/data/prices.json')
@@ -17,7 +21,8 @@ const prices = JSON.parse(readFileSync(pricesPath, 'utf8'))
 function setGroups(snap, groups) {
   const clean = (groups || []).filter((g) => g?.rows?.length)
   if (!clean.length) {
-    delete snap.groups
+    // Fail-soft: keep previously committed groups when rebuild finds nothing
+    // (title formats drift; don't wipe tuutari/zolotaya tables).
     return
   }
   snap.groups = clean
@@ -248,12 +253,26 @@ function enrichOkhta(snap) {
 
 function enrichIgora(snap) {
   const snapHtml = join(root, 'data/snapshots/igora/price.html')
-  if (existsSync(snapHtml)) {
-    const { groups } = parseIgoraPriceTables(readFileSync(snapHtml, 'utf8'))
-    setGroups(snap, groups)
+  const snapshotParsed = existsSync(snapHtml)
+    ? parseIgoraPriceTables(readFileSync(snapHtml, 'utf8'))
+    : { items: [], groups: [] }
+  // Keep live instructor prices when present; restore missing ski-pass groups
+  // from the committed HTML snapshot (daily live often drops them).
+  const liveParsed = { items: snap.items || [], groups: snap.groups || [] }
+  const merged = mergeIgoraPriceTables(liveParsed, snapshotParsed)
+  setGroups(snap, merged.groups)
+  snap.items = merged.items.slice(0, 80)
+  if (merged.filledSkiPass && snap.status === 'ok') {
+    snap.status = 'partial'
   }
-  // Fail-soft: clarify visitor wording on flat items too (live scrape titles
-  // may still say «с профи» until the next successful parse).
+  if (merged.filledSkiPass) {
+    const extra =
+      'ски-пасс (почасовые/проходы) из HTML-снимка — live без таблиц абонементов'
+    if (!String(snap.note || '').includes('ски-пасс (почасовые/проходы) из HTML-снимка')) {
+      snap.note = snap.note ? `${snap.note}. ${extra}` : extra
+    }
+  }
+  // Fail-soft: clarify visitor wording («с тренером») on any leftover labels.
   for (const it of snap.items || []) {
     if (typeof it.title === 'string') it.title = clarifyInstructorLabel(it.title)
   }
