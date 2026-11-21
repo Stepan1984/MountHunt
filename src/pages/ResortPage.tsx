@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { DataTable } from '../components/DataTable'
 import { ExternalLink, LinkedText } from '../components/LinkedText'
 import { ResortMap } from '../components/ResortMap'
 import { SkipassTables } from '../components/SkipassTables'
@@ -158,16 +159,28 @@ export function ResortPage({ data }: { data: SiteData }) {
             </p>
           )}
           {hours?.periods && hours.periods.length > 0 && (
-            <ul className="period-list">
-              {hours.periods.map((period) => (
-                <li key={`${period.days}-${period.open}-${period.close}`}>
-                  <span>{period.days}</span>
-                  <strong>
-                    {period.open}–{period.close}
-                  </strong>
-                </li>
-              ))}
-            </ul>
+            <DataTable aria-label="Часы работы">
+              <thead>
+                <tr>
+                  <th scope="col">Дни</th>
+                  <th scope="col" className="mh-table__num">
+                    Часы
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {hours.periods.map((period) => (
+                  <tr key={`${period.days}-${period.open}-${period.close}`}>
+                    <th scope="row">{period.days}</th>
+                    <td className="mh-table__num">
+                      <span className="mh-table__amount">
+                        {period.open}–{period.close}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </DataTable>
           )}
           {hours?.status === 'failed' && (
             <p className="muted">
