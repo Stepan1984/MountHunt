@@ -169,6 +169,17 @@ export function preferInstructorOnline(items) {
 }
 
 /**
+ * Visitor-facing tariff name: Igora’s site uses jargon «с профи»;
+ * show clear Russian «с тренером» (keeps N-человек count as on the site).
+ * Matching still accepts «профи» from live HTML.
+ * @param {string} label
+ */
+export function clarifyInstructorLabel(label) {
+  // No \b: JS word boundaries are ASCII-only and miss Cyrillic.
+  return cleanText(label).replace(/с\s+профи(?=$|[^\p{L}\p{N}])/giu, 'с тренером')
+}
+
+/**
  * Human-readable duration / pass-count label from a header cell.
  * @param {string} raw
  * @param {'hourly' | 'passes' | 'other'} kind
@@ -252,7 +263,7 @@ export function parseIgoraPriceTables(html) {
       if (hasOnline && cells.length >= 2 && !isInstructor) {
         const pairCount = Math.floor(cells.length / 2)
         if (pairCount < 1) continue
-        const name = cleanText(label)
+        const name = clarifyInstructorLabel(label)
         if (!matrix.has(name)) matrix.set(name, { name, cells: new Map() })
         const entry = matrix.get(name)
         for (let i = 0; i < pairCount * 2; i += 2) {
@@ -281,13 +292,14 @@ export function parseIgoraPriceTables(html) {
       } else if (/инструктор|человек|профи/i.test(label + sectionBlob)) {
         const slots = ['1 час', '1,5 часа', '2 часа']
         if (cells.length < 3) continue
+        const name = clarifyInstructorLabel(label)
         for (let i = 0; i < cells.length; i++) {
           const price = parsePrice(cells[i])
           if (price == null) continue
           const day = i < 3 ? 'будни' : 'выходные/праздники'
           const dur = slots[i % 3] || `кол.${i + 1}`
           items.push({
-            title: `${cleanText(label)} · ${dur} · ${day} (${section})`,
+            title: `${name} · ${dur} · ${day} (${section})`,
             price,
             unit: 'час',
             rawText: cells[i],
@@ -343,7 +355,7 @@ export function parseIgoraPriceTables(html) {
   for (const it of instructorFlat) {
     const m = it.title.match(/^(.+?) · (.+?) · (будни|выходные(?:\/праздники)?)(?:\s*\(|$)/i)
     if (!m) continue
-    const name = cleanText(m[1])
+    const name = clarifyInstructorLabel(m[1])
     const duration = cleanText(m[2])
     const day = /выходн/i.test(m[3]) ? 'weekend' : 'weekday'
     const key = `${name}|${duration}`
