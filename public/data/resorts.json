@@ -20,7 +20,6 @@
     ],
     "prices_url": "https://winter.ohtapark.ru/",
     "webcam_embeds": [
-      "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/uchebniy_sklon/playlist.m3u8",
       "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/69kp2pvk06/playlist.m3u8",
       "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/7trzptz2/playlist.m3u8",
       "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/130_art_10_katok/playlist.m3u8",
@@ -91,9 +90,63 @@
     "sources": [
       "https://krasnoeozero.ru/",
       "https://krasnoeozero.ru/cam/",
-      "https://krasnoeozero.ru/grafik/"
+      "https://krasnoeozero.ru/grafik/",
+      "https://krasnoeozero.ru/winter/winter-activities/naduvnoe-prizemlenie/",
+      "https://taplink.cc/progression_spot"
     ],
-    "webcam_embeds": []
+    "webcam_embeds": [],
+    "features": [
+      {
+        "id": "brushes-cushion",
+        "title": "Щётки и прыжковая подушка",
+        "summary": "Круглогодичный спот для фристайла: щётки и наклонная прыжковая подушка (надувное приземление) на трассе №9. Можно отрабатывать трюки без снега — подушка имитирует приземление на трамплине.",
+        "season": "Круглый год",
+        "hoursSummary": "Понедельник и вторник — выходной; среда–воскресенье 10:45–20:45. Актуальный график уточняйте у оператора спота.",
+        "periods": [
+          {
+            "days": "Пн–Вт",
+            "open": "—",
+            "close": "выходной"
+          },
+          {
+            "days": "Ср–Вс",
+            "open": "10:45",
+            "close": "20:45"
+          }
+        ],
+        "prices": [
+          {
+            "title": "Разовое пользование",
+            "price": 500,
+            "unit": "раз"
+          },
+          {
+            "title": "1 час",
+            "price": 1950,
+            "unit": "час"
+          },
+          {
+            "title": "2 часа",
+            "price": 2400,
+            "unit": "2 часа"
+          },
+          {
+            "title": "3 часа",
+            "price": 2800,
+            "unit": "3 часа"
+          },
+          {
+            "title": "1 день",
+            "price": 4750,
+            "unit": "день"
+          }
+        ],
+        "sourceUrl": "https://krasnoeozero.ru/winter/winter-activities/naduvnoe-prizemlenie/",
+        "sourceLabel": "О подушке на сайте",
+        "phone": "+7 (916) 232-22-16",
+        "note": "Перед катанием нужна проверка инвентаря у сотрудника (справа от основных касс, ближе к 5-й трассе) и соглашение о правилах. Острые или повреждённые канты могут порвать подушку. Цены — сезон 2025–2026; ски-пасс отдельно."
+      }
+    ]
   },
   {
     "id": "zolotaya-dolina",
@@ -186,11 +239,11 @@
     "prices_format": "pdf",
     "status": "active",
     "notes": "ГАУ ЛО СТЦ; учебный и основные склоны. Координаты приблизительные. Цены — прейскурант на сайте.",
-    "sources": [
-      "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/"
-    ],
     "community_links": [
       "https://vk.com/skyukki"
+    ],
+    "sources": [
+      "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/"
     ]
   },
   {
@@ -230,9 +283,54 @@
       "https://drop-park.ru/",
       "https://drop-park.ru/contacty",
       "https://mykorbi.ru/",
-      "https://drop-park.ru/snow-park"
+      "https://drop-park.ru/snow-park",
+      "https://t.me/dropsnowpark"
     ],
-    "webcam_embeds": []
+    "webcam_embeds": [],
+    "features": [
+      {
+        "id": "summer-brushes",
+        "title": "Летние щётки",
+        "summary": "Щеточный спот «Джиб Палас» на территории Drop Park / KORBI: две линии шириной по 6 м — PRO с перилами и учебная с безопасной трубкой. Фигуры можно переставлять под свою тренировку.",
+        "season": "Лето / межсезонье",
+        "hoursSummary": "Обычно вторник–воскресенье; понедельник — технический день. В ноябре: 11:00–19:00. Режим по месяцам уточняйте в сообществе парка.",
+        "periods": [
+          {
+            "days": "Пн",
+            "open": "—",
+            "close": "техдень"
+          },
+          {
+            "days": "Вт–Вс",
+            "open": "11:00",
+            "close": "19:00"
+          }
+        ],
+        "prices": [
+          {
+            "title": "День в будни",
+            "price": 2000,
+            "unit": "день"
+          },
+          {
+            "title": "День в выходной",
+            "price": 2600,
+            "unit": "день"
+          },
+          {
+            "title": "Абонемент на 30 дней",
+            "price": 13000,
+            "unit": "30 дней"
+          }
+        ],
+        "sourceUrl": "https://t.me/dropsnowpark",
+        "sourceLabel": "Джиб Палас в Telegram",
+        "note": "Проката пока нет — нужен свой инвентарь. Желательны шлем и защита; одежда должна закрывать открытые участки кожи."
+      }
+    ],
+    "community_links": [
+      "https://t.me/dropsnowpark"
+    ]
   },
   {
     "id": "orekhovo",

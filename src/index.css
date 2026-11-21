@@ -885,6 +885,17 @@ main {
   line-height: 1.5;
 }
 
+.feature-season {
+  margin: 0 0 0.45rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--pine-mid);
+}
+
+.feature-phone {
+  margin: 0.75rem 0 0.35rem;
+}
+
 .link-list {
   margin: 0.4rem 0 0.8rem;
   padding-left: 1.1rem;

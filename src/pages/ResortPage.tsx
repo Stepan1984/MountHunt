@@ -28,13 +28,26 @@ const PRICE_PREVIEW = 8
 
 /**
  * Shared resort-detail section order (all resorts):
- * header → notes → site → webcam → important → hours → prices → contacts → location → links
+ * header → notes → site → webcam → important → hours → prices → features →
+ * contacts → location → links
  * Address lives only under «Локация» (Yandex link); phone/email only under «Контакты».
+ * Features (щётки, подушка…) are in-resort sections — never separate catalog entries.
  */
 export function ResortPage({ data }: { data: SiteData }) {
   const { id } = useParams()
   const resort = data.resorts.find((r) => r.id === id)
   const [showAllPrices, setShowAllPrices] = useState(false)
+
+  function formatRub(price: number | null | undefined): string {
+    if (price == null) return '—'
+    return `${price.toLocaleString('ru-RU')} ₽`
+  }
+
+  function featureHoursCell(open: string, close: string): string {
+    if (!open || open === '—') return close
+    if (!close || close === '—') return open
+    return `${open}–${close}`
+  }
 
   if (!resort) {
     return (
@@ -72,6 +85,7 @@ export function ResortPage({ data }: { data: SiteData }) {
   const webcamStreams = resolveWebcamPlayers(resort.webcam_url, resort.webcam_embeds)
   const webcamLink = webcamExternalLink(resort.webcam_url, resort.webcam_embeds)
   const communityLinks = resort.community_links ?? []
+  const features = resort.features ?? []
   const phone = resort.phone?.trim() || null
   const email = resort.email?.trim() || null
   const hasContacts = Boolean(phone || email)
@@ -248,6 +262,102 @@ export function ResortPage({ data }: { data: SiteData }) {
             Актуальность: {formatUpdatedAt(prices?.scrapedAt)} · {scrapeStatusLabel(prices?.status)}
           </p>
         </section>
+
+        {features.map((feature) => {
+          const featureTel = feature.phone?.trim()
+            ? `tel:${feature.phone.replace(/[^\d+]/g, '')}`
+            : undefined
+          const featurePrices = feature.prices ?? []
+          const featurePeriods = feature.periods ?? []
+          const titleId = `resort-feature-${feature.id}-title`
+          return (
+            <section
+              key={feature.id}
+              className="detail-grid__wide"
+              aria-labelledby={titleId}
+            >
+              <div className="detail-section__head">
+                <h2 id={titleId}>{feature.title}</h2>
+                {feature.sourceUrl && (
+                  <ExternalLink className="detail-section__source" href={feature.sourceUrl}>
+                    {feature.sourceLabel || linkLabelForUrl(feature.sourceUrl, 'Подробнее')}
+                  </ExternalLink>
+                )}
+              </div>
+              {feature.season && <p className="feature-season">{feature.season}</p>}
+              <p className="detail-lead">
+                <LinkedText text={feature.summary} />
+              </p>
+              {feature.hoursSummary && (
+                <p>
+                  <LinkedText text={feature.hoursSummary} />
+                </p>
+              )}
+              {featurePeriods.length > 0 && (
+                <DataTable aria-label={`Часы: ${feature.title}`}>
+                  <thead>
+                    <tr>
+                      <th scope="col">Дни</th>
+                      <th scope="col" className="mh-table__num">
+                        Часы
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {featurePeriods.map((period) => (
+                      <tr key={`${feature.id}-${period.days}-${period.open}-${period.close}`}>
+                        <th scope="row">{period.days}</th>
+                        <td className="mh-table__num">
+                          <span className="mh-table__amount">
+                            {featureHoursCell(period.open, period.close)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </DataTable>
+              )}
+              {featurePrices.length > 0 && (
+                <DataTable aria-label={`Цены: ${feature.title}`}>
+                  <thead>
+                    <tr>
+                      <th scope="col">Тариф</th>
+                      <th scope="col" className="mh-table__num">
+                        Цена
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {featurePrices.map((row) => (
+                      <tr key={`${feature.id}-${row.title}`}>
+                        <th scope="row">
+                          {row.title}
+                          {row.unit ? (
+                            <span className="muted"> · {row.unit}</span>
+                          ) : null}
+                        </th>
+                        <td className="mh-table__num">
+                          <span className="mh-table__amount">{formatRub(row.price)}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </DataTable>
+              )}
+              {featureTel && feature.phone && (
+                <p className="feature-phone">
+                  <span className="contact-list__label">Телефон спота </span>
+                  <a href={featureTel}>{feature.phone}</a>
+                </p>
+              )}
+              {feature.note && (
+                <p className="muted">
+                  <LinkedText text={feature.note} />
+                </p>
+              )}
+            </section>
+          )
+        })}
 
         {hasContacts && (
           <section aria-labelledby="resort-contacts-title">

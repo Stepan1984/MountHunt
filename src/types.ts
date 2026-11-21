@@ -1,5 +1,27 @@
 export type ResortStatus = 'active' | 'unclear' | 'closed'
 
+/**
+ * In-resort amenity (щётки, подушка и т.п.) — section on the resort page,
+ * never a separate catalog resort.
+ */
+export type ResortFeature = {
+  id: string
+  title: string
+  /** Short visitor blurb (plain Russian). */
+  summary: string
+  /** e.g. «Круглый год», «Лето / межсезонье». */
+  season?: string
+  hoursSummary?: string
+  periods?: { days: string; open: string; close: string }[]
+  /** Feature-specific tariffs (flat rows). */
+  prices?: { title: string; price: number | null; unit?: string; note?: string }[]
+  sourceUrl?: string
+  /** Russian link label; falls back to linkLabelForUrl(sourceUrl). */
+  sourceLabel?: string
+  phone?: string
+  note?: string
+}
+
 export type Resort = {
   id: string
   name: string
@@ -22,6 +44,11 @@ export type Resort = {
   status: ResortStatus
   notes: string
   sources: string[]
+  /**
+   * Extra on-site spots (brushes, jump cushion, …) shown as sections
+   * on this resort’s page — not separate map/list entries.
+   */
+  features?: ResortFeature[]
 }
 
 export type HoursSnapshot = {
