@@ -60,7 +60,7 @@ export function HomePage({ data }: { data: SiteData }) {
           aria-labelledby="secondary-title"
         >
           <div className="section__head">
-            <h2 id="secondary-title">Дикие, неясные и закрытые</h2>
+            <h2 id="secondary-title">Дикие и закрытые склоны</h2>
             <p>
               Отдельная карта с серыми метками — только эти склоны (действующие остаются на карте
               выше). Статус или доступность могут быть сомнительны — уточняйте перед выездом.
