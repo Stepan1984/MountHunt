@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom'
 
-const homeHash = (hash: string) => `${import.meta.env.BASE_URL}${hash}`
-
 export function AboutPage() {
   return (
     <section className="section page-narrow about-page" aria-labelledby="about-title">
@@ -29,9 +27,9 @@ export function AboutPage() {
       </p>
 
       <div className="about-page__actions hero__actions">
-        <a className="btn btn--primary" href={homeHash('#explore')}>
+        <Link className="btn btn--primary" to={{ pathname: '/', hash: '#explore' }}>
           К карте и карточкам
-        </a>
+        </Link>
         <Link className="btn btn--ghost" to="/">
           На главную
         </Link>

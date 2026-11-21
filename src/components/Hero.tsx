@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 export function Hero({ activeCount }: { activeCount: number }) {
   return (
     <section className="hero" aria-labelledby="hero-brand">
@@ -61,12 +63,12 @@ export function Hero({ activeCount }: { activeCount: number }) {
           кататься, часы, цены и ссылки на камеры.
         </p>
         <div className="hero__actions">
-          <a className="btn btn--primary" href="#explore">
+          <Link className="btn btn--primary" to={{ pathname: '/', hash: '#explore' }}>
             Карта и список
-          </a>
-          <a className="btn btn--ghost" href="#important">
+          </Link>
+          <Link className="btn btn--ghost" to={{ pathname: '/', hash: '#important' }}>
             Важное сейчас
-          </a>
+          </Link>
         </div>
       </div>
     </section>

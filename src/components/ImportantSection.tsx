@@ -15,8 +15,6 @@ export function ImportantSection({ items, resorts, variant = 'full' }: Props) {
   const nameById = new Map(resorts.map((r) => [r.id, r.name]))
   const visible = operationalImportant(items)
 
-  if (visible.length === 0) return null
-
   return (
     <section
       className={`section important important--${variant}`}
@@ -27,46 +25,50 @@ export function ImportantSection({ items, resorts, variant = 'full' }: Props) {
         <h2 id="important-title">Важное</h2>
         <p>Свежие статусы по курортам — без персональных уведомлений.</p>
       </div>
-      <ul className="important__list">
-        {visible.map((item) => {
-          const resortName = item.resortId ? nameById.get(item.resortId) : undefined
-          return (
-            <li
-              key={item.id}
-              className={`important__item important__item--${item.severity}`}
-            >
-              <div className="important__meta">
-                <span className="important__severity">
-                  {item.severity === 'warn' ? 'Внимание' : 'Инфо'}
-                </span>
-                <time dateTime={item.updatedAt}>{formatUpdatedAt(item.updatedAt)}</time>
-              </div>
-              <h3>
-                {item.resortId ? (
-                  <Link to={`/resort/${item.resortId}`}>{item.title}</Link>
-                ) : (
-                  item.title
+      {visible.length === 0 ? (
+        <p className="muted">Сейчас нет срочных заметок по склонам.</p>
+      ) : (
+        <ul className="important__list">
+          {visible.map((item) => {
+            const resortName = item.resortId ? nameById.get(item.resortId) : undefined
+            return (
+              <li
+                key={item.id}
+                className={`important__item important__item--${item.severity}`}
+              >
+                <div className="important__meta">
+                  <span className="important__severity">
+                    {item.severity === 'warn' ? 'Внимание' : 'Инфо'}
+                  </span>
+                  <time dateTime={item.updatedAt}>{formatUpdatedAt(item.updatedAt)}</time>
+                </div>
+                <h3>
+                  {item.resortId ? (
+                    <Link to={`/resort/${item.resortId}`}>{item.title}</Link>
+                  ) : (
+                    item.title
+                  )}
+                </h3>
+                {resortName && item.resortId && (
+                  <p className="important__resort">
+                    <Link to={`/resort/${item.resortId}`}>{resortName}</Link>
+                  </p>
                 )}
-              </h3>
-              {resortName && item.resortId && (
-                <p className="important__resort">
-                  <Link to={`/resort/${item.resortId}`}>{resortName}</Link>
-                </p>
-              )}
-              {item.body && (
-                <p>
-                  <LinkedText text={item.body} />
-                </p>
-              )}
-              {item.sourceUrl && (
-                <ExternalLink href={item.sourceUrl}>
-                  {linkLabelForUrl(item.sourceUrl, 'Источник')}
-                </ExternalLink>
-              )}
-            </li>
-          )
-        })}
-      </ul>
+                {item.body && (
+                  <p>
+                    <LinkedText text={item.body} />
+                  </p>
+                )}
+                {item.sourceUrl && (
+                  <ExternalLink href={item.sourceUrl}>
+                    {linkLabelForUrl(item.sourceUrl, 'Источник')}
+                  </ExternalLink>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </section>
   )
 }

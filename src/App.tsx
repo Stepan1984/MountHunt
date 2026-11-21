@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
+import { ScrollToHash } from './components/ScrollToHash'
 import { useSiteData } from './hooks/useSiteData'
 import { AboutPage } from './pages/AboutPage'
 import { HomePage } from './pages/HomePage'
@@ -15,9 +16,11 @@ const routerBasename = (() => {
 
 export default function App() {
   const state = useSiteData()
+  const ready = state.status === 'ready'
 
   return (
     <BrowserRouter basename={routerBasename}>
+      <ScrollToHash ready={ready} />
       <div className="app-shell">
         <Header />
         <main>
@@ -32,7 +35,7 @@ export default function App() {
               <p>{state.message}</p>
             </section>
           )}
-          {state.status === 'ready' && (
+          {ready && (
             <Routes>
               <Route path="/" element={<HomePage data={state.data} />} />
               <Route path="/resort/:id" element={<ResortPage data={state.data} />} />
