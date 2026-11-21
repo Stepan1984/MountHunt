@@ -461,7 +461,6 @@ export async function scrapeIgora() {
     await sleep(500)
 
     let hoursHtml = ''
-    let hoursVia = ''
     // Skip fragile live hours when running against HTML snapshots only.
     if (!process.env.IGORA_HTML_DIR && !process.env.SCRAPE_HTML_DIR) {
       try {
@@ -470,7 +469,6 @@ export async function scrapeIgora() {
           allowBundledSnapshot: false,
         })
         hoursHtml = hoursLoad.html
-        hoursVia = hoursLoad.via
       } catch {
         hoursHtml = ''
       }
