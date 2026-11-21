@@ -268,12 +268,6 @@ export function publicPriceNote(note: string | null | undefined): string | null 
   return cleaned || null
 }
 
-export function truncateText(text: string, max = 96): string {
-  const trimmed = text.trim()
-  if (trimmed.length <= max) return trimmed
-  return `${trimmed.slice(0, max - 1).trimEnd()}…`
-}
-
 /**
  * Normalize accidental /en/ paths in user-visible Russian copy.
  * Raw URLs are turned into hyperlinks by LinkedText / ExternalLink — not shown as slash text.
