@@ -13,6 +13,15 @@ function isSinglePriceColumn(group: SkipassGroup): boolean {
   return group.columns.length === 1 && /^цена$/i.test(group.columns[0] ?? '')
 }
 
+/** Soften ALL-CAPS site headings (e.g. Igora) for readable RU titles. */
+function displayCategory(category: string): string {
+  const t = category.trim()
+  if (t.length > 4 && t === t.toLocaleUpperCase('ru')) {
+    return t.charAt(0) + t.slice(1).toLocaleLowerCase('ru')
+  }
+  return t
+}
+
 type Props = {
   groups: SkipassGroup[]
   /** Flat fallback when groups are empty. */
@@ -34,12 +43,13 @@ export function SkipassTables({
   if (structured.length > 0) {
     return (
       <div className="skipass">
-        {structured.map((group) => {
+        {structured.map((group, groupIdx) => {
           const showDuration = hasDurationColumn(group)
           const singleCol = isSinglePriceColumn(group)
+          const title = displayCategory(group.category)
           return (
-            <section key={group.category} className="skipass-group" aria-label={group.category}>
-              <h3 className="skipass-group__title">{group.category}</h3>
+            <section key={`${title}-${groupIdx}`} className="skipass-group" aria-label={title}>
+              <h3 className="skipass-group__title">{title}</h3>
               {group.note ? <p className="skipass-group__note">{group.note}</p> : null}
               <div className="skipass-table-wrap">
                 <table className="skipass-table">

@@ -292,7 +292,13 @@ function enrichIgora(snap) {
     : { items: [], groups: [] }
   // Keep live instructor prices when present; restore missing ski-pass groups
   // from the committed HTML snapshot (daily live often drops them).
-  const liveParsed = { items: snap.items || [], groups: snap.groups || [] }
+  // Rename legacy catch-all «Инструктор» so merge keeps site categories.
+  const liveGroups = (snap.groups || []).map((g) =>
+    /^Инструктор$/i.test(g.category || '')
+      ? { ...g, category: 'Занятия с инструктором' }
+      : g,
+  )
+  const liveParsed = { items: snap.items || [], groups: liveGroups }
   const merged = mergeIgoraPriceTables(liveParsed, snapshotParsed)
   setGroups(snap, merged.groups)
   snap.items = merged.items.slice(0, 80)
