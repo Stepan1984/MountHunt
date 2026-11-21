@@ -91,8 +91,33 @@ export function importantDateIso(item: { publishedAt?: string | null; updatedAt:
   return item.publishedAt || item.updatedAt
 }
 
-export function yandexMapsUrl(lat: number, lon: number): string {
-  return `https://yandex.ru/maps/?pt=${lon},${lat}&z=14&l=map`
+/**
+ * Yandex Maps link for a resort: pin at coordinates when known,
+ * otherwise search by address / name query.
+ */
+export function yandexMapsUrl(input: {
+  lat?: number | null
+  lon?: number | null
+  /** Fallback search text when coords are missing (address and/or name). */
+  query?: string | null
+}): string | null {
+  if (input.lat != null && input.lon != null) {
+    return `https://yandex.ru/maps/?pt=${input.lon},${input.lat}&z=14&l=map`
+  }
+  const query = input.query?.trim()
+  if (query) {
+    return `https://yandex.ru/maps/?text=${encodeURIComponent(query)}`
+  }
+  return null
+}
+
+/** Human-readable address line used in UI and as maps search fallback. */
+export function resortAddressQuery(resort: Pick<Resort, 'name' | 'area'>): string {
+  const area = resort.area?.trim()
+  if (!area) return resort.name
+  // Include name so vague areas (e.g. «ЛО, Токсово») still find the slope.
+  if (area.includes(resort.name)) return area
+  return `${resort.name}, ${area}`
 }
 
 export function hoursFor(resortId: string, hours: HoursSnapshot[]): HoursSnapshot | undefined {

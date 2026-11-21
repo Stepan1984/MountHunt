@@ -674,6 +674,17 @@ main {
   margin: 0;
 }
 
+/* Address → Yandex Maps; keep muted base, ice underline on hover. */
+.resort-detail__address {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.resort-detail__address:hover {
+  color: var(--ice);
+}
+
 .resort-detail__notes {
   font-size: 1.02rem;
 }
