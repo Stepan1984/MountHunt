@@ -5,47 +5,59 @@ export function Hero({ activeCount }: { activeCount: number }) {
         <svg className="hero__mountains" viewBox="0 0 1440 520" preserveAspectRatio="xMidYMax slice">
           <defs>
             <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#9ec4d4" />
-              <stop offset="55%" stopColor="#d7e6ee" />
+              <stop offset="0%" stopColor="#b7d2de" />
+              <stop offset="42%" stopColor="#dce8ee" />
               <stop offset="100%" stopColor="#f4f7f9" />
             </linearGradient>
-            <linearGradient id="ridgeA" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2f5a4a" />
-              <stop offset="100%" stopColor="#1b3a2f" />
+            {/* Bleached ice ridges — readable pine text without a fog scrim */}
+            <linearGradient id="ridgeFar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#d2e0e6" />
+              <stop offset="100%" stopColor="#b7cdd5" />
             </linearGradient>
-            <linearGradient id="ridgeB" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#4d7a6a" />
-              <stop offset="100%" stopColor="#274a3d" />
+            <linearGradient id="ridgeMid" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#b8cfc8" />
+              <stop offset="100%" stopColor="#95b3aa" />
+            </linearGradient>
+            <linearGradient id="ridgeNear" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#a8c9d4" />
+              <stop offset="100%" stopColor="#87a89f" />
             </linearGradient>
           </defs>
           <rect width="1440" height="520" fill="url(#skyGrad)" />
-          <circle cx="1180" cy="96" r="42" fill="#f7fafb" opacity="0.9" />
+          <circle cx="1180" cy="88" r="38" fill="#f7fafb" opacity="0.88" />
+          {/* Ridges kept low in the frame so copy sits on open ice sky */}
           <path
-            d="M0 360 L180 220 L280 300 L420 160 L560 290 L700 190 L860 310 L980 200 L1140 280 L1280 180 L1440 300 L1440 520 L0 520 Z"
-            fill="url(#ridgeA)"
+            d="M0 415 L160 335 L280 375 L420 285 L560 360 L700 300 L860 365 L980 310 L1140 350 L1280 290 L1440 355 L1440 520 L0 520 Z"
+            fill="url(#ridgeFar)"
+            opacity="0.9"
           />
           <path
-            d="M0 420 L140 320 L260 380 L400 280 L540 360 L700 300 L860 380 L1020 310 L1180 370 L1320 300 L1440 360 L1440 520 L0 520 Z"
-            fill="url(#ridgeB)"
-            opacity="0.92"
+            d="M0 450 L140 380 L260 415 L400 345 L540 400 L700 360 L860 415 L1020 370 L1180 405 L1320 360 L1440 395 L1440 520 L0 520 Z"
+            fill="url(#ridgeMid)"
+            opacity="0.82"
+          />
+          <path
+            d="M0 480 L120 440 L240 460 L380 415 L520 455 L680 425 L820 460 L980 430 L1140 455 L1300 425 L1440 445 L1440 520 L0 520 Z"
+            fill="url(#ridgeNear)"
+            opacity="0.75"
           />
           <path
             className="hero__trail"
-            d="M420 160 C480 220, 520 260, 560 290"
+            d="M420 285 C480 320, 520 345, 560 360"
             fill="none"
-            stroke="#e8f1f5"
-            strokeWidth="3"
+            stroke="#f4f7f9"
+            strokeWidth="2.5"
             strokeLinecap="round"
-            opacity="0.55"
+            opacity="0.7"
           />
           <path
             className="hero__trail hero__trail--delayed"
-            d="M980 200 C1040 240, 1080 260, 1140 280"
+            d="M980 310 C1040 335, 1080 345, 1140 350"
             fill="none"
-            stroke="#e8f1f5"
-            strokeWidth="2.5"
+            stroke="#f4f7f9"
+            strokeWidth="2"
             strokeLinecap="round"
-            opacity="0.4"
+            opacity="0.55"
           />
         </svg>
         <div className="hero__mist" />

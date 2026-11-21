@@ -128,8 +128,7 @@ main {
 
 .site-header__inner,
 .site-footer__inner,
-.section,
-.hero__content {
+.section {
   width: min(1120px, calc(100% - 2rem));
   margin-inline: auto;
 }
@@ -175,7 +174,8 @@ main {
   position: relative;
   min-height: min(78vh, 640px);
   display: grid;
-  align-items: center;
+  align-items: start;
+  justify-items: stretch;
   overflow: hidden;
   isolation: isolate;
 }
@@ -193,26 +193,13 @@ main {
   object-fit: cover;
 }
 
+/* Seam into page snow only — never a fog pool under copy */
 .hero__mist {
   position: absolute;
   inset: auto 0 0;
-  height: 78%;
-  background:
-    linear-gradient(
-      100deg,
-      rgba(244, 247, 249, 0.82) 0%,
-      rgba(244, 247, 249, 0.45) 38%,
-      rgba(244, 247, 249, 0.12) 62%,
-      transparent 78%
-    ),
-    linear-gradient(
-      180deg,
-      transparent 0%,
-      rgba(244, 247, 249, 0.4) 22%,
-      rgba(244, 247, 249, 0.82) 55%,
-      var(--snow) 100%
-    );
-  animation: mist-drift 12s ease-in-out infinite alternate;
+  height: 22%;
+  background: linear-gradient(180deg, transparent 0%, var(--snow) 100%);
+  animation: mist-drift 14s ease-in-out infinite alternate;
 }
 
 .hero__trail {
@@ -228,27 +215,12 @@ main {
 .hero__content {
   position: relative;
   z-index: 1;
-  padding: 5.5rem 0 3.25rem;
-  max-width: 40rem;
+  box-sizing: border-box;
+  width: min(40rem, calc(100% - 2rem));
+  margin-left: max(1rem, calc((100% - 1120px) / 2));
+  margin-right: auto;
+  padding: 4.75rem 0 3.5rem;
   animation: rise-in 0.9s ease both;
-}
-
-/* Soft snow scrim behind copy — feathered mist, not a card */
-.hero__content::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: -1.75rem -2.25rem -2rem -2.75rem;
-  max-width: calc(100% + 5rem);
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 120% 105% at 16% 42%,
-    rgba(244, 247, 249, 0.98) 0%,
-    rgba(244, 247, 249, 0.94) 32%,
-    rgba(244, 247, 249, 0.72) 54%,
-    rgba(244, 247, 249, 0.32) 74%,
-    transparent 88%
-  );
 }
 
 .hero__brand {
@@ -259,9 +231,6 @@ main {
   line-height: 0.95;
   letter-spacing: -0.04em;
   color: var(--pine);
-  text-shadow:
-    0 1px 0 rgba(244, 247, 249, 0.9),
-    0 2px 28px rgba(244, 247, 249, 0.85);
 }
 
 .hero__title {
@@ -270,7 +239,6 @@ main {
   line-height: 1.2;
   color: var(--graphite);
   max-width: 18ch;
-  text-shadow: 0 1px 18px rgba(244, 247, 249, 0.8);
 }
 
 .hero__lead {
@@ -278,7 +246,6 @@ main {
   font-size: 1rem;
   line-height: 1.5;
   max-width: 38ch;
-  text-shadow: 0 1px 14px rgba(244, 247, 249, 0.75);
 }
 
 .hero__actions {
@@ -289,8 +256,8 @@ main {
 }
 
 .hero .btn--ghost {
-  background: rgba(244, 247, 249, 0.92);
-  border-color: rgba(27, 58, 47, 0.22);
+  background: rgba(244, 247, 249, 0.88);
+  border-color: rgba(27, 58, 47, 0.2);
   color: var(--pine);
 }
 
@@ -1187,12 +1154,12 @@ main {
   }
 
   .hero__content {
-    padding-top: 4rem;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    width: calc(100% - 2rem);
+    max-width: none;
+    padding-top: 3.5rem;
     padding-bottom: 2.5rem;
-  }
-
-  .hero__content::before {
-    inset: -1.25rem -1.25rem -1.5rem -1.5rem;
   }
 
   .map-canvas {
