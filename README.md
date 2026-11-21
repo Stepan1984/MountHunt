@@ -127,6 +127,7 @@ npm run data:refresh
 - лёгкий HTTP-only scrape (`npm run scrape:important`) — без Playwright/OCR
 - обновляет `public/data/important.json` (+ метка в `meta.json`)
 - **fail-soft**: сбой одного курорта сохраняет прошлые пункты по нему; job не валится из‑за частичных ошибок
+- на карточках «Важного» — `publishedAt` (дата новости/графика/страницы с источника); время scrape только в «Снимок» (`meta.importantScrapedAt`)
 
 ---
 

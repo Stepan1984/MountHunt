@@ -4,12 +4,15 @@ import { dirname, join } from 'node:path'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import {
+  detectKrasnoeImportantFromFlags,
   detectLazurnyeImportant,
   detectOkhtaImportant,
   detectZoldolImportant,
+  extractPublishedAtFromHtml,
   mergeImportantFailSoft,
   mergeImportantFromDailyScrape,
 } from '../lib/important.mjs'
+import { httpDateToIso, ruDateLabelToIso } from '../lib/parse.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 
@@ -40,6 +43,51 @@ describe('important detectors', () => {
     assert.equal(items.length, 1)
     assert.equal(items[0].id, 'okhta-presale')
     assert.equal(items[0].severity, 'info')
+  })
+
+  it('sets Krasnoe publishedAt from schedule date column', () => {
+    const items = detectKrasnoeImportantFromFlags(
+      {
+        closedUntilSeason: true,
+        allClosed: true,
+        slopesCount: 2,
+        dateCol: '21.11.2026',
+      },
+      'https://krasnoeozero.ru/grafik/',
+    )
+    assert.equal(items.length, 1)
+    assert.equal(items[0].publishedAt, '2026-11-21T00:00:00Z')
+    assert.notEqual(items[0].publishedAt, items[0].updatedAt)
+  })
+
+  it('uses Last-Modified as publishedAt fallback for Zoldol', () => {
+    const html = '<html><body><p>Горнолыжные склоны закрыты на летний период</p></body></html>'
+    const items = detectZoldolImportant(html, 'https://zoldol.ru/vremya-raboty', {
+      lastModified: 'Fri, 20 Nov 2026 10:23:54 GMT',
+    })
+    assert.equal(items[0].publishedAt, '2026-11-20T10:23:54Z')
+  })
+
+  it('prefers article:published_time over Last-Modified', () => {
+    const html =
+      '<html><head><meta property="article:published_time" content="2026-11-10T08:00:00Z"></head><body><p>Горнолыжные склоны закрыты на летний период</p></body></html>'
+    const items = detectZoldolImportant(html, 'https://zoldol.ru/vremya-raboty', {
+      lastModified: 'Fri, 20 Nov 2026 10:23:54 GMT',
+    })
+    assert.equal(items[0].publishedAt, '2026-11-10T08:00:00Z')
+  })
+})
+
+describe('publication date helpers', () => {
+  it('parses RU date labels and HTTP dates', () => {
+    assert.equal(ruDateLabelToIso('21.11.2026'), '2026-11-21T00:00:00Z')
+    assert.equal(httpDateToIso('Fri, 20 Nov 2026 10:23:54 GMT'), '2026-11-20T10:23:54Z')
+  })
+
+  it('extracts published_time from HTML', () => {
+    const html =
+      '<html><head><meta property="article:published_time" content="2026-03-01T12:00:00+03:00"></head><body></body></html>'
+    assert.equal(extractPublishedAtFromHtml(html), '2026-03-01T09:00:00Z')
   })
 })
 
@@ -94,6 +142,36 @@ describe('mergeImportantFailSoft', () => {
     ])
     assert.equal(next.find((i) => i.id === 'okhta-presale')?.title, 'new okhta')
     assert.ok(next.find((i) => i.id === 'zoldol-slopes-closed'), 'untouched resort kept')
+  })
+
+  it('preserves publishedAt when re-scrape omits it', () => {
+    const withPub = [
+      {
+        id: 'okhta-presale',
+        resortId: 'okhta-park',
+        title: 'old okhta',
+        severity: 'info',
+        updatedAt: '2026-01-01T00:00:00Z',
+        publishedAt: '2026-11-19T13:14:57Z',
+      },
+    ]
+    const next = mergeImportantFailSoft(withPub, [
+      {
+        resortId: 'okhta-park',
+        ok: true,
+        items: [
+          {
+            id: 'okhta-presale',
+            resortId: 'okhta-park',
+            title: 'new okhta',
+            severity: 'info',
+            updatedAt: '2026-11-21T18:00:00Z',
+          },
+        ],
+      },
+    ])
+    assert.equal(next.find((i) => i.id === 'okhta-presale')?.publishedAt, '2026-11-19T13:14:57Z')
+    assert.equal(next.find((i) => i.id === 'okhta-presale')?.updatedAt, '2026-11-21T18:00:00Z')
   })
 })
 

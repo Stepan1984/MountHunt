@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ExternalLink, LinkedText } from './LinkedText'
-import { formatUpdatedAt, operationalImportant } from '../lib/data'
+import { formatImportantDate, formatUpdatedAt, operationalImportant } from '../lib/data'
 import { linkLabelForUrl } from '../lib/links'
 import type { ImportantItem, Meta, Resort } from '../types'
 
@@ -52,7 +52,9 @@ export function ImportantSection({ items, resorts, meta, variant = 'full' }: Pro
                   <span className="important__severity">
                     {item.severity === 'warn' ? 'Внимание' : 'Инфо'}
                   </span>
-                  <time dateTime={item.updatedAt}>{formatUpdatedAt(item.updatedAt)}</time>
+                  {item.publishedAt ? (
+                    <time dateTime={item.publishedAt}>{formatImportantDate(item.publishedAt)}</time>
+                  ) : null}
                 </div>
                 <h3>
                   {item.resortId ? (

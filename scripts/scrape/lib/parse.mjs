@@ -185,6 +185,34 @@ export function nowIso() {
   return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')
 }
 
+/**
+ * «21.11.2026» / «21.11.26» → ISO date at UTC midnight (date-only signal).
+ * @param {string | null | undefined} label
+ * @returns {string | null}
+ */
+export function ruDateLabelToIso(label) {
+  const m = cleanText(label).match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/)
+  if (!m) return null
+  const dd = Number(m[1])
+  const mm = Number(m[2])
+  let yyyy = Number(m[3])
+  if (yyyy < 100) yyyy += 2000
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return null
+  return `${String(yyyy).padStart(4, '0')}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}T00:00:00Z`
+}
+
+/**
+ * HTTP Last-Modified / Date header → ISO instant.
+ * @param {string | null | undefined} header
+ * @returns {string | null}
+ */
+export function httpDateToIso(header) {
+  if (!header) return null
+  const t = Date.parse(header)
+  if (!Number.isFinite(t)) return null
+  return new Date(t).toISOString().replace(/\.\d{3}Z$/, 'Z')
+}
+
 /** Minimal CSV line split (handles quoted commas). */
 export function splitCsvLine(line) {
   const out = []
