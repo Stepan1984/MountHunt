@@ -112,8 +112,8 @@ describe('parseIgoraPrices', () => {
     for (const it of items) {
       assert.doesNotMatch(it.title, /\bпрофи\b/i, `visitor title must not keep «профи»: ${it.title}`)
     }
-    const instrGroup = groups.find((g) => /инструктор/i.test(g.category))
-    assert.ok(instrGroup, 'expected Инструктор group')
+    const instrGroup = groups.find((g) => /^Занятия с инструктором$/i.test(g.category))
+    assert.ok(instrGroup, 'expected «Занятия с инструктором» lesson group')
     for (const row of instrGroup.rows || []) {
       assert.doesNotMatch(row.name || '', /\bпрофи\b/i, `group row must not keep «профи»: ${row.name}`)
     }
@@ -130,14 +130,16 @@ describe('parseIgoraPrices', () => {
       items: full.items.filter((i) => / · (?:будни|выходные)/i.test(i.title)),
       groups: full.groups.filter((g) => /инструктор/i.test(g.category)),
     }
-    assert.equal(liveOnly.groups.length, 1)
+    // Lessons + optional instructor pack — never a single catch-all «Инструктор» for ski-pass.
+    assert.ok(liveOnly.groups.length >= 1)
+    assert.ok(liveOnly.groups.every((g) => /инструктор/i.test(g.category)))
     assert.ok(liveOnly.items.length >= 12)
 
     const merged = mergeIgoraPriceTables(liveOnly, full)
     assert.equal(merged.filledSkiPass, true)
     assert.ok(merged.groups.some((g) => /почасов/i.test(g.category)))
     assert.ok(merged.groups.some((g) => /проход/i.test(g.category)))
-    assert.ok(merged.groups.some((g) => /инструктор/i.test(g.category)))
+    assert.ok(merged.groups.some((g) => /^Занятия с инструктором$/i.test(g.category)))
     assert.ok(merged.items.some((i) => /Базовый · 1 час/i.test(i.title)))
     assert.ok(merged.items.some((i) => /1 человек · 1 час · будни/i.test(i.title)))
     // Prefer live instructor prices over snapshot when both present
@@ -258,12 +260,17 @@ describe('skipass groups', () => {
   it('Igora snapshot yields structured groups with site categories', () => {
     const html = readFileSync(join(root, 'data/snapshots/igora/price.html'), 'utf8')
     const { groups } = parseIgoraPriceTables(html)
-    assert.ok(groups.length >= 2)
+    assert.ok(groups.length >= 3)
     assert.ok(groups.some((g) => /почасов/i.test(g.category)))
     assert.ok(groups.some((g) => /проход/i.test(g.category)))
+    assert.ok(groups.some((g) => /^Занятия с инструктором$/i.test(g.category)))
+    // Catch-all «Инструктор» title is gone — ski-pass rows must not live under it.
+    assert.ok(!groups.some((g) => /^Инструктор$/i.test(g.category)))
     const hourly = groups.find((g) => /почасов/i.test(g.category))
     assert.ok(hourly.columns.some((c) => /час/i.test(c)))
     assert.ok(hourly.rows.some((r) => /базов/i.test(r.name)))
+    const lessons = groups.find((g) => /^Занятия с инструктором$/i.test(g.category))
+    assert.ok(lessons?.rows?.every((r) => /человек|тренер/i.test(r.name || '')))
   })
 
   it('committed prices keep groups for split resorts and flat for drop-park', () => {
@@ -288,7 +295,14 @@ describe('skipass groups', () => {
     const igora = prices.find((p) => p.resortId === 'igora')
     assert.ok(igora?.groups?.some((g) => /почасов/i.test(g.category)), 'Igora hourly group')
     assert.ok(igora?.groups?.some((g) => /проход/i.test(g.category)), 'Igora passes group')
-    assert.ok(igora?.groups?.some((g) => /инструктор/i.test(g.category)), 'Igora instructor group')
+    assert.ok(
+      igora?.groups?.some((g) => /^Занятия с инструктором$/i.test(g.category)),
+      'Igora lessons group',
+    )
+    assert.ok(
+      !igora?.groups?.some((g) => /^Инструктор$/i.test(g.category)),
+      'Igora must not use catch-all «Инструктор»',
+    )
     assert.ok(
       (igora?.items || []).some((i) => /Базовый · 1 час/i.test(i.title || '')),
       'committed Igora items should include ski-pass hourly',
