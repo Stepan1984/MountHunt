@@ -14,6 +14,7 @@ import {
   pricesFor,
   publicPriceNote,
   publicResortNotes,
+  resortAddressQuery,
   scrapeStatusLabel,
   slopesClosedHint,
   statusLabel,
@@ -66,9 +67,11 @@ export function ResortPage({ data }: { data: SiteData }) {
   const webcamStreams = resolveWebcamPlayers(resort.webcam_url, resort.webcam_embeds)
   const webcamLink = webcamExternalLink(resort.webcam_url, resort.webcam_embeds)
   const communityLinks = resort.community_links ?? []
-  const mapsUrl = hasCoords
-    ? yandexMapsUrl(resort.lat as number, resort.lon as number)
-    : undefined
+  const mapsUrl = yandexMapsUrl({
+    lat: resort.lat,
+    lon: resort.lon,
+    query: resortAddressQuery(resort),
+  })
 
   return (
     <article className="section page-narrow resort-detail">
@@ -82,7 +85,15 @@ export function ResortPage({ data }: { data: SiteData }) {
         <div>
           <p className="resort-detail__brand-kicker">MountHunt</p>
           <h1>{resort.name}</h1>
-          <p className="resort-detail__area">{resort.area}</p>
+          {mapsUrl ? (
+            <p className="resort-detail__area">
+              <ExternalLink className="resort-detail__address" href={mapsUrl}>
+                {resort.area}
+              </ExternalLink>
+            </p>
+          ) : (
+            <p className="resort-detail__area">{resort.area}</p>
+          )}
         </div>
         {closed ? (
           <span className="badge badge--warn">Склоны закрыты</span>
@@ -236,13 +247,16 @@ export function ResortPage({ data }: { data: SiteData }) {
         <section className="detail-grid__wide">
           <div className="detail-section__head">
             <h2>Локация</h2>
-            {mapsUrl && (
-              <ExternalLink className="detail-section__source" href={mapsUrl}>
-                Яндекс Карты
-              </ExternalLink>
-            )}
           </div>
-          <p>{resort.area}</p>
+          {mapsUrl ? (
+            <p>
+              <ExternalLink className="resort-detail__address" href={mapsUrl}>
+                {resort.area}
+              </ExternalLink>
+            </p>
+          ) : (
+            <p>{resort.area}</p>
+          )}
           {hasCoords ? (
             <>
               <p className="muted">
