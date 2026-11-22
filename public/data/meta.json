@@ -1,7 +1,7 @@
 {
   "updatedAt": "2026-11-22T13:09:40Z",
   "source": "scrape-wave1+wave2+wave3",
-  "note": "Волны 1–3: zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park, igora, severny-sklon; failed: tuutari-park",
+  "note": "Волны 1–3: zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park, igora, severny-sklon; failed: tuutari-park · Важное 2026-11-22T13:58:34Z",
   "resortsScraped": [
     {
       "id": "tuutari-park",
@@ -91,5 +91,7 @@
       "itemCount": 0,
       "summary": "Склон: часы не найдены на сайте. Ресторан: пн–чт (бар) 11:00–21:00; пт 11:00–21:00; сб–вс 10:00–22:00"
     }
-  ]
+  ],
+  "importantScrapedAt": "2026-11-22T13:58:34Z",
+  "importantNote": "Важное: ok 4, fail 0"
 }
