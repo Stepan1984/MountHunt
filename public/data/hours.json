@@ -1,7 +1,7 @@
 [
   {
     "resortId": "okhta-park",
-    "scrapedAt": "2026-11-21T13:16:09Z",
+    "scrapedAt": "2026-11-22T13:07:21Z",
     "sourceUrl": "https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/",
     "summary": "пн–пт: 11:00–22:30; сб–вс: 9:00–22:30",
     "periods": [
@@ -20,7 +20,7 @@
   },
   {
     "resortId": "igora",
-    "scrapedAt": "2026-11-21T13:18:23Z",
+    "scrapedAt": "2026-11-22T13:09:37Z",
     "sourceUrl": "https://igora.ru/working-hours/",
     "summary": "Часы склонов уточняйте на сайте курорта",
     "periods": [],
@@ -43,19 +43,20 @@
         "close": "18:00"
       }
     ],
-    "status": "ok"
+    "status": "failed",
+    "note": "Сбор данных не удался — показаны прежние данные"
   },
   {
     "resortId": "krasnoe-ozero",
-    "scrapedAt": "2026-11-21T13:15:54Z",
+    "scrapedAt": "2026-11-22T13:06:47Z",
     "sourceUrl": "https://krasnoeozero.ru/grafik/",
-    "summary": "На 21.11.2026: склоны/подъёмники закрыты до сезона",
+    "summary": "На 22.11.2026: склоны/подъёмники закрыты до сезона",
     "periods": [],
     "status": "ok"
   },
   {
     "resortId": "zolotaya-dolina",
-    "scrapedAt": "2026-11-21T13:15:23Z",
+    "scrapedAt": "2026-11-22T13:06:13Z",
     "sourceUrl": "https://zoldol.ru/vremya-raboty",
     "summary": "Горнолыжные склоны закрыты на летний период (уточняйте открытие на сайте). Ближайший график (прочее): Понедельник: закрыто; Вторник: закрыто; Среда: 12:00–22:00…",
     "periods": [
@@ -99,7 +100,7 @@
   },
   {
     "resortId": "snezhny",
-    "scrapedAt": "2026-11-21T13:15:59Z",
+    "scrapedAt": "2026-11-22T13:06:52Z",
     "sourceUrl": "https://snegny.ru/",
     "summary": "Режим склонов уточняйте на сайте курорта…",
     "periods": [],
@@ -107,7 +108,7 @@
   },
   {
     "resortId": "severny-sklon",
-    "scrapedAt": "2026-11-21T13:18:25Z",
+    "scrapedAt": "2026-11-22T13:09:40Z",
     "sourceUrl": "https://severnysklon.ru/",
     "summary": "Склон: часы не найдены на сайте. Ресторан: пн–чт (бар) 11:00–21:00; пт 11:00–21:00; сб–вс 10:00–22:00",
     "periods": [
@@ -131,7 +132,7 @@
   },
   {
     "resortId": "puhtolova-gora",
-    "scrapedAt": "2026-11-21T13:15:34Z",
+    "scrapedAt": "2026-11-22T13:06:24Z",
     "sourceUrl": "https://puhgora.ru/o-kurorte/chasy-raboty",
     "summary": "ср., чт., пт. 15:00–21:00; сб., вс. 10:00–21:00; пн., вт.: выходной",
     "periods": [
@@ -155,7 +156,7 @@
   },
   {
     "resortId": "yukki",
-    "scrapedAt": "2026-11-21T13:15:48Z",
+    "scrapedAt": "2026-11-22T13:06:40Z",
     "sourceUrl": "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/",
     "summary": "ежедневно 10:00–21:00",
     "periods": [
@@ -169,7 +170,7 @@
   },
   {
     "resortId": "lazurnye-ozera",
-    "scrapedAt": "2026-11-21T13:15:28Z",
+    "scrapedAt": "2026-11-22T13:06:18Z",
     "sourceUrl": "https://lazoorsnow.ru/",
     "summary": "Сезон закрыт. пн: выходной; вт–пт: 11:00–22:00; сб–вс: 10:00–22:00",
     "periods": [
@@ -193,7 +194,7 @@
   },
   {
     "resortId": "drop-park",
-    "scrapedAt": "2026-11-21T22:54:18Z",
+    "scrapedAt": "2026-11-22T13:06:55Z",
     "sourceUrl": "https://drop-park.ru/snow-park",
     "summary": "По прайсу сноупарка — будни: 11:00–23:00; выходные и праздники: 10:00–21:00",
     "periods": [
