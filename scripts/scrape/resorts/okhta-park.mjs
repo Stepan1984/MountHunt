@@ -380,12 +380,9 @@ export async function scrapeOkhtaPark() {
     const guestNote = dayGroups.find((g) => g.note)?.note
 
     const notes = []
-    if (dayGroups.length) {
-      notes.push('Дневные тарифы — со страницы горнолыжных трасс')
-    } else if (trailHours.dayClosed) {
+    if (!dayGroups.length && trailHours.dayClosed) {
       notes.push('Дневной прейскурант подъёмников часто закрыт до сезона — смотрите страницу трасс')
     }
-    if (seasonalGroups.length) notes.push('Сезонные ски-пассы — с зимней страницы курорта')
     if (trailHours.preSale && !dayGroups.length) notes.push('Открыта предпродажа сезонных ски-пассов')
     if (guestNote) notes.push(guestNote)
 
