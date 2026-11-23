@@ -417,10 +417,6 @@ main {
   height: 220px;
 }
 
-.map-embedded__hint {
-  margin: 0 0 0.55rem;
-}
-
 .map-pin {
   background: transparent;
   border: none;

@@ -38,15 +38,6 @@ const resortPath = (id: string) => {
   return `${base}/resort/${id}`
 }
 
-/** Russian plural for «N точка/точки/точек». */
-function pointsLabel(n: number): string {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return `${n} точка`
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${n} точки`
-  return `${n} точек`
-}
-
 function matchesVariant(resort: Resort, variant: MapVariant): boolean {
   if (variant === 'active') return resort.status === 'active'
   return resort.status !== 'active'
@@ -153,18 +144,8 @@ export function ResortMap({
     </div>
   )
 
-  const hint =
-    variant === 'inactive'
-      ? `${pointsLabel(mappable.length)} · серые метки · подсказка ведёт в карточку`
-      : `${pointsLabel(mappable.length)} · маркер открывает подсказку, оттуда — карточку`
-
   if (embedded) {
-    return (
-      <div className={`map-embedded${variant === 'inactive' ? ' map-embedded--inactive' : ''}`}>
-        <p className="map-embedded__hint muted">{hint}</p>
-        {canvas}
-      </div>
-    )
+    return canvas
   }
 
   if (variant === 'inactive') {

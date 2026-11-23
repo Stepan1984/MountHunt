@@ -2,7 +2,6 @@ import { ImportantSection } from '../components/ImportantSection'
 import { Hero } from '../components/Hero'
 import { ResortCard } from '../components/ResortCard'
 import { ResortMap } from '../components/ResortMap'
-import { formatUpdatedAt } from '../lib/data'
 import type { SiteData } from '../types'
 
 export function HomePage({ data }: { data: SiteData }) {
@@ -23,11 +22,6 @@ export function HomePage({ data }: { data: SiteData }) {
       <section className="section explore" id="explore" aria-labelledby="explore-title">
         <div className="section__head">
           <h2 id="explore-title">Карта и курорты</h2>
-          <p>
-            {active.length} действующих комплексов СПБ и ЛО. Цены и часы обновляются ежедневно с
-            официальных сайтов; где данных ещё нет — смотрите ссылку на сайт курорта. Обновлено:{' '}
-            {formatUpdatedAt(data.meta.updatedAt)}.
-          </p>
         </div>
 
         <div className="explore__layout">
