@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom'
 import { ImportantItemCard } from '../components/ImportantItemCard'
-import { allImportantNews, formatUpdatedAt } from '../lib/data'
+import { allImportantNews } from '../lib/data'
 import type { SiteData } from '../types'
 
 export function NewsPage({ data }: { data: SiteData }) {
   const nameById = new Map(data.resorts.map((r) => [r.id, r.name]))
   const items = allImportantNews(data.important)
-  const refreshedAt = data.meta.importantScrapedAt || data.meta.updatedAt
 
   return (
     <section className="section news-page" aria-labelledby="news-title">
@@ -17,16 +16,6 @@ export function NewsPage({ data }: { data: SiteData }) {
       </p>
       <div className="section__head news-page__head">
         <h1 id="news-title">Новости курортов</h1>
-        <p>
-          Все заметки со страниц курортов — свежие сверху.
-          {refreshedAt ? (
-            <>
-              {' '}
-              Обновлено:{' '}
-              <time dateTime={refreshedAt}>{formatUpdatedAt(refreshedAt)}</time>.
-            </>
-          ) : null}
-        </p>
       </div>
 
       {items.length === 0 ? (
