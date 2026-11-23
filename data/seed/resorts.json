@@ -37,10 +37,10 @@
     ],
     "photo": {
       "file": "okhta-park.jpg",
-      "alt": "Вид на Охта-Парк с колеса обозрения",
-      "credit": "Borealex",
-      "license": "CC BY 4.0",
-      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%9E%D1%85%D1%82%D0%B0_%D0%9F%D0%B0%D1%80%D0%BA_(%D0%B2%D0%B8%D0%B4_%D1%81_%D0%BA%D0%BE%D0%BB%D0%B5%D1%81%D0%B0_%D0%BE%D0%B1%D0%BE%D0%B7%D1%80%D0%B5%D0%BD%D0%B8%D1%8F).jpg"
+      "alt": "Работающий бугельный подъёмник на заснеженном склоне Охта-Парка",
+      "credit": "Udacha",
+      "license": "Public domain",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ski_lift_in_Ohta_park.jpg"
     }
   },
   {
@@ -103,14 +103,7 @@
     ],
     "community_links": [
       "https://vk.com/tyytari_activity"
-    ],
-    "photo": {
-      "file": "tuutari-park.jpg",
-      "alt": "Туутари-парк",
-      "credit": "Grigorius m",
-      "license": "CC BY-SA 4.0",
-      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%A2%D1%83%D1%83%D1%82%D1%82%D0%B0%D1%80%D0%B8_%D0%BF%D0%B0%D1%80%D0%BA_120226.jpg"
-    }
+    ]
   },
   {
     "id": "krasnoe-ozero",
@@ -189,14 +182,7 @@
     "community_links": [
       "https://vk.com/redlakeclub",
       "https://t.me/redlakeclub"
-    ],
-    "photo": {
-      "file": "krasnoe-ozero.jpg",
-      "alt": "Закат у озера на курорте Красное озеро",
-      "credit": "Artem Kavalerov",
-      "license": "CC BY 3.0",
-      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lake_Krasnoye_Sunset_(114283543).jpeg"
-    }
+    ]
   },
   {
     "id": "zolotaya-dolina",
@@ -521,14 +507,7 @@
     "notes": "Малый склон / бывший Dream Park; статус сезона 2026/27 не подтверждён.",
     "sources": [
       "https://orehovosite.narod.ru/all.htm"
-    ],
-    "photo": {
-      "file": "u-tramplina.jpg",
-      "alt": "Трамплины в Токсово у склона «У трамплина»",
-      "credit": "Egor Gribanov",
-      "license": "CC BY 2.0",
-      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Toksovo_ski_jumping_hills.jpg"
-    }
+    ]
   },
   {
     "id": "voronya-gora",
@@ -545,14 +524,7 @@
     "notes": "Малый клубный склон без современного сервиса; актуальность уточнять.",
     "sources": [
       "https://ski2.ru/region/leningradskaya-oblast"
-    ],
-    "photo": {
-      "file": "voronya-gora.jpg",
-      "alt": "Гора Воронья, вид на Дудергофское озеро",
-      "credit": "MerryMoor",
-      "license": "CC BY-SA 4.0",
-      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%93%D0%BE%D1%80%D0%B0_%D0%92%D0%BE%D1%80%D0%BE%D0%BD%D1%8C%D1%8F,_%D0%B2%D0%B8%D0%B4_%D0%BD%D0%B0_%D0%94%D1%83%D0%B4%D0%B5%D1%80%D0%B3%D0%BE%D1%84%D1%81%D0%BA%D0%BE%D0%B5_%D0%BE%D0%B7%D0%B5%D1%80%D0%BE.jpg"
-    }
+    ]
   },
   {
     "id": "pulkovo-slope",
@@ -585,14 +557,7 @@
     "notes": "Малые естественные склоны без коммерческой инфраструктуры.",
     "sources": [
       "https://orehovosite.narod.ru/all.htm"
-    ],
-    "photo": {
-      "file": "mozhaiskaya.jpg",
-      "alt": "Нагорный парк на Дудергофских высотах",
-      "credit": "Olbkaolbka",
-      "license": "CC BY-SA 4.0",
-      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%9D%D0%B0%D0%B3%D0%BE%D1%80%D0%BD%D1%8B%D0%B9_%D0%BF%D0%B0%D1%80%D0%BA.jpg"
-    }
+    ]
   },
   {
     "id": "krestovsky",
