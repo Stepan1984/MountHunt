@@ -32,8 +32,8 @@ export function Header() {
           MountHunt
         </Link>
         <nav className="site-nav" aria-label="Основная навигация">
-          <HomeHashNavLink hash="#resorts">Курорты</HomeHashNavLink>
           <HomeHashNavLink hash="#map">Карта</HomeHashNavLink>
+          <HomeHashNavLink hash="#resorts">Курорты</HomeHashNavLink>
           <NavLink to="/news">Новости</NavLink>
           <NavLink to="/about">О проекте</NavLink>
         </nav>
