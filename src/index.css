@@ -54,7 +54,6 @@ html {
 #explore,
 #map,
 #resorts,
-#important,
 #about-title,
 #news-title {
   scroll-margin-top: 5.75rem;
@@ -271,16 +270,6 @@ main {
   margin-top: 1.4rem;
 }
 
-.hero .btn--ghost {
-  background: rgba(244, 247, 249, 0.88);
-  border-color: rgba(27, 58, 47, 0.2);
-  color: var(--pine);
-}
-
-.hero .btn--ghost:hover {
-  background: #fff;
-}
-
 .btn {
   display: inline-flex;
   align-items: center;
@@ -330,45 +319,6 @@ main {
 
 .section__head p {
   color: var(--muted);
-}
-
-.important--strip {
-  padding-top: 1.75rem;
-  padding-bottom: 0.25rem;
-}
-
-.important--strip .section__head {
-  margin-bottom: 0.9rem;
-}
-
-.important__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.5rem 1.25rem;
-  max-width: none;
-}
-
-.important__head-text {
-  max-width: 46rem;
-}
-
-.important__head-text h2 {
-  margin-bottom: 0.35rem;
-}
-
-.important__head-text p {
-  margin-bottom: 0;
-}
-
-.important__all-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.5rem;
-  font-size: 0.92rem;
-  font-weight: 600;
-  flex-shrink: 0;
 }
 
 .news-page {
@@ -1246,7 +1196,6 @@ main {
   #explore,
   #map,
   #resorts,
-  #important,
   #about-title,
   #news-title {
     /* Taller sticky header with padded nav links. */
@@ -1316,15 +1265,6 @@ main {
 
   .section__head {
     margin-bottom: 1rem;
-  }
-
-  .important--strip {
-    padding-top: 1.35rem;
-  }
-
-  .important__head {
-    align-items: flex-start;
-    gap: 0.25rem 1rem;
   }
 
   .news-page {

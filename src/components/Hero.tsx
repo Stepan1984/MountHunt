@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-
 export function Hero({ activeCount }: { activeCount: number }) {
   return (
     <section className="hero" aria-labelledby="hero-brand">
@@ -74,14 +72,6 @@ export function Hero({ activeCount }: { activeCount: number }) {
           Карта и карточки {activeCount} действующих курортов СПБ и Ленинградской области: где
           кататься, часы, цены и ссылки на камеры.
         </p>
-        <div className="hero__actions">
-          <Link className="btn btn--primary" to={{ pathname: '/', hash: '#explore' }}>
-            Карта и список
-          </Link>
-          <Link className="btn btn--ghost" to={{ pathname: '/', hash: '#important' }}>
-            Важное сейчас
-          </Link>
-        </div>
       </div>
     </section>
   )
