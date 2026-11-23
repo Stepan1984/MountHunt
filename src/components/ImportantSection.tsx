@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
-import { ExternalLink, LinkedText } from './LinkedText'
+import { LinkedText } from './LinkedText'
 import { formatImportantDate, formatUpdatedAt, operationalImportant } from '../lib/data'
-import { linkLabelForUrl } from '../lib/links'
 import type { ImportantItem, Meta, Resort } from '../types'
 
 type Props = {
@@ -61,11 +60,6 @@ export function ImportantSection({ items, resorts, meta, variant = 'full' }: Pro
                   <p>
                     <LinkedText text={item.body} />
                   </p>
-                )}
-                {item.sourceUrl && (
-                  <ExternalLink href={item.sourceUrl}>
-                    {linkLabelForUrl(item.sourceUrl, 'Источник')}
-                  </ExternalLink>
                 )}
               </li>
             )
