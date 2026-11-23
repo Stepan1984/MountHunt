@@ -668,6 +668,40 @@ main {
   margin: 0;
 }
 
+/* Single licensed hero — only when photo metadata exists; no placeholder. */
+.resort-detail__photo {
+  margin: 0 0 1.25rem;
+  padding: 0;
+}
+
+.resort-detail__photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  max-height: min(52vh, 28rem);
+  object-fit: cover;
+  object-position: center;
+  border-radius: var(--radius);
+  background: rgba(18, 32, 28, 0.06);
+}
+
+.resort-detail__photo-credit {
+  margin: 0;
+  padding: 0.45rem 0.15rem 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.resort-detail__photo-credit a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+
+.resort-detail__photo-credit a:hover {
+  color: var(--ice);
+}
+
 /* Address → Yandex Maps; keep muted base, ice underline on hover. */
 .resort-detail__address {
   color: inherit;

@@ -39,6 +39,12 @@ export function statusLabel(status: Resort['status']): string {
   }
 }
 
+/** Public URL for a resort hero photo file under `photos/resorts/`. */
+export function resortPhotoUrl(file: string): string {
+  const name = file.replace(/^\/+/, '')
+  return `${base}photos/resorts/${name}`
+}
+
 export function scrapeStatusLabel(
   status: HoursSnapshot['status'] | PriceSnapshot['status'] | string | null | undefined,
 ): string {
