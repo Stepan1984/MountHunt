@@ -15,11 +15,7 @@ npm install
 npm run dev
 ```
 
-Откроется dev-сервер Vite. Для локальной разработки с корнем `/` можно так:
-
-```bash
-VITE_BASE=/ npm run dev
-```
+Откроется dev-сервер Vite.
 
 Сборка:
 
@@ -28,15 +24,14 @@ npm run build
 npm run preview
 ```
 
-По умолчанию `base` = `/MountHunt/` (имя репозитория на GitHub Pages).
+По умолчанию `base` = `/` (кастомный домен **mounthunt.ru** на корне сайта). Для project-pages пути снова: `VITE_BASE=/MountHunt/ npm run build`.
 
 ---
 
 ## GitHub Pages
 
-Сайт рассчитан на адрес:
-
-`https://<user>.github.io/MountHunt/`
+Продакшен-адрес: **https://mounthunt.ru/**  
+(запасной project URL: `https://stepan1984.github.io/MountHunt/` — после смены `base` на `/` этот путь уже не обслуживает ассеты).
 
 ### Как включить (обязательно один раз)
 
@@ -52,7 +47,24 @@ Workflow собирает `dist`, но **деплой падает с 404**, п�
 
 Репозиторий **публичный** — GitHub Pro для Pages не нужен. Если сделаете private без Pro, Pages снова перестанет работать.
 
-Если репозиторий переименуете — обновите `base` в `vite.config.ts` и `VITE_BASE` в `.github/workflows/deploy-pages.yml`.
+### Кастомный домен `mounthunt.ru`
+
+В репозитории лежит `public/CNAME` → `mounthunt.ru` (копируется в `dist` при сборке). Владельцу репозитория нужно один раз:
+
+1. **Settings → Pages → Custom domain** → ввести `mounthunt.ru` и сохранить (GitHub проверит DNS).
+2. Включить **Enforce HTTPS** после успешной проверки сертификата.
+3. DNS у регистратора:
+
+| Тип | Имя | Значение |
+|-----|-----|----------|
+| **A** | `@` (apex) | `185.199.108.153` |
+| **A** | `@` | `185.199.109.153` |
+| **A** | `@` | `185.199.110.153` |
+| **A** | `@` | `185.199.111.153` |
+| **AAAA** (опционально) | `@` | `2606:50c0:8000::153` … `8003::153` (см. [документацию GitHub](https://docs.github.com/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site)) |
+| **CNAME** (рекомендуется) | `www` | `stepan1984.github.io` |
+
+Альтернатива apex: если DNS поддерживает **ALIAS/ANAME**, можно указать `stepan1984.github.io` вместо A-записей. После настройки www можно включить редирект apex ↔ www в Settings → Pages.
 
 ---
 
