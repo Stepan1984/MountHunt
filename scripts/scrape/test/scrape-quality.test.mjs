@@ -291,9 +291,10 @@ describe('closed-season card honesty signals', () => {
     const dataSrc = readFileSync(join(root, 'src/lib/data.ts'), 'utf8')
     const cardSrc = readFileSync(join(root, 'src/components/ResortCard.tsx'), 'utf8')
     assert.match(dataSrc, /сезон закрыт\|склон/)
-    assert.match(dataSrc, /предпродажа · сезон от/)
-    assert.match(cardSrc, /'сезон закрыт'/)
+    // Cards show closed via badge (slopesClosedHint); prices live on detail pages only.
     assert.match(cardSrc, /slopesClosedHint/)
+    assert.match(cardSrc, /Склоны закрыты/)
+    assert.doesNotMatch(cardSrc, /Цены/)
   })
 
   it('committed data keeps Puhtolova empty / Severny unavailable / Snezhny partial hours', () => {

@@ -28,7 +28,6 @@ export function HomePage({ data }: { data: SiteData }) {
                   key={resort.id}
                   resort={resort}
                   hours={data.hours}
-                  prices={data.prices}
                   important={data.important}
                   compact
                 />
@@ -56,7 +55,6 @@ export function HomePage({ data }: { data: SiteData }) {
                 key={resort.id}
                 resort={resort}
                 hours={data.hours}
-                prices={data.prices}
                 important={data.important}
               />
             ))}
