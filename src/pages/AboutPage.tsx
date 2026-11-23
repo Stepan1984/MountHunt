@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-
 export function AboutPage() {
   return (
     <section className="section page-narrow about-page" aria-labelledby="about-title">
@@ -25,15 +23,6 @@ export function AboutPage() {
         уточняйте режим и цены на официальном сайте комплекса. MountHunt не связан с операторами
         склонов и не продаёт ски-пассы.
       </p>
-
-      <div className="about-page__actions hero__actions">
-        <Link className="btn btn--primary" to={{ pathname: '/', hash: '#explore' }}>
-          К карте и карточкам
-        </Link>
-        <Link className="btn btn--ghost" to="/">
-          На главную
-        </Link>
-      </div>
     </section>
   )
 }
