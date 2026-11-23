@@ -45,6 +45,33 @@ describe('important detectors', () => {
     assert.equal(items[0].severity, 'info')
   })
 
+  it('detects Okhta season opening and prefers it over nav presale', () => {
+    const trails =
+      '<html><body><p>Открыли предпродажу</p><p>Открытие 22 ноября!</p><p>С 22 ноября будет открыт первый склон</p></body></html>'
+    const lenta =
+      '<html><body><p>Горнолыжный сезон открыт! Сегодня стартует сезон 2026–2027</p><time datetime="2026-11-22T09:05:00+03:00">09:05</time></body></html>'
+    const items = detectOkhtaImportant(
+      { trailsHtml: trails, lentaHtml: lenta },
+      'https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/',
+      {
+        trailsUrl: 'https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/',
+        lentaUrl: 'https://www.ohtapark.ru/lenta/',
+        winterUrl: 'https://winter.ohtapark.ru/',
+      },
+    )
+    assert.equal(items.length, 1)
+    assert.equal(items[0].id, 'okhta-season-open')
+    assert.equal(items[0].severity, 'info')
+    assert.match(items[0].title, /сезон открыт/i)
+    assert.equal(items[0].sourceUrl, 'https://www.ohtapark.ru/lenta/')
+    assert.equal(items[0].publishedAt, '2026-11-22T06:05:00Z')
+  })
+
+  it('clears Okhta when neither opening nor presale remain', () => {
+    const html = '<html><body><p>Горнолыжные трассы работают ежедневно</p></body></html>'
+    assert.equal(detectOkhtaImportant(html, 'https://www.ohtapark.ru/').length, 0)
+  })
+
   it('sets Krasnoe publishedAt from schedule date column', () => {
     const items = detectKrasnoeImportantFromFlags(
       {

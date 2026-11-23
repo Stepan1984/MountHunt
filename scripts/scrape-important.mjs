@@ -27,7 +27,11 @@ import {
   parseHoursFromCsv,
 } from './scrape/resorts/krasnoe-ozero.mjs'
 import { LAZURNYE_HOME_URL } from './scrape/resorts/lazurnye-ozera.mjs'
-import { OKHTA_TRAILS_URL, OKHTA_WINTER_URL } from './scrape/resorts/okhta-park.mjs'
+import {
+  OKHTA_LENTA_URL,
+  OKHTA_TRAILS_URL,
+  OKHTA_WINTER_URL,
+} from './scrape/resorts/okhta-park.mjs'
 import { ZOLDOL_HOURS_URL } from './scrape/resorts/zolotaya-dolina.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -79,8 +83,27 @@ const CHECKERS = [
   {
     id: 'okhta-park',
     async run() {
-      const { body, lastModified } = await fetchUrlResult(OKHTA_TRAILS_URL)
-      return detectOkhtaImportant(body, OKHTA_WINTER_URL, { lastModified })
+      const trails = await fetchUrlResult(OKHTA_TRAILS_URL)
+      let lentaBody = ''
+      let lentaModified = null
+      try {
+        await sleep()
+        const lenta = await fetchUrlResult(OKHTA_LENTA_URL)
+        lentaBody = lenta.body
+        lentaModified = lenta.lastModified
+      } catch {
+        // Fail-soft: trails page alone still carries opening banners.
+      }
+      return detectOkhtaImportant(
+        { trailsHtml: trails.body, lentaHtml: lentaBody },
+        OKHTA_TRAILS_URL,
+        {
+          lastModified: trails.lastModified || lentaModified,
+          trailsUrl: OKHTA_TRAILS_URL,
+          lentaUrl: OKHTA_LENTA_URL,
+          winterUrl: OKHTA_WINTER_URL,
+        },
+      )
     },
   },
 ]
