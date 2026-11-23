@@ -3219,6 +3219,15 @@
     "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
   },
   {
+    "resortId": "krestovsky",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "currency": "RUB",
+    "items": [],
+    "status": "pending",
+    "note": "Цены пока не собраны — смотрите на официальном сайте курорта"
+  },
+  {
     "resortId": "orlinaya-gora",
     "scrapedAt": null,
     "sourceUrl": null,

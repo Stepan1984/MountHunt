@@ -21,7 +21,7 @@
   {
     "resortId": "igora",
     "scrapedAt": "2026-11-23T05:44:10Z",
-    "sourceUrl": "https://igora.ru/en/working-hours/",
+    "sourceUrl": "https://igora.ru/working-hours/",
     "summary": "пн–пт: 11:00–22:00; сб: 10:00–23:00; вс: 10:00–21:00",
     "periods": [
       {
@@ -292,6 +292,14 @@
   },
   {
     "resortId": "mozhaiskaya",
+    "scrapedAt": null,
+    "sourceUrl": null,
+    "summary": "Часы работы появятся после ежедневного обновления данных",
+    "periods": [],
+    "status": "pending"
+  },
+  {
+    "resortId": "krestovsky",
     "scrapedAt": null,
     "sourceUrl": null,
     "summary": "Часы работы появятся после ежедневного обновления данных",
