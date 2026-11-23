@@ -1,4 +1,3 @@
-import { ImportantSection } from '../components/ImportantSection'
 import { Hero } from '../components/Hero'
 import { ResortCard } from '../components/ResortCard'
 import { ResortMap } from '../components/ResortMap'
@@ -10,14 +9,7 @@ export function HomePage({ data }: { data: SiteData }) {
 
   return (
     <>
-      <Hero activeCount={active.length} />
-
-      <ImportantSection
-        items={data.important}
-        resorts={data.resorts}
-        meta={data.meta}
-        variant="strip"
-      />
+      <Hero />
 
       <section className="section explore" id="explore" aria-labelledby="explore-title">
         <div className="section__head">
