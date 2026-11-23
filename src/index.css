@@ -50,7 +50,7 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Sticky header offset for in-page hash targets (nav: Курорты/Карта/…). */
+/* Sticky header offset for in-page hash targets (nav: Карта/Курорты/…). */
 #explore,
 #map,
 #resorts,
