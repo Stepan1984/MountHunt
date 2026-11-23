@@ -13,7 +13,7 @@ export function HomePage({ data }: { data: SiteData }) {
 
       <section className="section explore" id="explore" aria-labelledby="explore-title">
         <div className="section__head">
-          <h2 id="explore-title">Карта и курорты</h2>
+          <h2 id="explore-title">Действующие курорты</h2>
         </div>
 
         <div className="explore__layout">
@@ -22,7 +22,6 @@ export function HomePage({ data }: { data: SiteData }) {
           </div>
 
           <div className="explore__list" id="resorts">
-            <h3 className="explore__list-title">Список</h3>
             <div className="resort-grid resort-grid--stack">
               {active.map((resort) => (
                 <ResortCard
