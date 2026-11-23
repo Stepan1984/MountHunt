@@ -5,6 +5,7 @@ import { ScrollToHash } from './components/ScrollToHash'
 import { useSiteData } from './hooks/useSiteData'
 import { AboutPage } from './pages/AboutPage'
 import { HomePage } from './pages/HomePage'
+import { NewsPage } from './pages/NewsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ResortPage } from './pages/ResortPage'
 
@@ -38,6 +39,7 @@ export default function App() {
           {ready && (
             <Routes>
               <Route path="/" element={<HomePage data={state.data} />} />
+              <Route path="/news" element={<NewsPage data={state.data} />} />
               <Route path="/resort/:id" element={<ResortPage data={state.data} />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="*" element={<NotFoundPage />} />
