@@ -490,12 +490,14 @@ main {
 }
 
 .important__item h3 a {
-  color: inherit;
-  text-decoration: none;
+  color: var(--color-link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
 }
 
 .important__item h3 a:hover {
-  color: var(--ice);
+  color: var(--pine);
 }
 
 .resort-grid {
