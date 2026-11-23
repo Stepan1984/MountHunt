@@ -67,7 +67,7 @@ export function Hero() {
         <p className="hero__brand" id="hero-brand">
           MountHunt
         </p>
-        <h1 className="hero__title">Склоны Петербурга и Ленобласти — в одном месте</h1>
+        <h1 className="hero__title">Все горнолыжки Петербурга и Ленобласти в одном месте</h1>
       </div>
     </section>
   )
