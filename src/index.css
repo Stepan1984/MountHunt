@@ -530,19 +530,9 @@ main {
 
 .resort-card__top,
 .resort-card__facts,
-.resort-card__links,
 .resort-card__area {
   position: relative;
   z-index: 2;
-}
-
-.resort-card__links a {
-  position: relative;
-  z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.5rem;
-  padding: 0.2rem 0;
 }
 
 .resort-card__top {
@@ -582,7 +572,7 @@ main {
 .resort-card__facts {
   display: grid;
   gap: 0.5rem;
-  margin: 0 0 0.9rem;
+  margin: 0;
   min-width: 0;
 }
 
@@ -607,13 +597,6 @@ main {
   line-height: 1.35;
   min-width: 0;
   overflow-wrap: anywhere;
-}
-
-.resort-card__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 1rem;
-  font-size: 0.9rem;
 }
 
 .badge {
