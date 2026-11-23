@@ -54,7 +54,6 @@
       "https://igora.ru/price/",
       "https://igora.ru/working-hours/",
       "https://igora.ru/slopes/",
-      "https://igora.ru/en/working-hours/",
       "https://igora.ru/news/"
     ],
     "prices_url": "https://igora.ru/price/",
@@ -537,6 +536,32 @@
     "notes": "Малые естественные склоны без коммерческой инфраструктуры.",
     "sources": [
       "https://orehovosite.narod.ru/all.htm"
+    ]
+  },
+  {
+    "id": "krestovsky",
+    "name": "Крестовский",
+    "area": "СПб, Петроградский р-н, Крестовский остров, Приморский парк Победы (пр. Крестовский / Батарейная дорога)",
+    "city_or_district": "Крестовский остров",
+    "lat": 59.97217,
+    "lon": 30.24046,
+    "website": null,
+    "community_links": [
+      "https://t.me/spbrun_run",
+      "https://sneg.today/tracks/krestostrov/"
+    ],
+    "webcam_url": null,
+    "prices_format": "none",
+    "status": "unclear",
+    "notes": "Не ГЛК: сезонная муниципальная беговая лыжня (~2 км) в Приморском парке Победы, без подъёмников и горнолыжных трасс. Сезон 2025/26 закрыт ~15.03.2026; на ноябрь 2026 трасса снята. Монтаж/оснежение с ~01.12.2026, открытие плана ~07.01.2027 (дата зависит от погоды). В сезон обычно 06:00–23:00, бесплатно; проката и веб-камер нет. Официального сайта курорта нет — анонсы через городские каналы.",
+    "sources": [
+      "https://www.fontanka.ru/2025/12/16/76174031/",
+      "https://spb.mir24.tv/news/16657164/ne-v-sportzal-a-na-lyzhi!-na-krestovskom-ostrove-startoval-sezon-aktivnogo-otdyha",
+      "https://spb.mk.ru/social/2026/11/19/srok-zapuska-lyzhni-v-primorskom-parke-pobedy-budet-zaviset-ot-pogody.html",
+      "https://vecherka-spb.ru/2026/11/19/lizhnaya-trassa-na-krestovskom-ostrove-otkroetsya-7-yanvarya-",
+      "https://sneg.today/tracks/krestostrov/",
+      "https://loipe.it/trails/10058",
+      "https://nominatim.openstreetmap.org/search?q=%D0%9F%D1%80%D0%B8%D0%BC%D0%BE%D1%80%D1%81%D0%BA%D0%B8%D0%B9+%D0%BF%D0%B0%D1%80%D0%BA+%D0%9F%D0%BE%D0%B1%D0%B5%D0%B4%D1%8B&format=json"
     ]
   },
   {
