@@ -265,6 +265,11 @@ function enrichKrasnoe(snap) {
 }
 
 function enrichOkhta(snap) {
+  // Prefer groups already emitted by scrapeOkhtaPark / parseOkhtaDayTariffGroups.
+  if (Array.isArray(snap.groups) && snap.groups.some((g) => g?.rows?.length)) {
+    snap.groups = snap.groups.filter((g) => g?.rows?.length)
+    return
+  }
   const rows = (snap.items || [])
     .filter((it) => /сезонн/i.test(it.title))
     .map((it) => {
@@ -278,7 +283,7 @@ function enrichOkhta(snap) {
   if (!rows.length) return
   setGroups(snap, [
     {
-      category: 'Сезонные ски-пассы (предпродажа)',
+      category: 'Сезонные ски-пассы',
       columns: ['Цена'],
       rows,
     },

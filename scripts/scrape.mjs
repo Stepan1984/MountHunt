@@ -138,11 +138,12 @@ function applySeedFixes(resorts) {
     },
     'okhta-park': {
       prices_format: 'html_mixed',
-      prices_url: 'https://winter.ohtapark.ru/',
+      prices_url: 'https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/',
       webcam_url: 'https://www.ohtapark.ru/webcam/',
       sourcesAdd: [
-        'https://winter.ohtapark.ru/',
         'https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/',
+        'https://www.ohtapark.ru/lenta/',
+        'https://winter.ohtapark.ru/',
         'https://www.ohtapark.ru/webcam/',
       ],
     },

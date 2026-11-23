@@ -373,6 +373,38 @@ describe('skipass groups', () => {
     assert.equal(hours.status, 'partial')
   })
 
+  it('Okhta day tariff parser reads weekday/weekend lift board', async () => {
+    const { parseOkhtaDayTariffGroups } = await import('../resorts/okhta-park.mjs')
+    const html = `<html><body><div id="service_price">
+      <div class="service_price_tag">Пн - Чт</div>
+      <div class="service_price_tag">Пт - Вс и праздничные дни</div>
+      <div class="service_price_tag">Для проживающих специально</div>
+      <div class="service_price_block">
+        <div class="service_price_list_row"><div class="service_price_list_row_caption--name">Услуги подъемников 2 часа</div>
+          <div class="service_price_list_row_wrap"><div class="service_price_list_row_caption">800 ₽ / 700 ₽</div></div></div>
+        <div class="service_price_list_row"><div class="service_price_list_row_caption--name">Услуги подъемников 3 часа</div>
+          <div class="service_price_list_row_wrap"><div class="service_price_list_row_caption">1000 ₽ / 900 ₽</div></div></div>
+      </div>
+      <div class="service_price_block">
+        <div class="service_price_list_row"><div class="service_price_list_row_caption--name">Услуги подъемников 2 часа</div>
+          <div class="service_price_list_row_wrap"><div class="service_price_list_row_caption">950 ₽ / 750 ₽</div></div></div>
+        <div class="service_price_list_row"><div class="service_price_list_row_caption--name">Услуги подъемников 3 часа</div>
+          <div class="service_price_list_row_wrap"><div class="service_price_list_row_caption">1200 ₽ / 1000 ₽</div></div></div>
+      </div>
+      <div class="service_price_block">
+        <div class="service_price_list_row"><div class="service_price_list_row_caption--name">Resort &amp; spa 5* — ски-пасс безлимитный</div>
+          <div class="service_price_list_row_wrap"><div class="service_price_list_row_caption">бесплатно</div></div></div>
+      </div>
+    </div></body></html>`
+    const groups = parseOkhtaDayTariffGroups(html)
+    assert.ok(groups.some((g) => /Ски-пасс \(подъёмники\)/i.test(g.category)))
+    const lift = groups.find((g) => /подъёмники/i.test(g.category))
+    assert.deepEqual(lift.columns, ['Пн–чт', 'Пт–вс и праздники'])
+    assert.ok(lift.rows.some((r) => r.name === 'Взрослый' && r.duration === '2 часа' && r.prices[0]?.price === 800 && r.prices[1]?.price === 950))
+    assert.ok(lift.rows.some((r) => r.name === 'Детский' && r.duration === '2 часа' && r.prices[0]?.price === 700))
+    assert.match(lift.note || '', /проживающ/i)
+  })
+
   it('committed prices keep groups for split resorts including drop-park', () => {
     const prices = JSON.parse(readFileSync(join(root, 'public/data/prices.json'), 'utf8'))
     const needGroups = [
@@ -389,6 +421,12 @@ describe('skipass groups', () => {
       const snap = prices.find((p) => p.resortId === id)
       assert.ok(snap?.groups?.length, `${id} should have skipass groups`)
     }
+    const okhta = prices.find((p) => p.resortId === 'okhta-park')
+    assert.ok(
+      okhta?.groups?.some((g) => /подъёмники|Ски-пасс/i.test(g.category)),
+      'okhta-park should keep day lift tariffs, not only seasonal presale',
+    )
+    assert.match(String(okhta?.sourceUrl || ''), /gornolyzhnye-trassy/)
     const drop = prices.find((p) => p.resortId === 'drop-park')
     assert.ok((drop?.items || []).length > 0)
     assert.ok(drop?.groups?.some((g) => /^Ски-пасс$/i.test(g.category)), 'drop-park ski-pass group')
