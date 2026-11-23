@@ -1,4 +1,5 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
+import { detectPuhtolovaImportant } from '../lib/important.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -12,6 +13,8 @@ import {
 const PRICES_URL = 'https://puhgora.ru/uslugi/ceny-na-podyomniki'
 const HOURS_URL = 'https://puhgora.ru/o-kurorte/chasy-raboty'
 const WEBCAM_URL = 'https://puhgora.ru/web-camera'
+export const PUHT_NEWS_URL = 'https://puhgora.ru/o-kurorte/novosti-i-akcii'
+const NEWS_URL = PUHT_NEWS_URL
 
 /**
  * @returns {Promise<object>}
@@ -22,6 +25,13 @@ export async function scrapePuhtolovaGora() {
     const pricesHtml = await fetchUrl(PRICES_URL)
     await sleep()
     const hoursHtml = await fetchUrl(HOURS_URL)
+    await sleep()
+    let newsHtml = ''
+    try {
+      newsHtml = await fetchUrl(NEWS_URL)
+    } catch {
+      newsHtml = ''
+    }
     await sleep()
     const camHtml = await fetchUrl(WEBCAM_URL)
 
@@ -114,6 +124,7 @@ export async function scrapePuhtolovaGora() {
       : 'Часы работы уточняйте на сайте (часто пн–вт выходной)'
 
     const embeds = extractIframeSrcs(loadHtml(camHtml), WEBCAM_URL)
+    const important = newsHtml ? detectPuhtolovaImportant(newsHtml, NEWS_URL) : []
 
     return {
       resortId,
@@ -136,6 +147,7 @@ export async function scrapePuhtolovaGora() {
       webcamUrl: WEBCAM_URL,
       // ipeye iframe: codec unsupported / no playable stream — link-only.
       cameraEmbeds: embeds.filter(() => false),
+      important,
     }
   } catch (err) {
     return {

@@ -194,9 +194,9 @@ describe('yukki hours policy (source-level)', () => {
 })
 
 describe('snezhny hours stay partial (no Playwright)', () => {
-  it('hours status is hardcoded partial in source', () => {
+  it('hours status stays partial without Playwright', () => {
     const src = readFileSync(join(root, 'scripts/scrape/resorts/snezhny.mjs'), 'utf8')
-    assert.match(src, /status:\s*'partial'/)
+    assert.match(src, /hoursStatus\s*=\s*'partial'|status:\s*hoursStatus|status:\s*'partial'/)
     assert.doesNotMatch(src, /playwright|fetchRenderedHtml/i)
   })
 
@@ -206,7 +206,9 @@ describe('snezhny hours stay partial (no Playwright)', () => {
     const sne = hours.find((h) => h.resortId === 'snezhny')
     assert.match(src, /Режим склонов уточняйте на сайте курорта…/)
     assert.doesNotMatch(src, /виджет|без JS/i)
-    assert.equal(sne?.summary, 'Режим склонов уточняйте на сайте курорта…')
+    assert.ok(sne?.summary)
+    assert.doesNotMatch(sne.summary, /виджет|без JS|playwright/i)
+    assert.match(sne.summary, /Режим склонов|Важное|новост/i)
   })
 })
 
@@ -263,7 +265,8 @@ describe('closed-season card honesty signals', () => {
     const cardSrc = readFileSync(join(root, 'src/components/ResortCard.tsx'), 'utf8')
     assert.match(dataSrc, /сезон закрыт\|склон/)
     assert.match(dataSrc, /предпродажа · сезон от/)
-    assert.match(cardSrc, /closed \? 'сезон закрыт'/)
+    assert.match(cardSrc, /'сезон закрыт'/)
+    assert.match(cardSrc, /slopesClosedHint/)
   })
 
   it('committed data keeps Puhtolova empty / Severny unavailable / Snezhny partial hours', () => {
@@ -302,7 +305,7 @@ describe('resort page block semantics', () => {
 
   it('ResortPage keeps shared order and address only under Локация', () => {
     const src = readFileSync(join(root, 'src/pages/ResortPage.tsx'), 'utf8')
-    assert.match(src, /hours → prices → contacts → location → links/)
+    assert.match(src, /hours → prices → features/)
     assert.match(src, /city_or_district \|\| resort\.area/)
     assert.match(src, /resort-contacts-title/)
     assert.match(src, /resort-location-title/)

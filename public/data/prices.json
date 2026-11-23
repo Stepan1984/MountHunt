@@ -1316,8 +1316,8 @@
   },
   {
     "resortId": "tuutari-park",
-    "scrapedAt": "2026-11-21T13:15:08Z",
-    "sourceUrl": "http://www.2-park.ru/prices/lift/",
+    "scrapedAt": "2026-11-23T05:33:08Z",
+    "sourceUrl": "https://www.2-park.ru/prices/lift/",
     "currency": "RUB",
     "items": [
       {
@@ -1441,7 +1441,6 @@
         "rawText": "1500"
       }
     ],
-    "status": "failed",
     "groups": [
       {
         "category": "Выходной/праздник",
@@ -1591,7 +1590,7 @@
         ]
       }
     ],
-    "note": "fetch failed"
+    "status": "ok"
   },
   {
     "resortId": "krasnoe-ozero",
@@ -1938,7 +1937,7 @@
   },
   {
     "resortId": "snezhny",
-    "scrapedAt": "2026-11-22T13:06:52Z",
+    "scrapedAt": "2026-11-23T05:34:33Z",
     "sourceUrl": "https://snegny.ru/ски-пассы/",
     "currency": "RUB",
     "items": [
@@ -2526,7 +2525,7 @@
   },
   {
     "resortId": "puhtolova-gora",
-    "scrapedAt": "2026-11-22T13:06:24Z",
+    "scrapedAt": "2026-11-23T05:34:45Z",
     "sourceUrl": "https://puhgora.ru/uslugi/ceny-na-podyomniki",
     "currency": "RUB",
     "items": [],
@@ -2575,7 +2574,7 @@
   },
   {
     "resortId": "lazurnye-ozera",
-    "scrapedAt": "2026-11-22T13:06:18Z",
+    "scrapedAt": "2026-11-23T05:34:51Z",
     "sourceUrl": "https://lazoorsnow.ru/ceny",
     "currency": "RUB",
     "items": [
@@ -2691,7 +2690,7 @@
   },
   {
     "resortId": "drop-park",
-    "scrapedAt": "2026-11-22T13:06:55Z",
+    "scrapedAt": "2026-11-23T05:34:38Z",
     "sourceUrl": "https://drop-park.ru/snow-park",
     "currency": "RUB",
     "items": [

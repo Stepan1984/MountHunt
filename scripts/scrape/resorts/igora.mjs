@@ -14,7 +14,8 @@ import {
 } from '../lib/parse.mjs'
 
 const PRICE_URL = 'https://igora.ru/price/'
-const HOURS_URL = 'https://igora.ru/working-hours/'
+/** RU /working-hours/ returns 404; EN mirror has the slope schedule table. */
+const HOURS_URL = 'https://igora.ru/en/working-hours/'
 const CAM_URL = 'https://igora.ru/cam/'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')

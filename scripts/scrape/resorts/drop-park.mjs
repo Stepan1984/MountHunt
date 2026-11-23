@@ -1,4 +1,5 @@
-import { fetchUrl } from '../lib/http.mjs'
+import { fetchUrl, sleep } from '../lib/http.mjs'
+import { detectDropParkImportant } from '../lib/important.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -9,7 +10,10 @@ import {
   priceSnapshot,
 } from '../lib/parse.mjs'
 
-const PAGE_URL = 'https://drop-park.ru/snow-park'
+export const DROP_PAGE_URL = 'https://drop-park.ru/snow-park'
+export const DROP_TG_URL = 'https://t.me/s/dropsnowpark'
+const PAGE_URL = DROP_PAGE_URL
+const TG_URL = DROP_TG_URL
 
 /** @typedef {{ top: number, left: number, text: string }} TildaElem */
 /** @typedef {{ title: string, price: number, unit?: string, rawText?: string, note?: string, _top?: number, _left?: number }} FlatItem */
@@ -463,6 +467,13 @@ export async function scrapeDropPark() {
   const resortId = 'drop-park'
   try {
     const html = await fetchUrl(PAGE_URL)
+    let tgHtml = ''
+    try {
+      await sleep()
+      tgHtml = await fetchUrl(TG_URL)
+    } catch {
+      tgHtml = ''
+    }
     const parsed = parseDropParkPriceList(html)
     const $ = loadHtml(html)
     const embeds = [
@@ -484,6 +495,11 @@ export async function scrapeDropPark() {
 
     const hasGroups = parsed.groups.length > 0
     const hasItems = parsed.items.length > 0
+    const important = detectDropParkImportant(
+      { pageHtml: html, tgHtml },
+      TG_URL,
+      { pageUrl: PAGE_URL, tgUrl: TG_URL },
+    )
 
     return {
       resortId,
@@ -507,6 +523,7 @@ export async function scrapeDropPark() {
       webcamUrl: PAGE_URL,
       // rtsp.ru cams deleted / stream failed — avoid empty player boxes.
       cameraEmbeds: uniqueEmbeds.filter(() => false),
+      important,
     }
   } catch (err) {
     return {

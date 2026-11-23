@@ -28,7 +28,7 @@
   },
   {
     "resortId": "tuutari-park",
-    "scrapedAt": "2026-11-21T13:15:08Z",
+    "scrapedAt": "2026-11-23T05:33:08Z",
     "sourceUrl": "https://www.2-park.ru/",
     "summary": "будни 12:00–18:00; выходные 10:00–18:00",
     "periods": [
@@ -43,8 +43,7 @@
         "close": "18:00"
       }
     ],
-    "status": "failed",
-    "note": "Сбор данных не удался — показаны прежние данные"
+    "status": "ok"
   },
   {
     "resortId": "krasnoe-ozero",
@@ -100,7 +99,7 @@
   },
   {
     "resortId": "snezhny",
-    "scrapedAt": "2026-11-22T13:06:52Z",
+    "scrapedAt": "2026-11-23T05:34:33Z",
     "sourceUrl": "https://snegny.ru/",
     "summary": "Режим склонов уточняйте на сайте курорта…",
     "periods": [],
@@ -132,7 +131,7 @@
   },
   {
     "resortId": "puhtolova-gora",
-    "scrapedAt": "2026-11-22T13:06:24Z",
+    "scrapedAt": "2026-11-23T05:34:45Z",
     "sourceUrl": "https://puhgora.ru/o-kurorte/chasy-raboty",
     "summary": "ср., чт., пт. 15:00–21:00; сб., вс. 10:00–21:00; пн., вт.: выходной",
     "periods": [
@@ -170,7 +169,7 @@
   },
   {
     "resortId": "lazurnye-ozera",
-    "scrapedAt": "2026-11-22T13:06:18Z",
+    "scrapedAt": "2026-11-23T05:34:51Z",
     "sourceUrl": "https://lazoorsnow.ru/",
     "summary": "Сезон закрыт. пн: выходной; вт–пт: 11:00–22:00; сб–вс: 10:00–22:00",
     "periods": [
@@ -194,7 +193,7 @@
   },
   {
     "resortId": "drop-park",
-    "scrapedAt": "2026-11-22T13:06:55Z",
+    "scrapedAt": "2026-11-23T05:34:38Z",
     "sourceUrl": "https://drop-park.ru/snow-park",
     "summary": "По прайсу сноупарка — будни: 11:00–23:00; выходные и праздники: 10:00–21:00",
     "periods": [

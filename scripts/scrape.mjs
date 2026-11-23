@@ -97,11 +97,29 @@ function blankHours(resortId, resorts) {
 
 function applySeedFixes(resorts) {
   const patches = {
+    'tuutari-park': {
+      prices_format: 'html',
+      prices_url: 'https://www.2-park.ru/prices/lift/',
+      webcam_url: 'https://www.2-park.ru/about/webcam/',
+      sourcesAdd: [
+        'https://www.2-park.ru/prices/lift/',
+        'https://www.2-park.ru/about/news/',
+        'https://www.2-park.ru/about/webcam/',
+      ],
+      sourcesDrop: [/^http:\/\/www\.2-park\.ru\/prices\/lift\/$/],
+      community_links: ['https://vk.com/tyytari_activity'],
+    },
     'krasnoe-ozero': {
       webcam_url: 'https://krasnoeozero.ru/cam/',
       prices_format: 'csv',
-      sourcesAdd: ['https://krasnoeozero.ru/', 'https://krasnoeozero.ru/cam/', 'https://krasnoeozero.ru/grafik/'],
+      sourcesAdd: [
+        'https://krasnoeozero.ru/',
+        'https://krasnoeozero.ru/cam/',
+        'https://krasnoeozero.ru/grafik/',
+        'https://krasnoeozero.ru/events/news/',
+      ],
       sourcesDrop: [/cam\.html/],
+      community_links: ['https://vk.com/redlakeclub', 'https://t.me/redlakeclub'],
       notes:
         'Крупнейший курорт кластера Коробицыно; ~13–18 трасс.',
     },
@@ -109,17 +127,25 @@ function applySeedFixes(resorts) {
       webcam_url: 'https://lazoorsnow.ru/',
       prices_format: 'html',
       prices_url: 'https://lazoorsnow.ru/ceny',
-      sourcesAdd: ['https://lazoorsnow.ru/ceny'],
+      sourcesAdd: ['https://lazoorsnow.ru/ceny', 'https://lazoorsnow.ru/news'],
+      community_links: ['https://vk.com/lazurnyi_spb', 'https://t.me/lazoorsnow'],
     },
     'puhtolova-gora': {
       prices_format: 'html',
       prices_url: 'https://puhgora.ru/uslugi/ceny-na-podyomniki',
-      sourcesAdd: ['https://puhgora.ru/uslugi/ceny-na-podyomniki'],
+      sourcesAdd: [
+        'https://puhgora.ru/uslugi/ceny-na-podyomniki',
+        'https://puhgora.ru/o-kurorte/novosti-i-akcii',
+        'https://puhgora.ru/o-kurorte/chasy-raboty',
+      ],
+      community_links: ['https://vk.com/club313388'],
     },
     yukki: {
       prices_format: 'pdf',
       notes:
         'ГАУ ЛО СТЦ; учебный и основные склоны; VK https://vk.com/skyukki. Координаты приблизительные. Цены — прейскурант на сайте.',
+      community_links: ['https://vk.com/skyukki'],
+      sourcesAdd: ['https://stc.lenobl.ru/ru/news/news/'],
     },
     snezhny: {
       prices_format: 'html',
@@ -127,14 +153,18 @@ function applySeedFixes(resorts) {
       webcam_url: 'https://snegny.ru/',
       sourcesAdd: [
         'https://snegny.ru/ски-пассы/',
+        'https://snegny.ru/category/news/',
+        'https://snegny.ru/режим-работы/',
         'https://snegny.ru/wp-content/themes/snegny/twocam.php',
       ],
+      community_links: ['https://vk.com/kurort_snegny', 'https://t.me/kurort_snegny'],
     },
     'drop-park': {
       prices_format: 'html',
       prices_url: 'https://drop-park.ru/snow-park',
       webcam_url: 'https://drop-park.ru/snow-park',
-      sourcesAdd: ['https://drop-park.ru/snow-park'],
+      sourcesAdd: ['https://drop-park.ru/snow-park', 'https://t.me/s/dropsnowpark'],
+      community_links: ['https://t.me/dropsnowpark'],
     },
     'okhta-park': {
       prices_format: 'html_mixed',
@@ -146,6 +176,21 @@ function applySeedFixes(resorts) {
         'https://winter.ohtapark.ru/',
         'https://www.ohtapark.ru/webcam/',
       ],
+      community_links: [
+        'https://t.me/OhtaPark',
+        'https://vk.com/ohtapark',
+        'https://www.instagram.com/ohtapark/',
+      ],
+    },
+    'zolotaya-dolina': {
+      prices_url: 'https://zoldol.ru/price-winter',
+      webcam_url: 'https://zoldol.ru/webcamera',
+      sourcesAdd: ['https://zoldol.ru/price-winter', 'https://zoldol.ru/vremya-raboty', 'https://zoldol.ru/webcamera'],
+      community_links: [
+        'https://vk.com/zoldol_official',
+        'https://t.me/zoldoll',
+        'https://www.instagram.com/zoldol_official/',
+      ],
     },
     igora: {
       prices_format: 'html_js',
@@ -153,11 +198,13 @@ function applySeedFixes(resorts) {
       webcam_url: 'https://igora.ru/cam/',
       sourcesAdd: [
         'https://igora.ru/price/',
-        'https://igora.ru/working-hours/',
+        'https://igora.ru/en/working-hours/',
         'https://igora.ru/cam/',
         'https://igora.ru/slopes/',
+        'https://igora.ru/news/',
       ],
-      notes: 'Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м.',
+      community_links: ['https://vk.com/igora_kurort', 'https://t.me/igora_kurort'],
+      notes: 'Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. RU /working-hours/ → 404; часы — EN-зеркало / Playwright.',
     },
     'severny-sklon': {
       website: 'https://severnysklon.ru/',
@@ -168,17 +215,31 @@ function applySeedFixes(resorts) {
       email: 'sevsklon_toxovo@mail.ru',
       sourcesAdd: ['https://severnysklon.ru/'],
       sourcesDrop: [/sev-sklon\.ru/],
+      community_links: [
+        'https://vk.com/ssklon',
+        'https://t.me/sev_sklon',
+        'https://max.ru/join/vvFZpjgzC9kPllpcOfsQiEZzEEz00AmbiHT9OJoKQTw',
+      ],
       notes: '4 склона у оз. Хепоярви; бугели. Актуальные цены уточняйте на сайте курорта.',
     },
   }
   return resorts.map((r) => {
     const p = patches[r.id]
     if (!p) return r
-    const fixed = { ...r, ...Object.fromEntries(Object.entries(p).filter(([k]) => !['sourcesAdd', 'sourcesDrop'].includes(k))) }
+    const fixed = {
+      ...r,
+      ...Object.fromEntries(
+        Object.entries(p).filter(([k]) => !['sourcesAdd', 'sourcesDrop', 'community_links'].includes(k)),
+      ),
+    }
     let sources = Array.isArray(r.sources) ? [...r.sources] : []
     if (p.sourcesDrop) sources = sources.filter((s) => !p.sourcesDrop.some((re) => re.test(s)))
     if (p.sourcesAdd) sources = [...sources, ...p.sourcesAdd]
     fixed.sources = [...new Set(sources)]
+    if (p.community_links) {
+      const prev = Array.isArray(r.community_links) ? r.community_links : []
+      fixed.community_links = [...new Set([...prev, ...p.community_links])]
+    }
     return fixed
   })
 }

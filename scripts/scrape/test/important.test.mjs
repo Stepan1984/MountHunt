@@ -4,9 +4,13 @@ import { dirname, join } from 'node:path'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import {
+  detectDropParkImportant,
   detectKrasnoeImportantFromFlags,
   detectLazurnyeImportant,
+  detectLazurnyeImportantFromPages,
   detectOkhtaImportant,
+  detectPuhtolovaImportant,
+  detectTuutariImportant,
   detectZoldolImportant,
   extractPublishedAtFromHtml,
   mergeImportantFailSoft,
@@ -250,5 +254,62 @@ describe('important workflow wiring', () => {
     assert.match(wf, /npm run scrape:important/)
     assert.match(wf, /important\.json/)
     assert.doesNotMatch(wf, /playwright|tesseract|IGORA_/i)
+  })
+})
+
+describe('catalog source detectors', () => {
+  it('detects Tuutari season prep from dated news', () => {
+    const html =
+      '<html><body><p>20.11.2026 Набор в детские группы</p><p>18.11.2026 Сезон 2026-2027 Ждем первых морозов и в бой !</p><p>15.11.2026 Горнолыжная школа</p></body></html>'
+    const items = detectTuutariImportant(html, 'https://www.2-park.ru/about/news/')
+    assert.equal(items.length, 1)
+    assert.equal(items[0].id, 'tuutari-season-prep')
+    assert.equal(items[0].publishedAt, '2026-11-18T00:00:00Z')
+  })
+
+  it('detects Tuutari season open over prep when fresh', () => {
+    const html =
+      '<html><body><p>20.11.2026 Открытие сезона — центральный склон</p><p>18.11.2026 Сезон 2026-2027 Ждем первых морозов</p></body></html>'
+    const items = detectTuutariImportant(html, 'https://www.2-park.ru/about/news/')
+    assert.equal(items[0].id, 'tuutari-season-open')
+  })
+
+  it('ignores stale Puhtolova season open news', () => {
+    const html =
+      '<html><body><p>17.12.2025 Открытие сезона 20 декабря!</p><p>08.03.2026 SUPER четверг</p></body></html>'
+    assert.equal(detectPuhtolovaImportant(html, 'https://puhgora.ru/o-kurorte/novosti-i-akcii').length, 0)
+  })
+
+  it('detects Drop Park off-season from TG about', () => {
+    const tg =
+      '<html><body><div class="tgme_page_description">Сезон 2025/26 закончен, всех благодарим</div></body></html>'
+    const items = detectDropParkImportant(
+      { pageHtml: '<html><body><p>Сезонный абонемент 2026/27</p></body></html>', tgHtml: tg },
+      'https://t.me/s/dropsnowpark',
+      { tgUrl: 'https://t.me/s/dropsnowpark' },
+    )
+    assert.equal(items.length, 1)
+    assert.equal(items[0].id, 'drop-off-season')
+  })
+
+  it('clears Drop Park off-season when opening announced', () => {
+    const page = '<html><body><p>Горнолыжный сезон открыт на сноупарке</p></body></html>'
+    const tg = '<html><body><p>Сезон 2025/26 закончен</p></body></html>'
+    assert.equal(
+      detectDropParkImportant({ pageHtml: page, tgHtml: tg }, 'https://drop-park.ru/snow-park').length,
+      0,
+    )
+  })
+
+  it('detects Lazurnye open from fresh news over home closed banner', () => {
+    const home = '<html><body><h1>Сезон 2026 закрыт!</h1></body></html>'
+    const news =
+      '<html><body><p>20.11.2026 Lazoorka открывает сезон: 3 трассы и новый режим</p></body></html>'
+    const items = detectLazurnyeImportantFromPages(
+      { homeHtml: home, newsHtml: news },
+      'https://lazoorsnow.ru/',
+      { homeUrl: 'https://lazoorsnow.ru/', newsUrl: 'https://lazoorsnow.ru/news' },
+    )
+    assert.equal(items[0].id, 'lazurnye-season-open')
   })
 })

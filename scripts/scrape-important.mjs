@@ -15,8 +15,12 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DELAY_MS, fetchUrlResult, sleep } from './scrape/lib/http.mjs'
 import {
-  detectLazurnyeImportant,
+  detectDropParkImportant,
+  detectLazurnyeImportantFromPages,
   detectOkhtaImportant,
+  detectPuhtolovaImportant,
+  detectSnezhnyImportant,
+  detectTuutariImportant,
   detectZoldolImportant,
   importantItem,
   mergeImportantFailSoft,
@@ -26,12 +30,16 @@ import {
   KRASNOE_HOURS_CSV_URL,
   parseHoursFromCsv,
 } from './scrape/resorts/krasnoe-ozero.mjs'
-import { LAZURNYE_HOME_URL } from './scrape/resorts/lazurnye-ozera.mjs'
+import { DROP_PAGE_URL, DROP_TG_URL } from './scrape/resorts/drop-park.mjs'
+import { LAZURNYE_HOME_URL, LAZURNYE_NEWS_URL } from './scrape/resorts/lazurnye-ozera.mjs'
 import {
   OKHTA_LENTA_URL,
   OKHTA_TRAILS_URL,
   OKHTA_WINTER_URL,
 } from './scrape/resorts/okhta-park.mjs'
+import { PUHT_NEWS_URL } from './scrape/resorts/puhtolova-gora.mjs'
+import { SNEZHNY_NEWS_URL } from './scrape/resorts/snezhny.mjs'
+import { TUUTARI_NEWS_URL } from './scrape/resorts/tuutari-park.mjs'
 import { ZOLDOL_HOURS_URL } from './scrape/resorts/zolotaya-dolina.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -68,8 +76,23 @@ const CHECKERS = [
   {
     id: 'lazurnye-ozera',
     async run() {
-      const { body, lastModified } = await fetchUrlResult(LAZURNYE_HOME_URL)
-      return detectLazurnyeImportant(body, LAZURNYE_HOME_URL, { lastModified })
+      const home = await fetchUrlResult(LAZURNYE_HOME_URL)
+      let newsBody = ''
+      try {
+        await sleep()
+        newsBody = (await fetchUrlResult(LAZURNYE_NEWS_URL)).body
+      } catch {
+        newsBody = ''
+      }
+      return detectLazurnyeImportantFromPages(
+        { homeHtml: home.body, newsHtml: newsBody },
+        LAZURNYE_HOME_URL,
+        {
+          lastModified: home.lastModified,
+          homeUrl: LAZURNYE_HOME_URL,
+          newsUrl: LAZURNYE_NEWS_URL,
+        },
+      )
     },
   },
   {
@@ -104,6 +127,53 @@ const CHECKERS = [
           winterUrl: OKHTA_WINTER_URL,
         },
       )
+    },
+  },
+  {
+    id: 'tuutari-park',
+    async run() {
+      const { body, lastModified } = await fetchUrlResult(TUUTARI_NEWS_URL)
+      return detectTuutariImportant(body, TUUTARI_NEWS_URL, { lastModified })
+    },
+  },
+  {
+    id: 'snezhny',
+    async run() {
+      const { body, lastModified } = await fetchUrlResult(SNEZHNY_NEWS_URL)
+      return detectSnezhnyImportant(body, SNEZHNY_NEWS_URL, { lastModified })
+    },
+  },
+  {
+    id: 'drop-park',
+    async run() {
+      let pageBody = ''
+      let pageModified = null
+      try {
+        const page = await fetchUrlResult(DROP_PAGE_URL)
+        pageBody = page.body
+        pageModified = page.lastModified
+      } catch {
+        pageBody = ''
+      }
+      let tgBody = ''
+      try {
+        await sleep()
+        tgBody = (await fetchUrlResult(DROP_TG_URL)).body
+      } catch {
+        tgBody = ''
+      }
+      return detectDropParkImportant(
+        { pageHtml: pageBody, tgHtml: tgBody },
+        DROP_TG_URL,
+        { pageUrl: DROP_PAGE_URL, tgUrl: DROP_TG_URL, lastModified: pageModified },
+      )
+    },
+  },
+  {
+    id: 'puhtolova-gora',
+    async run() {
+      const { body, lastModified } = await fetchUrlResult(PUHT_NEWS_URL)
+      return detectPuhtolovaImportant(body, PUHT_NEWS_URL, { lastModified })
     },
   },
 ]
