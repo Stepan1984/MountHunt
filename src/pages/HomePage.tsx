@@ -9,7 +9,7 @@ export function HomePage({ data }: { data: SiteData }) {
 
   return (
     <>
-      <Hero activeCount={active.length} />
+      <Hero />
 
       <section className="section explore" id="explore" aria-labelledby="explore-title">
         <div className="section__head">

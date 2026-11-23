@@ -1,4 +1,4 @@
-export function Hero({ activeCount }: { activeCount: number }) {
+export function Hero() {
   return (
     <section className="hero" aria-labelledby="hero-brand">
       <div className="hero__sky" aria-hidden="true">
@@ -67,11 +67,7 @@ export function Hero({ activeCount }: { activeCount: number }) {
         <p className="hero__brand" id="hero-brand">
           MountHunt
         </p>
-        <h1 className="hero__title">Склоны рядом с Петербургом — в одном месте</h1>
-        <p className="hero__lead">
-          Карта и карточки {activeCount} действующих курортов СПБ и Ленинградской области: где
-          кататься, часы, цены и ссылки на камеры.
-        </p>
+        <h1 className="hero__title">Склоны Петербурга и Ленобласти — в одном месте</h1>
       </div>
     </section>
   )
