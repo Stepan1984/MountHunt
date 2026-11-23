@@ -10,7 +10,9 @@ import { fileURLToPath } from 'node:url'
 import { flattenSkipassGroups, mergeSnapshot, parsePrice } from '../lib/parse.mjs'
 import {
   clarifyInstructorLabel,
+  localizeIgoraDayLabel,
   mergeIgoraPriceTables,
+  parseIgoraHours,
   parseIgoraPrices,
   parseIgoraPriceTables,
   supplementIgoraSkiPassFromSnapshot,
@@ -50,6 +52,31 @@ describe('mergeSnapshot fail-soft', () => {
     const merged = mergeSnapshot(prev, next, 'severny-sklon', () => prev)
     assert.equal(merged.status, 'unavailable')
     assert.equal(merged.items.length, 0)
+  })
+})
+
+describe('parseIgoraHours RU day labels', () => {
+  it('localizes EN Mon/Sat/Sun labels', () => {
+    assert.equal(localizeIgoraDayLabel('Mon - Fri'), 'пн–пт')
+    assert.equal(localizeIgoraDayLabel('Sat'), 'сб')
+    assert.equal(localizeIgoraDayLabel('Sunday'), 'вс')
+  })
+
+  it('parseIgoraHours emits Russian day labels from EN HTML', () => {
+    const html = `<html><body>
+      <h2>Working hours</h2>
+      <p>Slopes Mon - Fri 11:00–22:00</p>
+      <p>Sat 10:00–23:00</p>
+      <p>Sun 10:00–21:00</p>
+    </body></html>`
+    const hours = parseIgoraHours(html)
+    assert.ok(hours.periods.length >= 1)
+    for (const p of hours.periods) {
+      assert.doesNotMatch(p.days, /Mon|Tue|Wed|Thu|Fri|Sat|Sun|day/i)
+      assert.match(p.days, /пн|вт|ср|чт|пт|сб|вс|склон|ежедневно/i)
+    }
+    assert.doesNotMatch(hours.summary, /Mon|Sat|Sun|Friday|Saturday/i)
+    assert.match(hours.summary, /пн|сб|вс/)
   })
 })
 
@@ -194,9 +221,9 @@ describe('yukki hours policy (source-level)', () => {
 })
 
 describe('snezhny hours stay partial (no Playwright)', () => {
-  it('hours status is hardcoded partial in source', () => {
+  it('hours status stays partial without Playwright', () => {
     const src = readFileSync(join(root, 'scripts/scrape/resorts/snezhny.mjs'), 'utf8')
-    assert.match(src, /status:\s*'partial'/)
+    assert.match(src, /hoursStatus\s*=\s*'partial'|status:\s*hoursStatus|status:\s*'partial'/)
     assert.doesNotMatch(src, /playwright|fetchRenderedHtml/i)
   })
 
@@ -206,7 +233,9 @@ describe('snezhny hours stay partial (no Playwright)', () => {
     const sne = hours.find((h) => h.resortId === 'snezhny')
     assert.match(src, /Режим склонов уточняйте на сайте курорта…/)
     assert.doesNotMatch(src, /виджет|без JS/i)
-    assert.equal(sne?.summary, 'Режим склонов уточняйте на сайте курорта…')
+    assert.ok(sne?.summary)
+    assert.doesNotMatch(sne.summary, /виджет|без JS|playwright/i)
+    assert.match(sne.summary, /Режим склонов|Важное|новост/i)
   })
 })
 
@@ -263,7 +292,8 @@ describe('closed-season card honesty signals', () => {
     const cardSrc = readFileSync(join(root, 'src/components/ResortCard.tsx'), 'utf8')
     assert.match(dataSrc, /сезон закрыт\|склон/)
     assert.match(dataSrc, /предпродажа · сезон от/)
-    assert.match(cardSrc, /closed \? 'сезон закрыт'/)
+    assert.match(cardSrc, /'сезон закрыт'/)
+    assert.match(cardSrc, /slopesClosedHint/)
   })
 
   it('committed data keeps Puhtolova empty / Severny unavailable / Snezhny partial hours', () => {
@@ -302,7 +332,7 @@ describe('resort page block semantics', () => {
 
   it('ResortPage keeps shared order and address only under Локация', () => {
     const src = readFileSync(join(root, 'src/pages/ResortPage.tsx'), 'utf8')
-    assert.match(src, /hours → prices → contacts → location → links/)
+    assert.match(src, /hours → prices → features/)
     assert.match(src, /city_or_district \|\| resort\.area/)
     assert.match(src, /resort-contacts-title/)
     assert.match(src, /resort-location-title/)

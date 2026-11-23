@@ -11,10 +11,51 @@ import { cleanText, httpDateToIso, loadHtml, nowIso, ruDateLabelToIso } from './
 /** Stable ids owned by automated important scrapers (cleared when a check succeeds without them). */
 export const MANAGED_IMPORTANT_IDS = Object.freeze({
   'zolotaya-dolina': Object.freeze(['zoldol-slopes-closed']),
-  'lazurnye-ozera': Object.freeze(['lazurnye-season-closed']),
+  'lazurnye-ozera': Object.freeze(['lazurnye-season-closed', 'lazurnye-season-open']),
   'krasnoe-ozero': Object.freeze(['krasnoe-slopes-closed']),
   'okhta-park': Object.freeze(['okhta-season-open', 'okhta-presale']),
+  'tuutari-park': Object.freeze(['tuutari-season-prep', 'tuutari-season-open']),
+  snezhny: Object.freeze(['snezhny-hours-notice']),
+  'drop-park': Object.freeze(['drop-off-season']),
+  'puhtolova-gora': Object.freeze(['puhtolova-season-open']),
 })
+
+/** Max age for dated news cards used as «Важное» (stale season-open posts drop out). */
+export const IMPORTANT_NEWS_MAX_AGE_DAYS = 60
+
+/**
+ * @param {string | null | undefined} iso
+ * @param {number} [maxAgeDays]
+ */
+export function isFreshPublishedAt(iso, maxAgeDays = IMPORTANT_NEWS_MAX_AGE_DAYS) {
+  if (!iso) return false
+  const t = Date.parse(iso)
+  if (!Number.isFinite(t)) return false
+  return Date.now() - t <= maxAgeDays * 86_400_000
+}
+
+/**
+ * Parse «DD.MM.YYYY Title…» news listing blocks (Bitrix / WP / custom).
+ * @param {string} text
+ * @returns {{ dateLabel: string, publishedAt: string, title: string }[]}
+ */
+export function parseDatedNewsItems(text) {
+  const t = cleanText(text)
+  if (!t) return []
+  const re = /(\d{1,2}\.\d{1,2}\.\d{2,4})\s+(.+?)(?=\d{1,2}\.\d{1,2}\.\d{2,4}|$)/gs
+  /** @type {{ dateLabel: string, publishedAt: string, title: string }[]} */
+  const out = []
+  let m
+  while ((m = re.exec(t))) {
+    const dateLabel = m[1]
+    const publishedAt = ruDateLabelToIso(dateLabel)
+    if (!publishedAt) continue
+    const title = cleanText(m[2]).slice(0, 220)
+    if (title.length < 8) continue
+    out.push({ dateLabel, publishedAt, title })
+  }
+  return out
+}
 
 const OKHTA_MONTHS = Object.freeze({
   января: 1,
@@ -273,6 +314,298 @@ export function detectKrasnoeImportantFromFlags(pack, sourceUrl) {
 }
 
 /**
+ * Tuutari: news listing — season prep («ждём морозов») or fresh opening.
+ * @param {string} newsHtml
+ * @param {string} sourceUrl
+ * @param {{ lastModified?: string | null }} [opts]
+ */
+export function detectTuutariImportant(newsHtml, sourceUrl, opts = {}) {
+  const text = cleanText(loadHtml(newsHtml)('body').text())
+  const items = parseDatedNewsItems(text)
+  const open = items.find(
+    (it) =>
+      isFreshPublishedAt(it.publishedAt) &&
+      (/открытие\s+сезон/i.test(it.title) ||
+        /открыт[ыа]?\s+(?:детский|учебный|центральный|первый).{0,40}склон/i.test(it.title) ||
+        /горнолыжн\w+\s+сезон\s+открыт/i.test(it.title)),
+  )
+  if (open) {
+    return [
+      importantItem({
+        id: 'tuutari-season-open',
+        resortId: 'tuutari-park',
+        title: 'Туутари-парк: открытие сезона',
+        body: 'В официальных новостях курорта есть сообщение об открытии склонов. Перед выездом сверьте часы на сайте.',
+        severity: 'info',
+        sourceUrl,
+        publishedAt: open.publishedAt,
+      }),
+    ]
+  }
+
+  const prep = items.find(
+    (it) =>
+      isFreshPublishedAt(it.publishedAt) &&
+      (/сезон\s+20\d{2}\s*[-–—]\s*20\d{2}/i.test(it.title) ||
+        /ждём?\s+первых\s+мороз/i.test(it.title) ||
+        /ждем\s+первых\s+мороз/i.test(it.title) ||
+        /подготовк\w+\s+к\s+(?:новому\s+)?сезон/i.test(it.title)),
+  )
+  if (!prep) {
+    // Fallback: undated blob still carries the headline (rare).
+    if (
+      /сезон\s+20\d{2}\s*[-–—]\s*20\d{2}.{0,80}мороз/i.test(text) ||
+      /ждём?\s+первых\s+мороз/i.test(text)
+    ) {
+      const publishedAt =
+        extractPublishedAtFromHtml(newsHtml) || httpDateToIso(opts.lastModified) || null
+      if (publishedAt && !isFreshPublishedAt(publishedAt)) return []
+      return [
+        importantItem({
+          id: 'tuutari-season-prep',
+          resortId: 'tuutari-park',
+          title: 'Туутари-парк: готовимся к сезону',
+          body: 'В новостях курорта — подготовка к горнолыжному сезону. Точную дату открытия уточняйте на сайте.',
+          severity: 'info',
+          sourceUrl,
+          ...(publishedAt ? { publishedAt } : {}),
+        }),
+      ]
+    }
+    return []
+  }
+
+  return [
+    importantItem({
+      id: 'tuutari-season-prep',
+      resortId: 'tuutari-park',
+      title: 'Туутари-парк: готовимся к сезону',
+      body: 'В новостях курорта — подготовка к горнолыжному сезону. Точную дату открытия уточняйте на сайте.',
+      severity: 'info',
+      sourceUrl,
+      publishedAt: prep.publishedAt,
+    }),
+  ]
+}
+
+/**
+ * Snezhny: fresh «режим работы склонов» / weather shortened day from news or hours post.
+ * @param {string} html
+ * @param {string} sourceUrl
+ * @param {{ lastModified?: string | null }} [opts]
+ */
+export function detectSnezhnyImportant(html, sourceUrl, opts = {}) {
+  const text = cleanText(loadHtml(html)('body').text())
+  const publishedAt =
+    extractPublishedAtFromHtml(html) ||
+    (() => {
+      const m = text.match(/(\d{1,2}\s+(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\s*,?\s*20\d{2})/i)
+      if (!m) return null
+      // WP often prints «10 декабря, 2025» near the title — not always DD.MM.YYYY.
+      return httpDateToIso(opts.lastModified)
+    })() ||
+    httpDateToIso(opts.lastModified) ||
+    null
+
+  // Prefer dated listing items when scanning the news index.
+  const dated = parseDatedNewsItems(text).find(
+    (it) =>
+      isFreshPublishedAt(it.publishedAt) &&
+      (/режим\s+работы\s+склон/i.test(it.title) ||
+        /аномально\s+тёпл/i.test(it.title) ||
+        /аномально\s+тепл/i.test(it.title) ||
+        /склон[ыа]?\s+закрыт/i.test(it.title) ||
+        /будет\s+работать\s+до/i.test(it.title)),
+  )
+  if (dated) {
+    return [
+      importantItem({
+        id: 'snezhny-hours-notice',
+        resortId: 'snezhny',
+        title: 'Снежный: изменение режима склонов',
+        body: 'В новостях курорта есть актуальное сообщение о режиме работы склонов. Перед выездом сверьте на сайте.',
+        severity: 'warn',
+        sourceUrl,
+        publishedAt: dated.publishedAt,
+      }),
+    ]
+  }
+
+  const weatherNotice =
+    /аномально\s+тёпл/i.test(text) ||
+    /аномально\s+тепл/i.test(text) ||
+    (/режим\s+работы\s+склон/i.test(text) && /будет\s+работать\s+до/i.test(text)) ||
+    (/горнолыжный\s+комплекс.{0,40}будет\s+работать\s+до/i.test(text) && /погод/i.test(text))
+
+  if (!weatherNotice) return []
+  // Without a fresh date, do not revive last-season weather posts.
+  if (publishedAt && !isFreshPublishedAt(publishedAt, 21)) return []
+  if (!publishedAt) return []
+
+  return [
+    importantItem({
+      id: 'snezhny-hours-notice',
+      resortId: 'snezhny',
+      title: 'Снежный: изменение режима склонов',
+      body: 'На сайте курорта есть сообщение об особом режиме работы склонов (погода). Перед выездом уточните актуальность.',
+      severity: 'warn',
+      sourceUrl,
+      publishedAt,
+    }),
+  ]
+}
+
+/**
+ * @param {string} text
+ */
+function dropParkSeasonOpenMatch(text) {
+  const t = cleanText(text)
+  if (!t) return false
+  return (
+    /сезон\s+20\d{2}\s*\/\s*20\d{2}\s+открыт/i.test(t) ||
+    /горнолыжн(?:ый|ого|ому)?\s+сезон\s+открыт/i.test(t) ||
+    /сезон\s+открыт/i.test(t) ||
+    /сноупарк.{0,40}открыт/i.test(t) ||
+    /открытие\s+сезон/i.test(t)
+  )
+}
+
+/**
+ * @param {string} text
+ */
+function dropParkOffSeasonMatch(text) {
+  const t = cleanText(text)
+  if (!t) return false
+  return /сезон\s+[\d/]+\s+закончен/i.test(t) || /сезон\s+закрыт/i.test(t)
+}
+
+/**
+ * Drop Park: official TG channel about / page — off-season until opening copy appears.
+ *
+ * Fail-soft: without a successful TG fetch, do not treat an empty match as
+ * authoritative clear of `drop-off-season` (signal lives in TG about). Page-only
+ * open/off-season text may still clear/upsert.
+ *
+ * @param {string | { pageHtml?: string, tgHtml?: string }} htmlOrPages
+ * @param {string} sourceUrl
+ * @param {{ pageUrl?: string, tgUrl?: string, lastModified?: string | null, tgFetched?: boolean, pageFetched?: boolean }} [opts]
+ * @returns {{ items: object[], ok: boolean }}
+ */
+export function detectDropParkImportant(htmlOrPages, sourceUrl, opts = {}) {
+  const pages =
+    typeof htmlOrPages === 'string'
+      ? { pageHtml: htmlOrPages, tgHtml: '' }
+      : { pageHtml: htmlOrPages?.pageHtml || '', tgHtml: htmlOrPages?.tgHtml || '' }
+  const pageFetched = opts.pageFetched ?? Boolean(pages.pageHtml)
+  const tgFetched = opts.tgFetched ?? Boolean(pages.tgHtml)
+  const pageText = cleanText(loadHtml(pages.pageHtml || '<body></body>')('body').text())
+  const tgText = cleanText(loadHtml(pages.tgHtml || '<body></body>')('body').text())
+  const combined = [pageText, tgText].filter(Boolean).join('\n')
+
+  if (dropParkSeasonOpenMatch(combined)) {
+    return { ok: true, items: [] }
+  }
+
+  if (dropParkOffSeasonMatch(tgText) || dropParkOffSeasonMatch(pageText)) {
+    const publishedAt =
+      extractPublishedAtFromHtml(pages.tgHtml) ||
+      extractPublishedAtFromHtml(pages.pageHtml) ||
+      httpDateToIso(opts.lastModified) ||
+      null
+    return {
+      ok: true,
+      items: [
+        importantItem({
+          id: 'drop-off-season',
+          resortId: 'drop-park',
+          title: 'Drop Park: межсезонье',
+          body: 'В официальном канале парка указано, что прошлый снежный сезон закончен. Актуальный режим и открытие уточняйте на сайте и в сообществе парка.',
+          severity: 'info',
+          sourceUrl: opts.tgUrl || sourceUrl,
+          ...(publishedAt ? { publishedAt } : {}),
+        }),
+      ],
+    }
+  }
+
+  // No open/off-season signal. Clearing managed ids requires an authoritative TG read
+  // (or both sources unavailable is also non-authoritative → keep previous).
+  if (!tgFetched || (!pageFetched && !tgFetched)) {
+    return { ok: false, items: [] }
+  }
+
+  return { ok: true, items: [] }
+}
+
+/**
+ * Пухтолова гора: fresh «открытие сезона» from news listing.
+ * @param {string} newsHtml
+ * @param {string} sourceUrl
+ * @param {{ lastModified?: string | null }} [opts]
+ */
+export function detectPuhtolovaImportant(newsHtml, sourceUrl, opts = {}) {
+  const text = cleanText(loadHtml(newsHtml)('body').text())
+  const items = parseDatedNewsItems(text)
+  const open = items.find(
+    (it) =>
+      isFreshPublishedAt(it.publishedAt) &&
+      (/открытие\s+сезон/i.test(it.title) ||
+        /открытие\s+центрального\s+склон/i.test(it.title) ||
+        /склон.{0,20}открыт/i.test(it.title)),
+  )
+  if (!open) return []
+  return [
+    importantItem({
+      id: 'puhtolova-season-open',
+      resortId: 'puhtolova-gora',
+      title: 'Пухтолова гора: открытие сезона',
+      body: 'В новостях курорта есть сообщение об открытии склонов. Перед выездом сверьте часы и тарифы на сайте.',
+      severity: 'info',
+      sourceUrl,
+      publishedAt: open.publishedAt,
+    }),
+  ]
+}
+
+/**
+ * Lazurnye: home banner still primary; news may announce opening (clears closed).
+ * @param {string | { homeHtml?: string, newsHtml?: string }} htmlOrPages
+ * @param {string} sourceUrl
+ * @param {{ lastModified?: string | null, homeUrl?: string, newsUrl?: string }} [opts]
+ */
+export function detectLazurnyeImportantFromPages(htmlOrPages, sourceUrl, opts = {}) {
+  const pages =
+    typeof htmlOrPages === 'string'
+      ? { homeHtml: htmlOrPages, newsHtml: '' }
+      : { homeHtml: htmlOrPages?.homeHtml || '', newsHtml: htmlOrPages?.newsHtml || '' }
+
+  const newsText = cleanText(loadHtml(pages.newsHtml || '<body></body>')('body').text())
+  const newsItems = parseDatedNewsItems(newsText)
+  const open = newsItems.find(
+    (it) =>
+      isFreshPublishedAt(it.publishedAt) &&
+      (/открывает\s+сезон/i.test(it.title) ||
+        /открытие.{0,40}сезон/i.test(it.title) ||
+        /сезон\s+открыт/i.test(it.title)),
+  )
+  if (open) {
+    return [
+      importantItem({
+        id: 'lazurnye-season-open',
+        resortId: 'lazurnye-ozera',
+        title: 'Лазурные озёра: открытие сезона',
+        body: 'В новостях курорта есть сообщение об открытии сезона. Перед выездом сверьте режим на сайте.',
+        severity: 'info',
+        sourceUrl: opts.newsUrl || sourceUrl,
+        publishedAt: open.publishedAt,
+      }),
+    ]
+  }
+
+  return detectLazurnyeImportant(pages.homeHtml || '', opts.homeUrl || sourceUrl, opts)
+}
+
+/**
  * Fail-soft merge:
  * - successful resort checks clear that resort's managed ids, then upsert new items
  * - failed checks leave previous managed ids untouched
@@ -312,10 +645,11 @@ export function mergeImportantFailSoft(prev, results, opts = {}) {
 /**
  * Daily full scrape helper: treat every target that returned (even with empty important)
  * as a successful clear for its managed ids when the resort scrape did not hard-fail.
+ * `importantInconclusive: true` keeps previous managed ids (e.g. Drop Park TG down).
  *
  * @param {object[]} prev
  * @param {object[]} importantAdds
- * @param {{ id: string, error?: string | null, prices?: string | null, hours?: string | null }[]} scrapeResults
+ * @param {{ id: string, error?: string | null, prices?: string | null, hours?: string | null, importantInconclusive?: boolean }[]} scrapeResults
  */
 export function mergeImportantFromDailyScrape(prev, importantAdds, scrapeResults) {
   const results = []
@@ -332,7 +666,7 @@ export function mergeImportantFromDailyScrape(prev, importantAdds, scrapeResults
     if (!MANAGED_IMPORTANT_IDS[r.id]) continue
     results.push({
       resortId: r.id,
-      ok: !hardFail,
+      ok: !hardFail && !r.importantInconclusive,
       items: addsByResort.get(r.id) || [],
       error: r.error || undefined,
     })

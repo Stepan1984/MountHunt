@@ -14,7 +14,8 @@ import {
 } from '../lib/parse.mjs'
 
 const PRICE_URL = 'https://igora.ru/price/'
-const HOURS_URL = 'https://igora.ru/working-hours/'
+/** RU /working-hours/ returns 404; EN mirror has the slope schedule table. */
+const HOURS_URL = 'https://igora.ru/en/working-hours/'
 const CAM_URL = 'https://igora.ru/cam/'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
@@ -788,6 +789,34 @@ export function parseIgoraPrices(html) {
 }
 
 /**
+ * EN working-hours page uses Mon/Tue… — visitor copy must stay Russian.
+ * @param {string} raw
+ */
+export function localizeIgoraDayLabel(raw) {
+  let s = cleanText(raw)
+  if (!s) return s
+  const map = [
+    [/monday/gi, 'пн'],
+    [/tuesday/gi, 'вт'],
+    [/wednesday/gi, 'ср'],
+    [/thursday/gi, 'чт'],
+    [/friday/gi, 'пт'],
+    [/saturday/gi, 'сб'],
+    [/sunday/gi, 'вс'],
+    [/\bmon\b/gi, 'пн'],
+    [/\btue\b/gi, 'вт'],
+    [/\bwed\b/gi, 'ср'],
+    [/\bthu\b/gi, 'чт'],
+    [/\bfri\b/gi, 'пт'],
+    [/\bsat\b/gi, 'сб'],
+    [/\bsun\b/gi, 'вс'],
+  ]
+  for (const [re, ru] of map) s = s.replace(re, ru)
+  s = s.replace(/\s*[–\-—]\s*/g, '–')
+  return s
+}
+
+/**
  * @param {string} html
  */
 export function parseIgoraHours(html) {
@@ -806,13 +835,27 @@ export function parseIgoraHours(html) {
   const generic = [...text.matchAll(dayRe)]
 
   if (generic.length) {
-    const seen = new Set()
+    const seenExact = new Set()
+    const seenDay = new Set()
     for (const m of generic) {
-      const days = cleanText(m[1])
-      const key = `${days}|${m[2]}|${m[3]}`
-      if (seen.has(key)) continue
-      seen.add(key)
+      const days = localizeIgoraDayLabel(m[1])
+      const exact = `${days}|${m[2]}|${m[3]}`
+      if (seenExact.has(exact)) continue
+      seenExact.add(exact)
+      // Prefer the first schedule block (usually slopes) over later
+      // instructor/rental duplicates with the same day label.
+      if (seenDay.has(days)) continue
+      seenDay.add(days)
       periods.push({ days, open: m[2], close: m[3] })
+      // Classic slopes block: weekday + sat + sun — stop before other venues.
+      if (
+        periods.length >= 3 &&
+        /пн/i.test(periods[0].days) &&
+        /сб/i.test(periods[1].days) &&
+        /вс/i.test(periods[2].days)
+      ) {
+        break
+      }
       if (periods.length >= 6) break
     }
     summary = periods.map((p) => `${p.days}: ${p.open}–${p.close}`).join('; ')

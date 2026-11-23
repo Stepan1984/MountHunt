@@ -1,4 +1,5 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
+import { detectSnezhnyImportant } from '../lib/important.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -12,6 +13,10 @@ import {
 const PRICES_URL = 'https://snegny.ru/%d1%81%d0%ba%d0%b8-%d0%bf%d0%b0%d1%81%d1%81%d1%8b/'
 const TWOCAM_URL = 'https://snegny.ru/wp-content/themes/snegny/twocam.php'
 const HOME_URL = 'https://snegny.ru/'
+export const SNEZHNY_NEWS_URL = 'https://snegny.ru/category/news/'
+export const SNEZHNY_HOURS_URL = 'https://snegny.ru/режим-работы/'
+const NEWS_URL = SNEZHNY_NEWS_URL
+const HOURS_NOTICE_URL = SNEZHNY_HOURS_URL
 
 const DAY_COLUMNS = [
   'Будни, льготный',
@@ -90,6 +95,20 @@ export async function scrapeSnezhny() {
   try {
     const pricesHtml = await fetchUrl(PRICES_URL)
     await sleep()
+    let newsHtml = ''
+    try {
+      newsHtml = await fetchUrl(NEWS_URL)
+    } catch {
+      newsHtml = ''
+    }
+    await sleep()
+    let hoursNoticeHtml = ''
+    try {
+      hoursNoticeHtml = await fetchUrl(HOURS_NOTICE_URL)
+    } catch {
+      hoursNoticeHtml = ''
+    }
+    await sleep()
     let camHtml = ''
     try {
       camHtml = await fetchUrl(TWOCAM_URL)
@@ -131,6 +150,22 @@ export async function scrapeSnezhny() {
     }
     const uniqueEmbeds = [...new Set(embeds)].filter((u) => /exdesign|webcam/i.test(u))
 
+    const importantFromNews = newsHtml ? detectSnezhnyImportant(newsHtml, NEWS_URL) : []
+    const importantFromHours = hoursNoticeHtml
+      ? detectSnezhnyImportant(hoursNoticeHtml, HOURS_NOTICE_URL)
+      : []
+    const important = importantFromNews.length ? importantFromNews : importantFromHours
+
+    let hoursSummary = 'Режим склонов уточняйте на сайте курорта…'
+    let hoursSource = HOME_URL
+    let hoursStatus = 'partial'
+    if (important.length) {
+      hoursSummary =
+        'Есть актуальное сообщение о режиме склонов — см. «Важное» и новости на сайте курорта'
+      hoursSource = important[0].sourceUrl || NEWS_URL
+      hoursStatus = 'partial'
+    }
+
     return {
       resortId,
       prices: priceSnapshot({
@@ -144,14 +179,15 @@ export async function scrapeSnezhny() {
       }),
       hours: hoursSnapshot({
         resortId,
-        sourceUrl: HOME_URL,
-        summary: 'Режим склонов уточняйте на сайте курорта…',
+        sourceUrl: hoursSource,
+        summary: hoursSummary,
         periods: [],
-        status: 'partial',
+        status: hoursStatus,
       }),
       webcamUrl: HOME_URL,
       // exdesign iframes render empty black boxes on MountHunt — link-only.
       cameraEmbeds: uniqueEmbeds.filter(() => false),
+      important,
     }
   } catch (err) {
     return {

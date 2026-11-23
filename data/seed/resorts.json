@@ -29,6 +29,11 @@
       "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/stream6/playlist.m3u8",
       "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/58_b_06_prud/playlist.m3u8",
       "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/ptch_01/playlist.m3u8"
+    ],
+    "community_links": [
+      "https://t.me/OhtaPark",
+      "https://vk.com/ohtapark",
+      "https://www.instagram.com/ohtapark/"
     ]
   },
   {
@@ -42,16 +47,22 @@
     "webcam_url": "https://igora.ru/cam/",
     "prices_format": "html_js",
     "status": "active",
-    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м.",
+    "notes": "Всесезонный курорт; ~9–10 трасс до ~1,2 км, перепад до ~118 м. RU /working-hours/ → 404; часы — EN-зеркало / Playwright.",
     "sources": [
       "https://igora.ru/",
       "https://igora.ru/cam/",
       "https://igora.ru/price/",
       "https://igora.ru/working-hours/",
-      "https://igora.ru/slopes/"
+      "https://igora.ru/slopes/",
+      "https://igora.ru/en/working-hours/",
+      "https://igora.ru/news/"
     ],
     "prices_url": "https://igora.ru/price/",
-    "webcam_embeds": []
+    "webcam_embeds": [],
+    "community_links": [
+      "https://vk.com/igora_kurort",
+      "https://t.me/igora_kurort"
+    ]
   },
   {
     "id": "tuutari-park",
@@ -61,18 +72,24 @@
     "lat": 59.6938,
     "lon": 30.1783,
     "website": "https://www.2-park.ru/",
-    "webcam_url": "https://tuutari.ru/webcam.html",
+    "webcam_url": "https://www.2-park.ru/about/webcam/",
     "prices_format": "html",
-    "prices_url": "http://www.2-park.ru/prices/lift/",
+    "prices_url": "https://www.2-park.ru/prices/lift/",
     "status": "active",
     "notes": "5–6 трасс 400–600 м; есть зеркальный партнёрский сайт.",
     "sources": [
       "https://www.2-park.ru/",
-      "https://tuutari.ru/"
+      "https://tuutari.ru/",
+      "https://www.2-park.ru/prices/lift/",
+      "https://www.2-park.ru/about/news/",
+      "https://www.2-park.ru/about/webcam/"
     ],
     "webcam_embeds": [
       "https://rtsp.me/embed/KDYy3ZSY/",
       "https://rtsp.me/embed/N6QEftRr/"
+    ],
+    "community_links": [
+      "https://vk.com/tyytari_activity"
     ]
   },
   {
@@ -93,7 +110,8 @@
       "https://krasnoeozero.ru/cam/",
       "https://krasnoeozero.ru/grafik/",
       "https://krasnoeozero.ru/winter/winter-activities/naduvnoe-prizemlenie/",
-      "https://taplink.cc/progression_spot"
+      "https://taplink.cc/progression_spot",
+      "https://krasnoeozero.ru/events/news/"
     ],
     "webcam_embeds": [],
     "features": [
@@ -147,6 +165,10 @@
         "phone": "+7 (916) 232-22-16",
         "note": "Перед катанием нужна проверка инвентаря у сотрудника (справа от основных касс, ближе к 5-й трассе) и соглашение о правилах. Острые или повреждённые канты могут порвать подушку. Цены — сезон 2025–2026; ски-пасс отдельно."
       }
+    ],
+    "community_links": [
+      "https://vk.com/redlakeclub",
+      "https://t.me/redlakeclub"
     ]
   },
   {
@@ -164,9 +186,16 @@
     "notes": "~12 трасс до 1100 м; 5 бугелей; учебный склон; сноупарк.",
     "sources": [
       "https://zoldol.ru/",
-      "https://zoldol.ru/webcamera"
+      "https://zoldol.ru/webcamera",
+      "https://zoldol.ru/price-winter",
+      "https://zoldol.ru/vremya-raboty"
     ],
-    "webcam_embeds": []
+    "webcam_embeds": [],
+    "community_links": [
+      "https://vk.com/zoldol_official",
+      "https://t.me/zoldoll",
+      "https://www.instagram.com/zoldol_official/"
+    ]
   },
   {
     "id": "snezhny",
@@ -183,10 +212,16 @@
     "sources": [
       "https://snegny.ru/",
       "https://snegny.ru/ски-пассы/",
-      "https://snegny.ru/wp-content/themes/snegny/twocam.php"
+      "https://snegny.ru/wp-content/themes/snegny/twocam.php",
+      "https://snegny.ru/category/news/",
+      "https://snegny.ru/режим-работы/"
     ],
     "prices_url": "https://snegny.ru/ски-пассы/",
-    "webcam_embeds": []
+    "webcam_embeds": [],
+    "community_links": [
+      "https://vk.com/kurort_snegny",
+      "https://t.me/kurort_snegny"
+    ]
   },
   {
     "id": "severny-sklon",
@@ -205,7 +240,12 @@
     "sources": [
       "https://severnysklon.ru/"
     ],
-    "prices_url": null
+    "prices_url": null,
+    "community_links": [
+      "https://vk.com/ssklon",
+      "https://t.me/sev_sklon",
+      "https://max.ru/join/vvFZpjgzC9kPllpcOfsQiEZzEEz00AmbiHT9OJoKQTw"
+    ]
   },
   {
     "id": "puhtolova-gora",
@@ -222,10 +262,15 @@
     "sources": [
       "https://puhgora.ru/",
       "https://puhgora.ru/web-camera",
-      "https://puhgora.ru/uslugi/ceny-na-podyomniki"
+      "https://puhgora.ru/uslugi/ceny-na-podyomniki",
+      "https://puhgora.ru/o-kurorte/novosti-i-akcii",
+      "https://puhgora.ru/o-kurorte/chasy-raboty"
     ],
     "prices_url": "https://puhgora.ru/uslugi/ceny-na-podyomniki",
-    "webcam_embeds": []
+    "webcam_embeds": [],
+    "community_links": [
+      "https://vk.com/club313388"
+    ]
   },
   {
     "id": "yukki",
@@ -244,7 +289,8 @@
       "https://vk.com/skyukki"
     ],
     "sources": [
-      "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/"
+      "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/",
+      "https://stc.lenobl.ru/ru/news/news/"
     ]
   },
   {
@@ -262,10 +308,15 @@
     "sources": [
       "https://lazoorsnow.ru/",
       "https://lazoorsnow.ru/contacts",
-      "https://lazoorsnow.ru/ceny"
+      "https://lazoorsnow.ru/ceny",
+      "https://lazoorsnow.ru/news"
     ],
     "prices_url": "https://lazoorsnow.ru/ceny",
-    "webcam_embeds": []
+    "webcam_embeds": [],
+    "community_links": [
+      "https://vk.com/lazurnyi_spb",
+      "https://t.me/lazoorsnow"
+    ]
   },
   {
     "id": "drop-park",
@@ -285,7 +336,8 @@
       "https://drop-park.ru/contacty",
       "https://mykorbi.ru/",
       "https://drop-park.ru/snow-park",
-      "https://t.me/dropsnowpark"
+      "https://t.me/dropsnowpark",
+      "https://t.me/s/dropsnowpark"
     ],
     "webcam_embeds": [],
     "features": [

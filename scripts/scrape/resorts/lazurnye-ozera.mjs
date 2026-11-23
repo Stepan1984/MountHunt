@@ -1,5 +1,5 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
-import { detectLazurnyeImportant } from '../lib/important.mjs'
+import { detectLazurnyeImportantFromPages } from '../lib/important.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -12,7 +12,9 @@ import {
 
 const PRICES_URL = 'https://lazoorsnow.ru/ceny'
 export const LAZURNYE_HOME_URL = 'https://lazoorsnow.ru/'
+export const LAZURNYE_NEWS_URL = 'https://lazoorsnow.ru/news'
 const HOME_URL = LAZURNYE_HOME_URL
+const NEWS_URL = LAZURNYE_NEWS_URL
 
 /**
  * @returns {Promise<object>}
@@ -23,6 +25,13 @@ export async function scrapeLazurnyeOzera() {
     const pricesHtml = await fetchUrl(PRICES_URL)
     await sleep()
     const homeHtml = await fetchUrl(HOME_URL)
+    await sleep()
+    let newsHtml = ''
+    try {
+      newsHtml = await fetchUrl(NEWS_URL)
+    } catch {
+      newsHtml = ''
+    }
 
     const $p = loadHtml(pricesHtml)
     /** @type {{ category: string, columns: string[], rows: object[] }[]} */
@@ -65,8 +74,12 @@ export async function scrapeLazurnyeOzera() {
 
     const $h = loadHtml(homeHtml)
     const text = cleanText($h('body').text())
-    const important = detectLazurnyeImportant(homeHtml, HOME_URL)
-    const seasonClosed = important.length > 0
+    const important = detectLazurnyeImportantFromPages(
+      { homeHtml, newsHtml },
+      HOME_URL,
+      { homeUrl: HOME_URL, newsUrl: NEWS_URL },
+    )
+    const seasonClosed = important.some((i) => i.id === 'lazurnye-season-closed')
 
     let summary = 'Режим уточняйте на сайте'
     const periods = []
