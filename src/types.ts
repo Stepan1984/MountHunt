@@ -60,7 +60,7 @@ export type Resort = {
   sources: string[]
   /**
    * Exactly one optional detail-page hero photo when a verified licensed
-   * image of this place exists; omit rather than use a wrong location.
+   * image of this place shows snowy operating slopes; omit otherwise.
    */
   photo?: ResortPhoto
   /**
