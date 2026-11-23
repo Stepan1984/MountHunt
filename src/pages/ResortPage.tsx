@@ -15,6 +15,7 @@ import {
   publicPriceNote,
   publicResortNotes,
   resortAddressQuery,
+  resortPhotoUrl,
   scrapeStatusLabel,
   slopesClosedHint,
   statusLabel,
@@ -28,9 +29,10 @@ const PRICE_PREVIEW = 8
 
 /**
  * Shared resort-detail section order:
- * header → notes → site → webcam → important → [hours → prices if active] →
+ * header → [photo] → notes → site → webcam → important → [hours → prices if active] →
  * features → contacts → location → links
  * Hours / prices sections are omitted for дикие / неясные / закрытые (status !== active).
+ * Photo: at most one licensed hero; omitted when no verified image of this place.
  * Address lives only under «Локация» (Yandex link); phone/email only under «Контакты».
  * Features (щётки, подушка…) are in-resort sections — never separate catalog entries.
  */
@@ -127,6 +129,26 @@ export function ResortPage({ data }: { data: SiteData }) {
           <span className={`badge badge--${resort.status}`}>{statusLabel(resort.status)}</span>
         )}
       </header>
+
+      {resort.photo && (
+        <figure className="resort-detail__photo">
+          <img
+            src={resortPhotoUrl(resort.photo.file)}
+            alt={resort.photo.alt}
+            width={1500}
+            height={1000}
+            decoding="async"
+            fetchPriority="high"
+          />
+          <figcaption className="resort-detail__photo-credit">
+            Фото:{' '}
+            <ExternalLink href={resort.photo.sourceUrl}>
+              {resort.photo.credit}
+            </ExternalLink>
+            {` · ${resort.photo.license}`}
+          </figcaption>
+        </figure>
+      )}
 
       {visitorNotes && (
         <p className="resort-detail__notes">
