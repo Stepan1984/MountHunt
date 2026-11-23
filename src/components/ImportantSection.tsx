@@ -38,6 +38,8 @@ export function ImportantSection({ items, resorts, meta, variant = 'full' }: Pro
         <ul className="important__list">
           {visible.map((item) => {
             const resortName = item.resortId ? nameById.get(item.resortId) : undefined
+            const titleStartsWithResort =
+              Boolean(resortName && item.resortId && item.title.startsWith(resortName))
             return (
               <li key={item.id} className="important__item">
                 {item.publishedAt ? (
@@ -46,17 +48,15 @@ export function ImportantSection({ items, resorts, meta, variant = 'full' }: Pro
                   </div>
                 ) : null}
                 <h3>
-                  {item.resortId ? (
-                    <Link to={`/resort/${item.resortId}`}>{item.title}</Link>
+                  {titleStartsWithResort && resortName && item.resortId ? (
+                    <>
+                      <Link to={`/resort/${item.resortId}`}>{resortName}</Link>
+                      {item.title.slice(resortName.length)}
+                    </>
                   ) : (
                     item.title
                   )}
                 </h3>
-                {resortName && item.resortId && (
-                  <p className="important__resort">
-                    <Link to={`/resort/${item.resortId}`}>{resortName}</Link>
-                  </p>
-                )}
                 {item.body && (
                   <p>
                     <LinkedText text={item.body} />

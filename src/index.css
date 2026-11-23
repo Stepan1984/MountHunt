@@ -484,19 +484,6 @@ main {
   padding: 0.2rem 0;
 }
 
-.important__resort {
-  font-size: 0.9rem;
-  margin-bottom: 0.35rem;
-}
-
-.important__resort a {
-  color: var(--ice);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.25rem;
-}
-
 .important__item h3 {
   font-size: 1.1rem;
   line-height: 1.2;
