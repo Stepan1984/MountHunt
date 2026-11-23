@@ -148,25 +148,44 @@ const CHECKERS = [
     async run() {
       let pageBody = ''
       let pageModified = null
+      let pageFetched = false
       try {
         const page = await fetchUrlResult(DROP_PAGE_URL)
         pageBody = page.body
         pageModified = page.lastModified
+        pageFetched = true
       } catch {
         pageBody = ''
       }
       let tgBody = ''
+      let tgFetched = false
       try {
         await sleep()
         tgBody = (await fetchUrlResult(DROP_TG_URL)).body
+        tgFetched = true
       } catch {
         tgBody = ''
       }
-      return detectDropParkImportant(
+      const { items, ok } = detectDropParkImportant(
         { pageHtml: pageBody, tgHtml: tgBody },
         DROP_TG_URL,
-        { pageUrl: DROP_PAGE_URL, tgUrl: DROP_TG_URL, lastModified: pageModified },
+        {
+          pageUrl: DROP_PAGE_URL,
+          tgUrl: DROP_TG_URL,
+          lastModified: pageModified,
+          pageFetched,
+          tgFetched,
+        },
       )
+      // Fail-soft: empty match without TG must not clear drop-off-season.
+      if (!ok) {
+        throw new Error(
+          !pageFetched && !tgFetched
+            ? 'Drop Park: page and TG unavailable'
+            : 'Drop Park: TG unavailable; keeping previous Important',
+        )
+      }
+      return items
     },
   },
   {

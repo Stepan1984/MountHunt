@@ -468,11 +468,14 @@ export async function scrapeDropPark() {
   try {
     const html = await fetchUrl(PAGE_URL)
     let tgHtml = ''
+    let tgFetched = false
     try {
       await sleep()
       tgHtml = await fetchUrl(TG_URL)
+      tgFetched = true
     } catch {
       tgHtml = ''
+      tgFetched = false
     }
     const parsed = parseDropParkPriceList(html)
     const $ = loadHtml(html)
@@ -495,10 +498,10 @@ export async function scrapeDropPark() {
 
     const hasGroups = parsed.groups.length > 0
     const hasItems = parsed.items.length > 0
-    const important = detectDropParkImportant(
+    const dropImportant = detectDropParkImportant(
       { pageHtml: html, tgHtml },
       TG_URL,
-      { pageUrl: PAGE_URL, tgUrl: TG_URL },
+      { pageUrl: PAGE_URL, tgUrl: TG_URL, pageFetched: true, tgFetched },
     )
 
     return {
@@ -523,7 +526,9 @@ export async function scrapeDropPark() {
       webcamUrl: PAGE_URL,
       // rtsp.ru cams deleted / stream failed — avoid empty player boxes.
       cameraEmbeds: uniqueEmbeds.filter(() => false),
-      important,
+      important: dropImportant.ok ? dropImportant.items : [],
+      // When TG is down and the page has no open/off-season signal, keep previous card.
+      importantInconclusive: !dropImportant.ok,
     }
   } catch (err) {
     return {

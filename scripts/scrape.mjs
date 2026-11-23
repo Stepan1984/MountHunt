@@ -354,7 +354,9 @@ async function main() {
         return next
       })
     }
-    if (result.important?.length) importantAdds.push(...result.important)
+    if (result.important?.length && !result.importantInconclusive) {
+      importantAdds.push(...result.important)
+    }
 
     results.push({
       id,
@@ -363,6 +365,7 @@ async function main() {
       hours: hoursStatus || null,
       itemCount: result.prices?.items?.length ?? 0,
       summary: result.hours?.summary || null,
+      importantInconclusive: Boolean(result.importantInconclusive),
     })
 
     if (i < targets.length - 1) await sleep()

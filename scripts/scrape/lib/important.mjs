@@ -456,51 +456,85 @@ export function detectSnezhnyImportant(html, sourceUrl, opts = {}) {
 }
 
 /**
+ * @param {string} text
+ */
+function dropParkSeasonOpenMatch(text) {
+  const t = cleanText(text)
+  if (!t) return false
+  return (
+    /сезон\s+20\d{2}\s*\/\s*20\d{2}\s+открыт/i.test(t) ||
+    /горнолыжн(?:ый|ого|ому)?\s+сезон\s+открыт/i.test(t) ||
+    /сезон\s+открыт/i.test(t) ||
+    /сноупарк.{0,40}открыт/i.test(t) ||
+    /открытие\s+сезон/i.test(t)
+  )
+}
+
+/**
+ * @param {string} text
+ */
+function dropParkOffSeasonMatch(text) {
+  const t = cleanText(text)
+  if (!t) return false
+  return /сезон\s+[\d/]+\s+закончен/i.test(t) || /сезон\s+закрыт/i.test(t)
+}
+
+/**
  * Drop Park: official TG channel about / page — off-season until opening copy appears.
+ *
+ * Fail-soft: without a successful TG fetch, do not treat an empty match as
+ * authoritative clear of `drop-off-season` (signal lives in TG about). Page-only
+ * open/off-season text may still clear/upsert.
+ *
  * @param {string | { pageHtml?: string, tgHtml?: string }} htmlOrPages
  * @param {string} sourceUrl
- * @param {{ pageUrl?: string, tgUrl?: string, lastModified?: string | null }} [opts]
+ * @param {{ pageUrl?: string, tgUrl?: string, lastModified?: string | null, tgFetched?: boolean, pageFetched?: boolean }} [opts]
+ * @returns {{ items: object[], ok: boolean }}
  */
 export function detectDropParkImportant(htmlOrPages, sourceUrl, opts = {}) {
   const pages =
     typeof htmlOrPages === 'string'
       ? { pageHtml: htmlOrPages, tgHtml: '' }
       : { pageHtml: htmlOrPages?.pageHtml || '', tgHtml: htmlOrPages?.tgHtml || '' }
+  const pageFetched = opts.pageFetched ?? Boolean(pages.pageHtml)
+  const tgFetched = opts.tgFetched ?? Boolean(pages.tgHtml)
   const pageText = cleanText(loadHtml(pages.pageHtml || '<body></body>')('body').text())
   const tgText = cleanText(loadHtml(pages.tgHtml || '<body></body>')('body').text())
   const combined = [pageText, tgText].filter(Boolean).join('\n')
 
-  const seasonOpen =
-    /сезон\s+20\d{2}\s*\/\s*20\d{2}\s+открыт/i.test(combined) ||
-    /горнолыжн(?:ый|ого|ому)?\s+сезон\s+открыт/i.test(combined) ||
-    /сезон\s+открыт/i.test(combined) ||
-    /сноупарк.{0,40}открыт/i.test(combined) ||
-    /открытие\s+сезон/i.test(combined)
+  if (dropParkSeasonOpenMatch(combined)) {
+    return { ok: true, items: [] }
+  }
 
-  if (seasonOpen) return []
+  if (dropParkOffSeasonMatch(tgText) || dropParkOffSeasonMatch(pageText)) {
+    const publishedAt =
+      extractPublishedAtFromHtml(pages.tgHtml) ||
+      extractPublishedAtFromHtml(pages.pageHtml) ||
+      httpDateToIso(opts.lastModified) ||
+      null
+    return {
+      ok: true,
+      items: [
+        importantItem({
+          id: 'drop-off-season',
+          resortId: 'drop-park',
+          title: 'Drop Park: межсезонье',
+          body: 'В официальном канале парка указано, что прошлый снежный сезон закончен. Актуальный режим и открытие уточняйте на сайте и в сообществе парка.',
+          severity: 'info',
+          sourceUrl: opts.tgUrl || sourceUrl,
+          ...(publishedAt ? { publishedAt } : {}),
+        }),
+      ],
+    }
+  }
 
-  const offSeason =
-    /сезон\s+[\d/]+\s+закончен/i.test(tgText) ||
-    /сезон\s+[\d/]+\s+закончен/i.test(pageText) ||
-    /сезон\s+закрыт/i.test(pageText)
+  // No open/off-season signal. Clearing managed ids requires an authoritative TG read
+  // (or both sources unavailable is also non-authoritative → keep previous).
+  if (!tgFetched || (!pageFetched && !tgFetched)) {
+    return { ok: false, items: [] }
+  }
 
-  if (!offSeason) return []
-  const publishedAt =
-    extractPublishedAtFromHtml(pages.tgHtml) ||
-    extractPublishedAtFromHtml(pages.pageHtml) ||
-    httpDateToIso(opts.lastModified) ||
-    null
-  return [
-    importantItem({
-      id: 'drop-off-season',
-      resortId: 'drop-park',
-      title: 'Drop Park: межсезонье',
-      body: 'В официальном канале парка указано, что прошлый снежный сезон закончен. Актуальный режим и открытие уточняйте на сайте и в сообществе парка.',
-      severity: 'info',
-      sourceUrl: opts.tgUrl || sourceUrl,
-      ...(publishedAt ? { publishedAt } : {}),
-    }),
-  ]
+  return { ok: true, items: [] }
 }
 
 /**
@@ -611,10 +645,11 @@ export function mergeImportantFailSoft(prev, results, opts = {}) {
 /**
  * Daily full scrape helper: treat every target that returned (even with empty important)
  * as a successful clear for its managed ids when the resort scrape did not hard-fail.
+ * `importantInconclusive: true` keeps previous managed ids (e.g. Drop Park TG down).
  *
  * @param {object[]} prev
  * @param {object[]} importantAdds
- * @param {{ id: string, error?: string | null, prices?: string | null, hours?: string | null }[]} scrapeResults
+ * @param {{ id: string, error?: string | null, prices?: string | null, hours?: string | null, importantInconclusive?: boolean }[]} scrapeResults
  */
 export function mergeImportantFromDailyScrape(prev, importantAdds, scrapeResults) {
   const results = []
@@ -631,7 +666,7 @@ export function mergeImportantFromDailyScrape(prev, importantAdds, scrapeResults
     if (!MANAGED_IMPORTANT_IDS[r.id]) continue
     results.push({
       resortId: r.id,
-      ok: !hardFail,
+      ok: !hardFail && !r.importantInconclusive,
       items: addsByResort.get(r.id) || [],
       error: r.error || undefined,
     })

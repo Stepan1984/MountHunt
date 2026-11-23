@@ -10,7 +10,9 @@ import { fileURLToPath } from 'node:url'
 import { flattenSkipassGroups, mergeSnapshot, parsePrice } from '../lib/parse.mjs'
 import {
   clarifyInstructorLabel,
+  localizeIgoraDayLabel,
   mergeIgoraPriceTables,
+  parseIgoraHours,
   parseIgoraPrices,
   parseIgoraPriceTables,
   supplementIgoraSkiPassFromSnapshot,
@@ -50,6 +52,31 @@ describe('mergeSnapshot fail-soft', () => {
     const merged = mergeSnapshot(prev, next, 'severny-sklon', () => prev)
     assert.equal(merged.status, 'unavailable')
     assert.equal(merged.items.length, 0)
+  })
+})
+
+describe('parseIgoraHours RU day labels', () => {
+  it('localizes EN Mon/Sat/Sun labels', () => {
+    assert.equal(localizeIgoraDayLabel('Mon - Fri'), 'пн–пт')
+    assert.equal(localizeIgoraDayLabel('Sat'), 'сб')
+    assert.equal(localizeIgoraDayLabel('Sunday'), 'вс')
+  })
+
+  it('parseIgoraHours emits Russian day labels from EN HTML', () => {
+    const html = `<html><body>
+      <h2>Working hours</h2>
+      <p>Slopes Mon - Fri 11:00–22:00</p>
+      <p>Sat 10:00–23:00</p>
+      <p>Sun 10:00–21:00</p>
+    </body></html>`
+    const hours = parseIgoraHours(html)
+    assert.ok(hours.periods.length >= 1)
+    for (const p of hours.periods) {
+      assert.doesNotMatch(p.days, /Mon|Tue|Wed|Thu|Fri|Sat|Sun|day/i)
+      assert.match(p.days, /пн|вт|ср|чт|пт|сб|вс|склон|ежедневно/i)
+    }
+    assert.doesNotMatch(hours.summary, /Mon|Sat|Sun|Friday|Saturday/i)
+    assert.match(hours.summary, /пн|сб|вс/)
   })
 })
 
