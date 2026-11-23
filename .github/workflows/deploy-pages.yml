@@ -39,7 +39,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_BASE: /MountHunt/
+          # Custom domain mounthunt.ru → site root (not /MountHunt/)
+          VITE_BASE: /
 
       - name: SPA fallback for GitHub Pages
         run: cp dist/index.html dist/404.html
