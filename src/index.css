@@ -50,12 +50,13 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Sticky header offset for in-page hash targets (nav: Курорты/Карта/Важное). */
+/* Sticky header offset for in-page hash targets (nav: Курорты/Карта/…). */
 #explore,
 #map,
 #resorts,
 #important,
-#about-title {
+#about-title,
+#news-title {
   scroll-margin-top: 5.75rem;
 }
 
@@ -338,6 +339,55 @@ main {
 
 .important--strip .section__head {
   margin-bottom: 0.9rem;
+}
+
+.important__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem 1.25rem;
+  max-width: none;
+}
+
+.important__head-text {
+  max-width: 46rem;
+}
+
+.important__head-text h2 {
+  margin-bottom: 0.35rem;
+}
+
+.important__head-text p {
+  margin-bottom: 0;
+}
+
+.important__all-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.news-page {
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
+.news-page .crumb {
+  margin-bottom: 0.85rem;
+}
+
+.news-page__head {
+  max-width: 40rem;
+  margin-bottom: 1.5rem;
+}
+
+.news-page__head h1 {
+  font-size: clamp(1.75rem, 4vw, 2.35rem);
+  margin-bottom: 0.45rem;
 }
 
 .explore__layout {
@@ -1197,7 +1247,8 @@ main {
   #map,
   #resorts,
   #important,
-  #about-title {
+  #about-title,
+  #news-title {
     /* Taller sticky header with padded nav links. */
     scroll-margin-top: 8.75rem;
   }
@@ -1269,6 +1320,20 @@ main {
 
   .important--strip {
     padding-top: 1.35rem;
+  }
+
+  .important__head {
+    align-items: flex-start;
+    gap: 0.25rem 1rem;
+  }
+
+  .news-page {
+    padding-top: 1.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .news-page__head {
+    margin-bottom: 1.15rem;
   }
 
   .important__list,

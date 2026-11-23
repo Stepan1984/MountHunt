@@ -367,6 +367,21 @@ export function operationalImportant(items: ImportantItem[]): ImportantItem[] {
   return deduped
 }
 
+/**
+ * Full news feed for `/news`: all non-chrome Important items, newest first
+ * (publication date, else scrape stamp). No severity boost or warn dedupe.
+ */
+export function allImportantNews(items: ImportantItem[]): ImportantItem[] {
+  return [...items]
+    .filter((item) => !IMPORTANT_CHROME_IDS.has(item.id))
+    .sort((a, b) => {
+      const aTime = new Date(importantDateIso(a)).getTime()
+      const bTime = new Date(importantDateIso(b)).getTime()
+      if (aTime !== bTime) return bTime - aTime
+      return a.id.localeCompare(b.id)
+    })
+}
+
 export function slopesClosedHint(
   resortId: string,
   hours: HoursSnapshot | undefined,
