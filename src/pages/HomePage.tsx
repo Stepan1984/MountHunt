@@ -46,10 +46,6 @@ export function HomePage({ data }: { data: SiteData }) {
         >
           <div className="section__head">
             <h2 id="secondary-title">Дикие и закрытые склоны</h2>
-            <p>
-              Отдельная карта с серыми метками — только эти склоны (действующие остаются на карте
-              выше). Статус или доступность могут быть сомнительны — уточняйте перед выездом.
-            </p>
           </div>
           <div className="secondary-map" id="map-inactive">
             <ResortMap resorts={data.resorts} variant="inactive" embedded />
