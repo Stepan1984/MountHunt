@@ -351,11 +351,6 @@ main {
   }
 }
 
-.explore__list-title {
-  font-size: 1.05rem;
-  margin-bottom: 0.85rem;
-}
-
 .map-shell {
   border-radius: var(--radius);
   overflow: hidden;
