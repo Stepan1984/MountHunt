@@ -27,22 +27,19 @@ export function ResortCard({
 }: Props) {
   const inactive = resort.status !== 'active'
   const h = hoursFor(resort.id, hours)
-  const p = pricesFor(resort.id, prices)
-  const rawHours = h?.summary ? localizePublicText(h.summary) : null
-  // Never show raw URLs/paths on cards — strip them, keep the human summary.
-  // Дикие / неясные / закрытые: no live hours/prices — show «отсутствует», not placeholders.
-  const hoursText = inactive
-    ? 'отсутствует'
-    : rawHours
-      ? stripUrlsFromText(rawHours) || 'уточняйте на сайте'
-      : 'нет данных'
   const closed = slopesClosedHint(resort.id, h, important)
-  // When slopes are closed, don't advertise a live «от N ₽» next to the warn badge.
-  const priceHint = inactive
-    ? 'отсутствует'
-    : closed
-      ? 'сезон закрыт'
-      : priceHintFor(p)
+
+  // Active only: live hours / price hints. Дикие / неясные / закрытые — omit facts entirely.
+  let hoursText: string | null = null
+  let priceHint: string | null = null
+  if (!inactive) {
+    const p = pricesFor(resort.id, prices)
+    const rawHours = h?.summary ? localizePublicText(h.summary) : null
+    // Never show raw URLs/paths on cards — strip them, keep the human summary.
+    hoursText = rawHours ? stripUrlsFromText(rawHours) || 'уточняйте на сайте' : 'нет данных'
+    // When slopes are closed, don't advertise a live «от N ₽» next to the warn badge.
+    priceHint = closed ? 'сезон закрыт' : priceHintFor(p)
+  }
 
   return (
     <article className={`resort-card resort-card--${resort.status}${compact ? ' resort-card--compact' : ''}${closed ? ' resort-card--slopes-closed' : ''}`}>
@@ -62,16 +59,18 @@ export function ResortCard({
         </div>
       </div>
       <p className="resort-card__area">{resort.city_or_district || resort.area}</p>
-      <dl className="resort-card__facts">
-        <div>
-          <dt>Часы</dt>
-          <dd>{hoursText}</dd>
-        </div>
-        <div>
-          <dt>Цены</dt>
-          <dd>{priceHint}</dd>
-        </div>
-      </dl>
+      {!inactive && hoursText && priceHint ? (
+        <dl className="resort-card__facts">
+          <div>
+            <dt>Часы</dt>
+            <dd>{hoursText}</dd>
+          </div>
+          <div>
+            <dt>Цены</dt>
+            <dd>{priceHint}</dd>
+          </div>
+        </dl>
+      ) : null}
       {/* Single CTA: detail page owns site / cam / tariffs links. */}
       <div className="resort-card__links">
         <Link to={`/resort/${resort.id}`}>Подробнее</Link>
