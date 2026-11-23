@@ -71,10 +71,6 @@ export function ResortCard({
           </div>
         </dl>
       ) : null}
-      {/* Single CTA: detail page owns site / cam / tariffs links. */}
-      <div className="resort-card__links">
-        <Link to={`/resort/${resort.id}`}>Подробнее</Link>
-      </div>
     </article>
   )
 }
