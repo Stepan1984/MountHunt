@@ -27,9 +27,10 @@ import type { SiteData } from '../types'
 const PRICE_PREVIEW = 8
 
 /**
- * Shared resort-detail section order (all resorts):
- * header → notes → site → webcam → important → hours → prices → features →
- * contacts → location → links
+ * Shared resort-detail section order:
+ * header → notes → site → webcam → important → [hours → prices if active] →
+ * features → contacts → location → links
+ * Hours / prices sections are omitted for дикие / неясные / закрытые (status !== active).
  * Address lives only under «Локация» (Yandex link); phone/email only under «Контакты».
  * Features (щётки, подушка…) are in-resort sections — never separate catalog entries.
  */
@@ -59,8 +60,10 @@ export function ResortPage({ data }: { data: SiteData }) {
     )
   }
 
+  // Same inactive/secondary flag as catalog cards and gray map (PR #57).
+  const inactive = resort.status !== 'active'
   const hours = hoursFor(resort.id, data.hours)
-  const prices = pricesFor(resort.id, data.prices)
+  const prices = inactive ? undefined : pricesFor(resort.id, data.prices)
   const important = data.important.filter((i) => i.resortId === resort.id)
   const hasCoords = resort.lat != null && resort.lon != null
   // Dedicated tariff page only — do not fall back to homepage (already «Сайт курорта»).
@@ -68,17 +71,24 @@ export function ResortPage({ data }: { data: SiteData }) {
   const hoursSourceUrl = hours?.sourceUrl || undefined
   // Skip section source links when they duplicate the official homepage button.
   const hoursLink =
-    hoursSourceUrl && !sameExternalUrl(hoursSourceUrl, resort.website)
+    !inactive &&
+    hoursSourceUrl &&
+    !sameExternalUrl(hoursSourceUrl, resort.website)
       ? hoursSourceUrl
       : undefined
   const tariffsLink =
-    tariffsUrl && !sameExternalUrl(tariffsUrl, resort.website) ? tariffsUrl : undefined
-  const hoursSummaryRaw = hours?.summary ? localizePublicText(hours.summary) : null
+    !inactive && tariffsUrl && !sameExternalUrl(tariffsUrl, resort.website)
+      ? tariffsUrl
+      : undefined
+  const hoursSummaryRaw =
+    !inactive && hours?.summary ? localizePublicText(hours.summary) : null
   const hoursLead = hoursLeadText(hoursSummaryRaw, hours?.periods)
-  const hoursSummary = hoursLead ?? (hours?.periods?.length ? null : 'Нет данных')
+  const hoursSummary = inactive
+    ? null
+    : (hoursLead ?? (hours?.periods?.length ? null : 'Нет данных'))
   const closed = slopesClosedHint(resort.id, hours, data.important)
   const visitorNotes = publicResortNotes(resort.notes)
-  const visitorPriceNote = publicPriceNote(prices?.note)
+  const visitorPriceNote = inactive ? null : publicPriceNote(prices?.note)
   const priceItems = prices?.items ?? []
   const priceGroups = prices?.groups ?? []
   const hasSkipassTables = priceGroups.some((g) => g.rows?.length > 0)
@@ -171,97 +181,102 @@ export function ResortPage({ data }: { data: SiteData }) {
       )}
 
       <div className="detail-grid">
-        <section aria-labelledby="resort-hours-title">
-          <div className="detail-section__head">
-            <h2 id="resort-hours-title">Часы работы</h2>
-            {hoursLink && (
-              <ExternalLink className="detail-section__source" href={hoursLink}>
-                Расписание на сайте
-              </ExternalLink>
-            )}
-          </div>
-          {hoursSummary && (
-            <p className="detail-lead">
-              <LinkedText text={hoursSummary} />
-            </p>
-          )}
-          {hours?.periods && hours.periods.length > 0 && (
-            <DataTable aria-label="Часы работы">
-              <thead>
-                <tr>
-                  <th scope="col">Дни</th>
-                  <th scope="col" className="mh-table__num">
-                    Часы
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {hours.periods.map((period) => (
-                  <tr key={`${period.days}-${period.open}-${period.close}`}>
-                    <th scope="row">{period.days}</th>
-                    <td className="mh-table__num">
-                      <span className="mh-table__amount">
-                        {period.open}–{period.close}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </DataTable>
-          )}
-          {hours?.status === 'failed' && (
-            <p className="muted">
-              Последний сбор часов не удался — показаны прежние данные, если они были.
-            </p>
-          )}
-          <p className="muted">
-            Актуальность: {formatUpdatedAt(hours?.scrapedAt)} · {scrapeStatusLabel(hours?.status)}
-          </p>
-        </section>
-
-        <section
-          className={hasSkipassTables ? 'detail-grid__wide' : undefined}
-          aria-labelledby="resort-prices-title"
-        >
-          <div className="detail-section__head">
-            <h2 id="resort-prices-title">Цены</h2>
-            {tariffsLink && (
-              <ExternalLink className="detail-section__source" href={tariffsLink}>
-                Тарифы на сайте
-              </ExternalLink>
-            )}
-          </div>
-          {priceItems.length > 0 || hasSkipassTables ? (
-            <SkipassTables
-              groups={priceGroups}
-              items={priceItems}
-              showAll={showAllPrices}
-              previewLimit={PRICE_PREVIEW}
-              onToggleShowAll={() => setShowAllPrices((v) => !v)}
-            />
-          ) : (
-            <p>
-              {visitorPriceNote ? (
-                <LinkedText text={visitorPriceNote} />
-              ) : (
-                'Цены появятся после ежедневного обновления данных.'
+        {/* Active only — same rule as ResortCard: no empty / stub hours·prices for secondary. */}
+        {!inactive && (
+          <section aria-labelledby="resort-hours-title">
+            <div className="detail-section__head">
+              <h2 id="resort-hours-title">Часы работы</h2>
+              {hoursLink && (
+                <ExternalLink className="detail-section__source" href={hoursLink}>
+                  Расписание на сайте
+                </ExternalLink>
               )}
-            </p>
-          )}
-          {visitorPriceNote && (priceItems.length > 0 || hasSkipassTables) && (
+            </div>
+            {hoursSummary && (
+              <p className="detail-lead">
+                <LinkedText text={hoursSummary} />
+              </p>
+            )}
+            {hours?.periods && hours.periods.length > 0 && (
+              <DataTable aria-label="Часы работы">
+                <thead>
+                  <tr>
+                    <th scope="col">Дни</th>
+                    <th scope="col" className="mh-table__num">
+                      Часы
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {hours.periods.map((period) => (
+                    <tr key={`${period.days}-${period.open}-${period.close}`}>
+                      <th scope="row">{period.days}</th>
+                      <td className="mh-table__num">
+                        <span className="mh-table__amount">
+                          {period.open}–{period.close}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DataTable>
+            )}
+            {hours?.status === 'failed' && (
+              <p className="muted">
+                Последний сбор часов не удался — показаны прежние данные, если они были.
+              </p>
+            )}
             <p className="muted">
-              <LinkedText text={visitorPriceNote} />
+              Актуальность: {formatUpdatedAt(hours?.scrapedAt)} · {scrapeStatusLabel(hours?.status)}
             </p>
-          )}
-          {prices?.status === 'failed' && (
+          </section>
+        )}
+
+        {!inactive && (
+          <section
+            className={hasSkipassTables ? 'detail-grid__wide' : undefined}
+            aria-labelledby="resort-prices-title"
+          >
+            <div className="detail-section__head">
+              <h2 id="resort-prices-title">Цены</h2>
+              {tariffsLink && (
+                <ExternalLink className="detail-section__source" href={tariffsLink}>
+                  Тарифы на сайте
+                </ExternalLink>
+              )}
+            </div>
+            {priceItems.length > 0 || hasSkipassTables ? (
+              <SkipassTables
+                groups={priceGroups}
+                items={priceItems}
+                showAll={showAllPrices}
+                previewLimit={PRICE_PREVIEW}
+                onToggleShowAll={() => setShowAllPrices((v) => !v)}
+              />
+            ) : (
+              <p>
+                {visitorPriceNote ? (
+                  <LinkedText text={visitorPriceNote} />
+                ) : (
+                  'Цены появятся после ежедневного обновления данных.'
+                )}
+              </p>
+            )}
+            {visitorPriceNote && (priceItems.length > 0 || hasSkipassTables) && (
+              <p className="muted">
+                <LinkedText text={visitorPriceNote} />
+              </p>
+            )}
+            {prices?.status === 'failed' && (
+              <p className="muted">
+                Последний сбор цен не удался — показаны прежние данные, если они были.
+              </p>
+            )}
             <p className="muted">
-              Последний сбор цен не удался — показаны прежние данные, если они были.
+              Актуальность: {formatUpdatedAt(prices?.scrapedAt)} · {scrapeStatusLabel(prices?.status)}
             </p>
-          )}
-          <p className="muted">
-            Актуальность: {formatUpdatedAt(prices?.scrapedAt)} · {scrapeStatusLabel(prices?.status)}
-          </p>
-        </section>
+          </section>
+        )}
 
         {features.map((feature) => {
           const featureTel = feature.phone?.trim()
@@ -431,8 +446,10 @@ export function ResortPage({ data }: { data: SiteData }) {
       </div>
 
       <p className="muted resort-detail__meta">
-        Данные каталога: {formatUpdatedAt(data.meta.updatedAt)}. Цены и часы — с официальных
-        публичных страниц курортов; где данных ещё нет — смотрите ссылку на сайт. Не оферта.
+        Данные каталога: {formatUpdatedAt(data.meta.updatedAt)}.
+        {inactive
+          ? ' Не оферта.'
+          : ' Цены и часы — с официальных публичных страниц курортов; где данных ещё нет — смотрите ссылку на сайт. Не оферта.'}
       </p>
     </article>
   )
