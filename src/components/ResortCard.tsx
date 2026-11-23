@@ -2,18 +2,15 @@ import { Link } from 'react-router-dom'
 import {
   hoursFor,
   localizePublicText,
-  priceHintFor,
-  pricesFor,
   slopesClosedHint,
   statusLabel,
 } from '../lib/data'
 import { stripUrlsFromText } from '../lib/links'
-import type { HoursSnapshot, ImportantItem, PriceSnapshot, Resort } from '../types'
+import type { HoursSnapshot, ImportantItem, Resort } from '../types'
 
 type Props = {
   resort: Resort
   hours: HoursSnapshot[]
-  prices: PriceSnapshot[]
   important?: ImportantItem[]
   compact?: boolean
 }
@@ -21,7 +18,6 @@ type Props = {
 export function ResortCard({
   resort,
   hours,
-  prices,
   important = [],
   compact = false,
 }: Props) {
@@ -29,16 +25,13 @@ export function ResortCard({
   const h = hoursFor(resort.id, hours)
   const closed = slopesClosedHint(resort.id, h, important)
 
-  // Active only: live hours / price hints. Дикие / неясные / закрытые — omit facts entirely.
+  // Active only: live hours. Prices live on the detail page, not on cards.
+  // Дикие / неясные / закрытые — omit facts entirely.
   let hoursText: string | null = null
-  let priceHint: string | null = null
   if (!inactive) {
-    const p = pricesFor(resort.id, prices)
     const rawHours = h?.summary ? localizePublicText(h.summary) : null
     // Never show raw URLs/paths on cards — strip them, keep the human summary.
     hoursText = rawHours ? stripUrlsFromText(rawHours) || 'уточняйте на сайте' : 'нет данных'
-    // When slopes are closed, don't advertise a live «от N ₽» next to the warn badge.
-    priceHint = closed ? 'сезон закрыт' : priceHintFor(p)
   }
 
   return (
@@ -59,15 +52,11 @@ export function ResortCard({
         </div>
       </div>
       <p className="resort-card__area">{resort.city_or_district || resort.area}</p>
-      {!inactive && hoursText && priceHint ? (
+      {!inactive && hoursText ? (
         <dl className="resort-card__facts">
           <div>
             <dt>Часы</dt>
             <dd>{hoursText}</dd>
-          </div>
-          <div>
-            <dt>Цены</dt>
-            <dd>{priceHint}</dd>
           </div>
         </dl>
       ) : null}
