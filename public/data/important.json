@@ -4,17 +4,7 @@
     "title": "Данные обновляются регулярно",
     "body": "Цены и часы — ежедневно; блок «Важное» — примерно каждые 2 часа с официальных страниц курортов. Это не оферта — перед выездом сверяйте с сайтом курорта.",
     "severity": "info",
-    "updatedAt": "2026-11-23T15:46:27Z"
-  },
-  {
-    "id": "tuutari-season-prep",
-    "resortId": "tuutari-park",
-    "title": "Туутари-парк: готовимся к сезону",
-    "body": "В новостях курорта — подготовка к горнолыжному сезону. Точную дату открытия уточняйте на сайте.",
-    "severity": "info",
-    "updatedAt": "2026-11-23T13:59:00Z",
-    "sourceUrl": "https://www.2-park.ru/about/news/",
-    "publishedAt": "2026-11-18T00:00:00Z"
+    "updatedAt": "2026-11-24T01:34:38Z"
   },
   {
     "id": "zoldol-slopes-closed",
@@ -22,7 +12,7 @@
     "title": "Золотая Долина: склоны закрыты",
     "body": "На странице часов работы указано, что горнолыжные склоны закрыты на летний период.",
     "severity": "warn",
-    "updatedAt": "2026-11-23T15:42:51Z",
+    "updatedAt": "2026-11-24T01:34:15Z",
     "sourceUrl": "https://zoldol.ru/vremya-raboty",
     "publishedAt": "2026-11-23T08:04:36Z"
   },
@@ -32,28 +22,18 @@
     "title": "Лазурные озёра: сезон закрыт",
     "body": "На сайте курорта есть сообщение о закрытии сезона. Перед выездом проверьте актуальность.",
     "severity": "warn",
-    "updatedAt": "2026-11-23T15:42:58Z",
+    "updatedAt": "2026-11-24T01:34:19Z",
     "sourceUrl": "https://lazoorsnow.ru/"
   },
   {
     "id": "krasnoe-slopes-closed",
     "resortId": "krasnoe-ozero",
     "title": "Красное озеро: склоны закрыты до сезона",
-    "body": "На 23.11.2026 трассы и подъёмники отмечены как закрытые до сезона.",
+    "body": "На 24.11.2026 трассы и подъёмники отмечены как закрытые до сезона.",
     "severity": "warn",
-    "updatedAt": "2026-11-23T15:43:39Z",
+    "updatedAt": "2026-11-24T01:34:22Z",
     "sourceUrl": "https://krasnoeozero.ru/grafik/",
-    "publishedAt": "2026-11-23T00:00:00Z"
-  },
-  {
-    "id": "drop-off-season",
-    "resortId": "drop-park",
-    "title": "Drop Park: межсезонье",
-    "body": "В официальном канале парка указано, что прошлый снежный сезон закончен. Актуальный режим и открытие уточняйте на сайте и в сообществе парка.",
-    "severity": "info",
-    "updatedAt": "2026-11-23T15:43:56Z",
-    "sourceUrl": "https://t.me/s/dropsnowpark",
-    "publishedAt": "2026-11-03T14:09:17Z"
+    "publishedAt": "2026-11-24T00:00:00Z"
   },
   {
     "id": "okhta-season-open",
@@ -61,8 +41,28 @@
     "title": "Охта-Парк: горнолыжный сезон открыт",
     "body": "На официальных страницах курорта объявлено открытие склонов. Перед выездом сверьте часы и тарифы на сайте.",
     "severity": "info",
-    "updatedAt": "2026-11-23T15:44:07Z",
+    "updatedAt": "2026-11-24T01:34:26Z",
     "sourceUrl": "https://www.ohtapark.ru/lenta/",
     "publishedAt": "2026-11-22T00:00:00Z"
+  },
+  {
+    "id": "tuutari-season-prep",
+    "resortId": "tuutari-park",
+    "title": "Туутари-парк: готовимся к сезону",
+    "body": "В новостях курорта — подготовка к горнолыжному сезону. Точную дату открытия уточняйте на сайте.",
+    "severity": "info",
+    "updatedAt": "2026-11-24T01:34:28Z",
+    "sourceUrl": "https://www.2-park.ru/about/news/",
+    "publishedAt": "2026-11-18T00:00:00Z"
+  },
+  {
+    "id": "drop-off-season",
+    "resortId": "drop-park",
+    "title": "Drop Park: межсезонье",
+    "body": "В официальном канале парка указано, что прошлый снежный сезон закончен. Актуальный режим и открытие уточняйте на сайте и в сообществе парка.",
+    "severity": "info",
+    "updatedAt": "2026-11-24T01:34:35Z",
+    "sourceUrl": "https://t.me/s/dropsnowpark",
+    "publishedAt": "2026-11-03T14:09:17Z"
   }
 ]
