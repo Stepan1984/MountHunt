@@ -67,7 +67,7 @@
   },
   {
     "resortId": "krasnoe-ozero",
-    "scrapedAt": "2026-11-25T15:20:15Z",
+    "scrapedAt": "2026-11-25T20:21:32Z",
     "sourceUrl": "https://krasnoeozero.ru/grafik/",
     "summary": "На 25.11.2026: склоны/подъёмники закрыты до сезона",
     "periods": [],
@@ -76,7 +76,7 @@
   },
   {
     "resortId": "zolotaya-dolina",
-    "scrapedAt": "2026-11-25T15:19:36Z",
+    "scrapedAt": "2026-11-25T20:21:25Z",
     "sourceUrl": "https://zoldol.ru/vremya-raboty",
     "summary": "Горнолыжные склоны закрыты на летний период (уточняйте открытие на сайте). Ближайший график (прочее): Понедельник: закрыто; Вторник: закрыто; Среда: 12:00–22:00…",
     "periods": [
@@ -180,7 +180,7 @@
   },
   {
     "resortId": "yukki",
-    "scrapedAt": "2026-11-25T15:20:05Z",
+    "scrapedAt": "2026-11-25T20:31:15Z",
     "sourceUrl": "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/",
     "summary": "ежедневно 10:00–21:00",
     "periods": [

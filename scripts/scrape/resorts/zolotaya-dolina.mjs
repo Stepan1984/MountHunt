@@ -24,8 +24,11 @@ const COLUMNS = ['Детский · будни', 'Взрослый · будни
 export function parseZoldolSkipassGroups(html) {
   /** @type {Map<string, { name: string, duration: string, prices: object[] }[]>} */
   const byKind = new Map()
+  // Official t431 CSV uses genitive plurals: «5 подъемов», «5 часов», «15 подъемов».
   const rowRe =
-    /((?:\d+\s*)?(?:подъем|подъём|подъема|часа?|час))\s*;\s*(\d+)\s*;\s*(\d+)\s*;\s*(\d+)\s*;\s*(\d+)/gi
+    /((?:\d+\s*)?(?:подъём(?:ов|а)?|подъем(?:ов|а)?|час(?:ов|а)?))\s*;\s*(\d+)\s*;\s*(\d+)\s*;\s*(\d+)\s*;\s*(\d+)/gi
+  /** @type {Map<string, Set<string>>} */
+  const seenByKind = new Map()
   let m
   while ((m = rowRe.exec(html))) {
     const name = cleanText(m[1])
@@ -37,10 +40,15 @@ export function parseZoldolSkipassGroups(html) {
       prices.push({ price, rawText: m[i + 2] })
     }
     if (!prices.some((p) => p.price != null)) continue
+    const duration = name.replace(/подъем/gi, 'подъём')
+    const seen = seenByKind.get(kind) || new Set()
+    if (seen.has(duration)) continue
+    seen.add(duration)
+    seenByKind.set(kind, seen)
     const rows = byKind.get(kind) || []
     rows.push({
       name: 'Ски-пасс',
-      duration: name.replace(/подъем/gi, 'подъём'),
+      duration,
       prices,
     })
     byKind.set(kind, rows)

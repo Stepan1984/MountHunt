@@ -77,32 +77,78 @@ function ocrPdf(pdfBuf) {
 
 /**
  * Pull key visit prices from OCR/text.
+ * Official прейскурант: вт–пт 9:00–15:00 has a special 1,5ч rate (1100),
+ * plus a general cluster (30 мин / 1 ч / 1,5 ч / 2–4 ч). Do not collapse
+ * the morning special into the generic «1,5 часа» row.
  * @param {string} text
  */
-function parseYukkiPrices(text) {
+export function parseYukkiPrices(text) {
   const items = []
   const seen = new Set()
-  const add = (title, price, unit) => {
+  const add = (title, price, unit, note) => {
     if (price == null || seen.has(title)) return
     seen.add(title)
-    items.push({ title, price, unit })
+    items.push({ title, price, unit, ...(note ? { note } : {}) })
+  }
+
+  // Morning special: «Вторник-пятница … 1,5 часа 1100» (OCR may glue lines).
+  const morning = text.match(
+    /Вторник\s*[-–—]?\s*пятниц[^\n]{0,80}?1(?:,5|\.5)\s*час[а]?\s+(\d{1,3}(?:\s?\d{3})?[,.]?\d{0,2})/i,
+  )
+  if (morning) {
+    const price = parsePrice(morning[1])
+    if (price != null && price >= 100) {
+      add(
+        'Разовое посещение 1,5 часа (вт–пт 9:00–15:00)',
+        price,
+        'час',
+        'Специальный тариф вторник–пятница до 15:00',
+      )
+    }
   }
 
   // Patterns like: "1 час 1000,00" / "1,5 часа 1300,00" / "2 часа 1700,00"
   const durationRe =
     /(30\s*минут|1(?:,5|\.5)?\s*час(?:а)?|2\s*часа|3\s*часа|4\s*часа)\s+(\d{1,3}(?:\s?\d{3})?[,.]?\d{0,2})/gi
-  // Prefer block after "Разовое посещение" — first duration cluster (skip noisy later OCR)
+  // Visit block only — stop before постановка трассы / seasonal packs / training.
   const visitIdx = text.search(/Разовое посещение/i)
-  const slice = visitIdx >= 0 ? text.slice(visitIdx, visitIdx + 1200) : text.slice(0, 2500)
+  let slice = visitIdx >= 0 ? text.slice(visitIdx, visitIdx + 2000) : text.slice(0, 2500)
+  const cut = slice.search(
+    /Постановка трассы|Сезонный ски-пас|Услуги по предоставлению|Обучение катанию|Прокат комплекта/i,
+  )
+  if (cut > 80) slice = slice.slice(0, cut)
+
+  /** @type {Map<string, number[]>} */
+  const byDuration = new Map()
   let m
   while ((m = durationRe.exec(slice))) {
-    const unitRaw = cleanText(m[1]).toLowerCase()
+    const unitRaw = cleanText(m[1]).toLowerCase().replace('.', ',')
     const price = parsePrice(m[2])
     if (price == null || price < 100) continue
+    // Skip discounted 50% block (250/500/650…) — keep full visit tariffs only.
+    if (price < 400 && /30/.test(unitRaw)) continue
+    if (price < 800 && /^1(?:,5)?\s*час/.test(unitRaw) && !/30/.test(unitRaw)) continue
+    // Visit разовое is typically ≤3500; drop OCR bleed from other services.
+    if (price > 4000) continue
+    const list = byDuration.get(unitRaw) || []
+    if (!list.includes(price)) list.push(price)
+    byDuration.set(unitRaw, list)
+  }
+
+  const morningPrice = parsePrice(morning?.[1] || '')
+  for (const [unitRaw, prices] of byDuration) {
     let unit = 'час'
     if (/30/.test(unitRaw)) unit = '30 мин'
-    add(`Разовое посещение ${unitRaw}`, price, unit)
-    if (items.length >= 8) break
+    // For 1,5 часа: take the general rate (1300), not morning 1100 and not later services.
+    if (/1(?:,5|\.5)\s*час/.test(unitRaw)) {
+      const general = prices.filter((p) => p !== morningPrice && p >= 1200 && p <= 2000)
+      const pick = general.sort((a, b) => a - b)[0] || prices.filter((p) => p !== morningPrice).sort((a, b) => a - b)[0]
+      if (pick != null) add(`Разовое посещение ${unitRaw}`, pick, unit)
+      continue
+    }
+    // Prefer the higher (full) tariff when OCR also caught льготный later.
+    const pick = [...prices].sort((a, b) => b - a)[0]
+    add(`Разовое посещение ${unitRaw}`, pick, unit)
   }
 
   // Seasonal ski-pass hints

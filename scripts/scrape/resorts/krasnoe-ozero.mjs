@@ -172,42 +172,103 @@ function extractIvideon(html) {
   return [...new Set(urls)].filter((u) => /ivideon/i.test(u))
 }
 
+/** Hourly columns on the ski-pass sheet (будни / выходные). */
+const KRASNOE_HOUR_SLOTS = [
+  { duration: '1 час', weekday: '1 час будни', weekend: '1 час выходные', weekdayAlt: '1 час' },
+  { duration: '2 часа', weekday: '2 часа будни', weekend: '2 часа выходные', weekdayAlt: '2 часа' },
+  { duration: '3 часа', weekday: '3 часа будни', weekend: '3 часа выходные' },
+  { duration: '4 часа', weekday: '4 часа будни', weekend: '4 часа выходные' },
+  { duration: '5 часов', weekday: '5 часов будни', weekend: '5 часов выходные' },
+  { duration: '6 часов', weekday: '6 часов будни', weekend: '6 часов выходные' },
+]
+
+/** Pass-pack columns on the same sheet. */
+const KRASNOE_PASS_SLOTS = [
+  { duration: '1 проход', key: '1 проход' },
+  { duration: '7 проходов', key: '7 проходов' },
+  { duration: '15 проходов', key: '15 проходов' },
+]
+
 /**
  * Build skipass groups from CSV rows (site widget structure).
+ * Official sheet publishes 1–6 hour weekday/weekend cells and pass packs —
+ * not only the 1-hour columns.
  * @param {Record<string, string>[]} rows
  */
 export function parseKrasnoeSkipassGroups(rows) {
-  /** @type {{ name: string, duration?: string, prices: object[], note?: string }[]} */
-  const skipassRows = []
-  const columns = ['1 ч будни', '1 ч выходные']
+  /** @type {{ category: string, columns: string[], rows: object[], note?: string }[]} */
+  const groups = []
+  const dayColumns = ['Будни', 'Выходные']
+
   for (const row of rows) {
     const pageKey = cleanText(row['Ключ страницы'] || '')
     const show = cleanText(row['Показывать'] || '').toLowerCase()
     if (pageKey !== 'ski-pass' || show !== 'yes') continue
     const name = cleanText(row['Название'] || '')
     if (!name) continue
-    const weekday = parsePrice(row['1 час будни'] ?? row['1 час'] ?? '')
-    const weekend = parsePrice(row['1 час выходные'] ?? '')
-    if (weekday == null && weekend == null) continue
-    skipassRows.push({
-      name,
-      duration: '1 час',
-      prices: [
-        { price: weekday, rawText: String(row['1 час будни'] ?? row['1 час'] ?? '') },
-        { price: weekend, rawText: String(row['1 час выходные'] ?? '') },
-      ],
-      note: cleanText(row['Уточнение'] || '') || undefined,
-    })
+    const note = cleanText(row['Уточнение'] || '') || undefined
+
+    /** @type {{ name: string, duration?: string, prices: object[], note?: string }[]} */
+    const hourRows = []
+    for (const slot of KRASNOE_HOUR_SLOTS) {
+      const wdRaw = row[slot.weekday] ?? (slot.weekdayAlt ? row[slot.weekdayAlt] : '') ?? ''
+      const weRaw = row[slot.weekend] ?? ''
+      const weekday = parsePrice(wdRaw)
+      const weekend = parsePrice(weRaw)
+      if (weekday == null && weekend == null) continue
+      hourRows.push({
+        name: 'Ски-пасс',
+        duration: slot.duration,
+        prices: [
+          { price: weekday, rawText: String(wdRaw) },
+          { price: weekend, rawText: String(weRaw) },
+        ],
+        note,
+      })
+    }
+    if (hourRows.length) {
+      const hourName = /проход/i.test(name)
+        ? name
+        : /час/i.test(name)
+          ? name
+          : `${name} (часы)`
+      groups.push({
+        category: hourName,
+        columns: [...dayColumns],
+        rows: hourRows,
+        note: 'Стоимость БСК уточняйте на сайте',
+      })
+    }
+
+    /** @type {{ name: string, duration?: string, prices: object[], note?: string }[]} */
+    const passRows = []
+    for (const slot of KRASNOE_PASS_SLOTS) {
+      const raw = row[slot.key] ?? ''
+      const price = parsePrice(raw)
+      if (price == null) continue
+      passRows.push({
+        name: 'Ски-пасс',
+        duration: slot.duration,
+        prices: [{ price, rawText: String(raw) }],
+        note,
+      })
+    }
+    if (passRows.length) {
+      const passName = /\(проходы\)/i.test(name)
+        ? name
+        : /час/i.test(name)
+          ? name.replace(/\(часы\)/i, '(проходы)').replace(/часы/i, 'проходы')
+          : `${name} (проходы)`
+      groups.push({
+        category: passName,
+        columns: ['Цена'],
+        rows: passRows,
+        note: note || 'Проходы сохраняются до конца сезона — уточняйте на сайте',
+      })
+    }
   }
-  if (!skipassRows.length) return []
-  return [
-    {
-      category: 'Ски-пасс (часы)',
-      columns,
-      rows: skipassRows,
-      note: 'Стоимость БСК уточняйте на сайте',
-    },
-  ]
+
+  return groups
 }
 
 /**
