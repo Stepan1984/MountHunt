@@ -291,9 +291,11 @@ describe('closed-season card honesty signals', () => {
     const dataSrc = readFileSync(join(root, 'src/lib/data.ts'), 'utf8')
     const cardSrc = readFileSync(join(root, 'src/components/ResortCard.tsx'), 'utf8')
     assert.match(dataSrc, /сезон закрыт\|склон/)
-    // Cards show closed via badge (slopesClosedHint); prices live on detail pages only.
+    // Active cards: open/closed slope badges only (slopesClosedHint); prices on detail.
     assert.match(cardSrc, /slopesClosedHint/)
     assert.match(cardSrc, /Склоны закрыты/)
+    assert.match(cardSrc, /Склоны открыты/)
+    assert.doesNotMatch(cardSrc, /statusLabel/)
     assert.doesNotMatch(cardSrc, /Цены/)
   })
 

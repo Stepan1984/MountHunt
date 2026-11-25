@@ -3,7 +3,6 @@ import {
   hoursFor,
   localizePublicText,
   slopesClosedHint,
-  statusLabel,
 } from '../lib/data'
 import { stripUrlsFromText } from '../lib/links'
 import type { HoursSnapshot, ImportantItem, Resort } from '../types'
@@ -23,7 +22,8 @@ export function ResortCard({
 }: Props) {
   const inactive = resort.status !== 'active'
   const h = hoursFor(resort.id, hours)
-  const closed = slopesClosedHint(resort.id, h, important)
+  // Slope open/closed badges only on active resorts; дикие/закрытые — no status badges.
+  const closed = !inactive && Boolean(slopesClosedHint(resort.id, h, important))
 
   // Active only: live hours. Prices live on the detail page, not on cards.
   // Дикие / неясные / закрытые — omit facts entirely.
@@ -43,13 +43,15 @@ export function ResortCard({
         <h3>
           <Link to={`/resort/${resort.id}`}>{resort.name}</Link>
         </h3>
-        <div className="resort-card__badges">
-          {closed ? (
-            <span className="badge badge--warn">Склоны закрыты</span>
-          ) : (
-            <span className={`badge badge--${resort.status}`}>{statusLabel(resort.status)}</span>
-          )}
-        </div>
+        {!inactive ? (
+          <div className="resort-card__badges">
+            {closed ? (
+              <span className="badge badge--warn">Склоны закрыты</span>
+            ) : (
+              <span className="badge badge--open">Склоны открыты</span>
+            )}
+          </div>
+        ) : null}
       </div>
       <p className="resort-card__area">{resort.city_or_district || resort.area}</p>
       {!inactive && hoursText ? (
