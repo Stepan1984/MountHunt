@@ -18,7 +18,6 @@ import {
   resortPhotoUrl,
   scrapeStatusLabel,
   slopesClosedHint,
-  statusLabel,
   yandexMapsUrl,
 } from '../lib/data'
 import { linkLabelForUrl, sameExternalUrl } from '../lib/links'
@@ -88,7 +87,8 @@ export function ResortPage({ data }: { data: SiteData }) {
   const hoursSummary = inactive
     ? null
     : (hoursLead ?? (hours?.periods?.length ? null : 'Нет данных'))
-  const closed = slopesClosedHint(resort.id, hours, data.important)
+  // Slope badges only for active resorts; inactive detail pages show none.
+  const closed = !inactive && Boolean(slopesClosedHint(resort.id, hours, data.important))
   const visitorNotes = publicResortNotes(resort.notes)
   const visitorPriceNote = inactive ? null : publicPriceNote(prices?.note)
   const priceItems = prices?.items ?? []
@@ -123,11 +123,13 @@ export function ResortPage({ data }: { data: SiteData }) {
           {/* District only — full street address is sole under «Локация». */}
           <p className="resort-detail__area">{resort.city_or_district || resort.area}</p>
         </div>
-        {closed ? (
-          <span className="badge badge--warn">Склоны закрыты</span>
-        ) : (
-          <span className={`badge badge--${resort.status}`}>{statusLabel(resort.status)}</span>
-        )}
+        {!inactive ? (
+          closed ? (
+            <span className="badge badge--warn">Склоны закрыты</span>
+          ) : (
+            <span className="badge badge--open">Склоны открыты</span>
+          )
+        ) : null}
       </header>
 
       {resort.photo && (

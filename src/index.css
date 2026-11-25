@@ -610,7 +610,8 @@ main {
   border: 1px solid transparent;
 }
 
-.badge--active {
+.badge--active,
+.badge--open {
   color: var(--pine);
   background: rgba(47, 90, 74, 0.12);
 }
