@@ -9,6 +9,7 @@ import {
   priceSnapshot,
   tableRows,
 } from '../lib/parse.mjs'
+import { detectLazurnyeSlopeStatus } from '../lib/slope-status.mjs'
 
 const PRICES_URL = 'https://lazoorsnow.ru/ceny'
 export const LAZURNYE_HOME_URL = 'https://lazoorsnow.ru/'
@@ -107,6 +108,7 @@ export async function scrapeLazurnyeOzera() {
         ? `Сезон закрыт. ${summary}`
         : 'Сезон закрыт — уточняйте открытие на сайте'
     }
+    const slopeStatus = detectLazurnyeSlopeStatus(homeHtml, important)
 
     const embeds = extractIframeSrcs($h, HOME_URL).filter((u) => /rtsp/i.test(u))
 
@@ -125,6 +127,7 @@ export async function scrapeLazurnyeOzera() {
         summary,
         periods,
         status: /выходной/.test(summary) ? 'ok' : 'partial',
+        slopesOpen: slopeStatus.slopesOpen,
       }),
       webcamUrl: HOME_URL,
       // rtsp.me: «доступ ограничен» / unpaid — link-only, no empty player.

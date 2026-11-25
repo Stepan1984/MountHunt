@@ -5,6 +5,7 @@ import {
   loadHtml,
   priceSnapshot,
 } from '../lib/parse.mjs'
+import { detectGenericSlopeStatus } from '../lib/slope-status.mjs'
 
 /** Preferred official site (Tilda). Seed historically pointed at sev-sklon.ru. */
 const SITE_URL = 'https://severnysklon.ru/'
@@ -82,6 +83,7 @@ export async function scrapeSevernySklon() {
         summary,
         periods,
         status: 'partial',
+        slopesOpen: detectGenericSlopeStatus(html).slopesOpen,
       }),
       webcamUrl: null,
       // Hint for seed patch in scrape.mjs

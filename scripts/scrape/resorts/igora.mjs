@@ -12,6 +12,7 @@ import {
   priceSnapshot,
   tableRows,
 } from '../lib/parse.mjs'
+import { detectGenericSlopeStatus } from '../lib/slope-status.mjs'
 
 const PRICE_URL = 'https://igora.ru/price/'
 /** RU /working-hours/ returns 404; EN mirror has the slope schedule table. */
@@ -985,6 +986,8 @@ export async function scrapeIgora() {
         summary: hours.summary,
         periods: hours.periods,
         status: hours.status,
+        // Schedule alone ≠ season open; need alpine-open copy on the page.
+        slopesOpen: detectGenericSlopeStatus(hoursHtml || '').slopesOpen,
       }),
       webcamUrl: CAM_URL,
       // exdesign iframes render empty black boxes on MountHunt — link-only.

@@ -9,6 +9,10 @@ import {
   parsePrice,
   priceSnapshot,
 } from '../lib/parse.mjs'
+import {
+  appendHoursExtraNote,
+  detectDropParkSlopeStatus,
+} from '../lib/slope-status.mjs'
 
 export const DROP_PAGE_URL = 'https://drop-park.ru/snow-park'
 export const DROP_TG_URL = 'https://t.me/s/dropsnowpark'
@@ -503,6 +507,8 @@ export async function scrapeDropPark() {
       TG_URL,
       { pageUrl: PAGE_URL, tgUrl: TG_URL, pageFetched: true, tgFetched },
     )
+    const slopeStatus = detectDropParkSlopeStatus(html, tgHtml)
+    const hoursSummary = appendHoursExtraNote(parsed.hours.summary, slopeStatus.note)
 
     return {
       resortId,
@@ -519,9 +525,11 @@ export async function scrapeDropPark() {
       hours: hoursSnapshot({
         resortId,
         sourceUrl: PAGE_URL,
-        summary: parsed.hours.summary,
+        summary: hoursSummary,
         periods: parsed.hours.periods,
         status: parsed.hours.status,
+        // Щётки ≠ alpine slopes — badge stays closed while season finished / no alpine open.
+        slopesOpen: slopeStatus.slopesOpen,
       }),
       webcamUrl: PAGE_URL,
       // rtsp.ru cams deleted / stream failed — avoid empty player boxes.

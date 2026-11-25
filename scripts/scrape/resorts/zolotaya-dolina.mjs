@@ -8,6 +8,7 @@ import {
   parsePrice,
   priceSnapshot,
 } from '../lib/parse.mjs'
+import { detectZoldolSlopeStatus } from '../lib/slope-status.mjs'
 
 const PRICES_URL = 'https://zoldol.ru/price-winter'
 export const ZOLDOL_HOURS_URL = 'https://zoldol.ru/vremya-raboty'
@@ -70,6 +71,7 @@ export async function scrapeZolotayaDolina() {
     const $h = loadHtml(hoursHtml)
     const text = cleanText($h('body').text())
     const important = detectZoldolImportant(hoursHtml, HOURS_URL)
+    const slopeStatus = detectZoldolSlopeStatus(hoursHtml)
     let summary = 'См. график на сайте'
     const periods = []
 
@@ -123,6 +125,7 @@ export async function scrapeZolotayaDolina() {
         summary,
         periods,
         status: /закрыты на летний/i.test(summary) || periods.length ? 'ok' : 'partial',
+        slopesOpen: slopeStatus.slopesOpen,
       }),
       webcamUrl: WEBCAM_URL,
       // rtsp.ru embeds load a black player shell with no stream — link-only.
