@@ -9,6 +9,7 @@ import {
   priceSnapshot,
   tableRows,
 } from '../lib/parse.mjs'
+import { detectGenericSlopeStatus } from '../lib/slope-status.mjs'
 
 const PRICES_URL = 'https://snegny.ru/%d1%81%d0%ba%d0%b8-%d0%bf%d0%b0%d1%81%d1%81%d1%8b/'
 const TWOCAM_URL = 'https://snegny.ru/wp-content/themes/snegny/twocam.php'
@@ -165,6 +166,8 @@ export async function scrapeSnezhny() {
       hoursSource = important[0].sourceUrl || NEWS_URL
       hoursStatus = 'partial'
     }
+    const slopeProbe = [newsHtml, hoursNoticeHtml].filter(Boolean).join('\n')
+    const slopeStatus = detectGenericSlopeStatus(slopeProbe)
 
     return {
       resortId,
@@ -183,6 +186,7 @@ export async function scrapeSnezhny() {
         summary: hoursSummary,
         periods: [],
         status: hoursStatus,
+        slopesOpen: slopeStatus.slopesOpen,
       }),
       webcamUrl: HOME_URL,
       // exdesign iframes render empty black boxes on MountHunt — link-only.

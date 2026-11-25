@@ -77,6 +77,12 @@ export type HoursSnapshot = {
   summary: string
   periods?: { days: string; open: string; close: string }[]
   status: 'ok' | 'partial' | 'failed' | 'pending'
+  /**
+   * Alpine slopes open/closed from scrape detectors.
+   * true → badge «Склоны открыты»; false/omit → do not invent open
+   * (щётки / подушка are not alpine — stay in summary, not this flag).
+   */
+  slopesOpen?: boolean
 }
 
 export type PriceItem = {

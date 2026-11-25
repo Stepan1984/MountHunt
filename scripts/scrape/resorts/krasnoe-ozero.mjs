@@ -8,6 +8,10 @@ import {
   parsePrice,
   priceSnapshot,
 } from '../lib/parse.mjs'
+import {
+  appendHoursExtraNote,
+  detectKrasnoeSlopeStatus,
+} from '../lib/slope-status.mjs'
 
 const PAGE_URL = 'https://krasnoeozero.ru/winter/skipass-and-lifts'
 const CSV_URL =
@@ -77,6 +81,8 @@ export function parseHoursFromCsv(csv) {
         sourceUrl: HOURS_PAGE_URL,
         summary: 'Режим склонов уточняйте на сайте курорта',
         status: 'partial',
+        // Unknown schedule → fail-soft closed for badges.
+        slopesOpen: false,
       }),
       important: [],
     }
@@ -130,15 +136,15 @@ export function parseHoursFromCsv(csv) {
     summary = `На ${dateCol}: склоны/подъёмники закрыты до сезона`
   }
 
-  const important = detectKrasnoeImportantFromFlags(
-    {
-      closedUntilSeason,
-      allClosed,
-      slopesCount: slopes.length,
-      dateCol,
-    },
-    HOURS_PAGE_URL,
-  )
+  const pack = {
+    closedUntilSeason,
+    allClosed,
+    slopesCount: slopes.length,
+    dateCol,
+  }
+  const important = detectKrasnoeImportantFromFlags(pack, HOURS_PAGE_URL)
+  const slopeStatus = detectKrasnoeSlopeStatus(pack, { header, rows, dateCol })
+  summary = appendHoursExtraNote(summary, slopeStatus.note)
 
   return {
     hours: hoursSnapshot({
@@ -147,6 +153,7 @@ export function parseHoursFromCsv(csv) {
       summary,
       periods,
       status: bits.length || closedUntilSeason ? 'ok' : 'partial',
+      slopesOpen: slopeStatus.slopesOpen,
     }),
     important,
   }

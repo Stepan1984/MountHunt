@@ -7,6 +7,7 @@ import {
   parsePrice,
   priceSnapshot,
 } from '../lib/parse.mjs'
+import { detectOkhtaSlopeStatus } from '../lib/slope-status.mjs'
 
 export const OKHTA_TRAILS_URL =
   'https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/'
@@ -395,6 +396,10 @@ export async function scrapeOkhtaPark() {
         winterUrl: WINTER_URL,
       },
     )
+    const slopeStatus = detectOkhtaSlopeStatus(
+      { trailsHtml, lentaHtml },
+      { dayClosed: trailHours.dayClosed },
+    )
 
     return {
       resortId,
@@ -411,6 +416,7 @@ export async function scrapeOkhtaPark() {
         summary: trailHours.summary,
         periods: trailHours.periods,
         status: trailHours.status,
+        slopesOpen: slopeStatus.slopesOpen,
       }),
       webcamUrl: WEBCAM_URL,
       cameraEmbeds: hls.slice(0, 12).map((c) => c.hlsUrl),

@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fetchUrl, sleep } from '../lib/http.mjs'
 import { cleanText, hoursSnapshot, loadHtml, parsePrice, priceSnapshot } from '../lib/parse.mjs'
+import { detectGenericSlopeStatus } from '../lib/slope-status.mjs'
 
 const PAGE_URL = 'https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/'
 
@@ -182,6 +183,7 @@ export async function scrapeYukki() {
         summary,
         periods,
         status: hoursStatus,
+        slopesOpen: detectGenericSlopeStatus(pageHtml).slopesOpen,
       }),
     }
   } catch (err) {

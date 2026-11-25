@@ -169,9 +169,10 @@ export function priceSnapshot(partial) {
 
 /**
  * @param {object} partial
+ * @param {boolean} [partial.slopesOpen] alpine slopes open when scrape knows; omit if unknown
  */
 export function hoursSnapshot(partial) {
-  return {
+  const snap = {
     resortId: partial.resortId,
     scrapedAt: partial.scrapedAt ?? nowIso(),
     sourceUrl: partial.sourceUrl ?? null,
@@ -179,6 +180,11 @@ export function hoursSnapshot(partial) {
     periods: partial.periods ?? [],
     status: partial.status ?? 'ok',
   }
+  // Structured alpine open/closed for card badges. Omit when unknown (UI fail-soft ≠ open).
+  if (partial.slopesOpen === true || partial.slopesOpen === false) {
+    snap.slopesOpen = partial.slopesOpen
+  }
+  return snap
 }
 
 export function nowIso() {

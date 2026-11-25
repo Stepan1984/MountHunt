@@ -287,16 +287,33 @@ describe('closed-season card honesty signals', () => {
     assert.match(src, /seasonClosed/)
   })
 
-  it('UI slopesClosedHint matches сезон закрыт in hours', () => {
+  it('UI slopesBadgeLabel uses slopesOpen fail-soft (never invent open)', () => {
     const dataSrc = readFileSync(join(root, 'src/lib/data.ts'), 'utf8')
     const cardSrc = readFileSync(join(root, 'src/components/ResortCard.tsx'), 'utf8')
     assert.match(dataSrc, /сезон закрыт\|склон/)
-    // Active cards: open/closed slope badges only (slopesClosedHint); prices on detail.
-    assert.match(cardSrc, /slopesClosedHint/)
-    assert.match(cardSrc, /Склоны закрыты/)
-    assert.match(cardSrc, /Склоны открыты/)
+    assert.match(dataSrc, /slopesBadgeLabel/)
+    assert.match(dataSrc, /slopesOpen === true/)
+    assert.match(dataSrc, /Склоны открыты/)
+    assert.match(dataSrc, /Склоны закрыты/)
+    // Active cards: open/closed slope badges from scrape signal; prices on detail.
+    assert.match(cardSrc, /slopesBadgeLabel/)
+    assert.match(cardSrc, /badge--open/)
+    assert.match(cardSrc, /badge--warn/)
     assert.doesNotMatch(cardSrc, /statusLabel/)
     assert.doesNotMatch(cardSrc, /Цены/)
+  })
+
+  it('scrape pipeline writes hours.slopesOpen via slope-status detectors', () => {
+    const slopeLib = readFileSync(join(root, 'scripts/scrape/lib/slope-status.mjs'), 'utf8')
+    assert.match(slopeLib, /detectOkhtaSlopeStatus/)
+    assert.match(slopeLib, /detectDropParkSlopeStatus/)
+    assert.match(slopeLib, /detectKrasnoeSlopeStatus/)
+    const okhta = readFileSync(join(root, 'scripts/scrape/resorts/okhta-park.mjs'), 'utf8')
+    const drop = readFileSync(join(root, 'scripts/scrape/resorts/drop-park.mjs'), 'utf8')
+    const kras = readFileSync(join(root, 'scripts/scrape/resorts/krasnoe-ozero.mjs'), 'utf8')
+    assert.match(okhta, /slopesOpen:\s*slopeStatus\.slopesOpen/)
+    assert.match(drop, /slopesOpen:\s*slopeStatus\.slopesOpen/)
+    assert.match(kras, /slopesOpen:\s*slopeStatus\.slopesOpen/)
   })
 
   it('committed data keeps Puhtolova empty / Severny unavailable / Snezhny partial hours', () => {
@@ -335,7 +352,8 @@ describe('resort page block semantics', () => {
 
   it('ResortPage keeps shared order and address only under Локация', () => {
     const src = readFileSync(join(root, 'src/pages/ResortPage.tsx'), 'utf8')
-    assert.match(src, /hours → prices → features/)
+    assert.match(src, /hours → prices if active/)
+    assert.match(src, /features → contacts → location/)
     assert.match(src, /city_or_district \|\| resort\.area/)
     assert.match(src, /resort-contacts-title/)
     assert.match(src, /resort-location-title/)

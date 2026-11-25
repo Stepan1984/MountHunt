@@ -9,6 +9,7 @@ import {
   priceSnapshot,
   tableRows,
 } from '../lib/parse.mjs'
+import { detectPuhtolovaSlopeStatus } from '../lib/slope-status.mjs'
 
 const PRICES_URL = 'https://puhgora.ru/uslugi/ceny-na-podyomniki'
 const HOURS_URL = 'https://puhgora.ru/o-kurorte/chasy-raboty'
@@ -125,6 +126,7 @@ export async function scrapePuhtolovaGora() {
 
     const embeds = extractIframeSrcs(loadHtml(camHtml), WEBCAM_URL)
     const important = newsHtml ? detectPuhtolovaImportant(newsHtml, NEWS_URL) : []
+    const slopeStatus = detectPuhtolovaSlopeStatus(important, newsHtml)
 
     return {
       resortId,
@@ -143,6 +145,7 @@ export async function scrapePuhtolovaGora() {
         summary,
         periods: periods.slice(0, 12),
         status: periods.length ? 'ok' : 'partial',
+        slopesOpen: slopeStatus.slopesOpen,
       }),
       webcamUrl: WEBCAM_URL,
       // ipeye iframe: codec unsupported / no playable stream — link-only.

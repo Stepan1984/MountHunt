@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import {
   hoursFor,
   localizePublicText,
-  slopesClosedHint,
+  slopesBadgeLabel,
 } from '../lib/data'
 import { stripUrlsFromText } from '../lib/links'
 import type { HoursSnapshot, ImportantItem, Resort } from '../types'
@@ -23,7 +23,9 @@ export function ResortCard({
   const inactive = resort.status !== 'active'
   const h = hoursFor(resort.id, hours)
   // Slope open/closed badges only on active resorts; дикие/закрытые — no status badges.
-  const closed = !inactive && Boolean(slopesClosedHint(resort.id, h, important))
+  // Fail-soft: open only when scrape/important positively says so.
+  const badge = !inactive ? slopesBadgeLabel(resort.id, h, important) : null
+  const closed = badge === 'Склоны закрыты'
 
   // Active only: live hours. Prices live on the detail page, not on cards.
   // Дикие / неясные / закрытые — omit facts entirely.
@@ -43,12 +45,12 @@ export function ResortCard({
         <h3>
           <Link to={`/resort/${resort.id}`}>{resort.name}</Link>
         </h3>
-        {!inactive ? (
+        {!inactive && badge ? (
           <div className="resort-card__badges">
             {closed ? (
-              <span className="badge badge--warn">Склоны закрыты</span>
+              <span className="badge badge--warn">{badge}</span>
             ) : (
-              <span className="badge badge--open">Склоны открыты</span>
+              <span className="badge badge--open">{badge}</span>
             )}
           </div>
         ) : null}

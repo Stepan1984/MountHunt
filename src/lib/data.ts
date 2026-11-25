@@ -307,11 +307,24 @@ export function allImportantNews(items: ImportantItem[]): ImportantItem[] {
     })
 }
 
+/** Managed «Важное» ids that mean alpine slopes are open (info severity). */
+const SLOPES_OPEN_IMPORTANT_IDS = new Set([
+  'okhta-season-open',
+  'tuutari-season-open',
+  'puhtolova-season-open',
+  'lazurnye-season-open',
+])
+
+/**
+ * Legacy closed signals from warn «Важное» / hours prose.
+ * Prefer hours.slopesOpen when the scrape set it.
+ */
 export function slopesClosedHint(
   resortId: string,
   hours: HoursSnapshot | undefined,
   important: ImportantItem[],
 ): string | null {
+  if (hours?.slopesOpen === false) return 'Склоны закрыты'
   const warn = important.find(
     (i) =>
       i.resortId === resortId &&
@@ -326,4 +339,23 @@ export function slopesClosedHint(
     return 'Склоны закрыты'
   }
   return null
+}
+
+/**
+ * Active-card badge: «Склоны открыты» only with positive scrape/important signal.
+ * Fail-soft — unknown / scrape miss → closed (never invent open).
+ */
+export function slopesBadgeLabel(
+  resortId: string,
+  hours: HoursSnapshot | undefined,
+  important: ImportantItem[],
+): 'Склоны открыты' | 'Склоны закрыты' {
+  if (hours?.slopesOpen === true) return 'Склоны открыты'
+  if (hours?.slopesOpen === false) return 'Склоны закрыты'
+  if (slopesClosedHint(resortId, hours, important)) return 'Склоны закрыты'
+  const openImportant = important.some(
+    (i) => i.resortId === resortId && SLOPES_OPEN_IMPORTANT_IDS.has(i.id),
+  )
+  if (openImportant) return 'Склоны открыты'
+  return 'Склоны закрыты'
 }

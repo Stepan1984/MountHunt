@@ -9,6 +9,7 @@ import {
   priceSnapshot,
   tableRows,
 } from '../lib/parse.mjs'
+import { detectTuutariSlopeStatus } from '../lib/slope-status.mjs'
 
 export const TUUTARI_PRICES_URL = 'https://www.2-park.ru/prices/lift/'
 export const TUUTARI_PRICES_FALLBACK_URL = 'https://tuutari.ru/price.html'
@@ -149,6 +150,7 @@ export async function scrapeTuutari() {
     const $c = loadHtml(camHtml)
     const embeds = extractIframeSrcs($c, WEBCAM_URL)
     const important = newsHtml ? detectTuutariImportant(newsHtml, NEWS_URL) : []
+    const slopeStatus = detectTuutariSlopeStatus(important, newsHtml)
 
     return {
       resortId,
@@ -165,6 +167,7 @@ export async function scrapeTuutari() {
         summary,
         periods,
         status: periods.length || summary.includes('будни') ? 'ok' : 'partial',
+        slopesOpen: slopeStatus.slopesOpen,
       }),
       webcamUrl: WEBCAM_URL,
       cameraEmbeds: embeds,
