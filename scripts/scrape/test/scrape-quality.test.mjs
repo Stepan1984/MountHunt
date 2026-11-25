@@ -391,6 +391,75 @@ describe('skipass groups', () => {
     assert.equal(items[0].unit, 'час')
   })
 
+  it('Zolotaya Dolina parses подъёмов/часов genitive plurals', async () => {
+    const { parseZoldolSkipassGroups } = await import('../resorts/zolotaya-dolina.mjs')
+    const html = `
+      1 подъем;200;250;200;250
+      5 подъемов;800;1000;900;1200
+      15 подъемов;1600;2300;2100;2900
+      1 час;1200;1500;1500;1900
+      5 часов;2300;3200;3200;4300
+      6 часов;2500;3500;3500;4600
+    `
+    const groups = parseZoldolSkipassGroups(html)
+    const lifts = groups.find((g) => /подъём/i.test(g.category))
+    const hours = groups.find((g) => /час/i.test(g.category))
+    assert.ok(lifts?.rows?.some((r) => r.duration === '5 подъёмов' && r.prices[1]?.price === 1000))
+    assert.ok(lifts?.rows?.some((r) => r.duration === '15 подъёмов' && r.prices[3]?.price === 2900))
+    assert.ok(hours?.rows?.some((r) => r.duration === '5 часов' && r.prices[0]?.price === 2300))
+    assert.ok(hours?.rows?.some((r) => r.duration === '6 часов' && r.prices[1]?.price === 3500))
+  })
+
+  it('Yukki OCR keeps morning 1,5ч special separate from general 1,5ч', async () => {
+    const { parseYukkiPrices } = await import('../resorts/yukki.mjs')
+    const text = `
+      Разовое посещение + смарт-карта (Вторник-пятница 1,5 часа 1100,00
+      с 9-00до 15-00)
+      30 минут 500,00
+      1 час 1000,00
+      1,5 часа 1300,00
+      Разовое посещение + смарт-карта Зимний сезон 2 часа 1700,00
+      3 часа 2600,00
+      4 часа 3500,00
+      Разовое посещение + смарт-карта (льготный тариф 50%) 30 минут 250,00
+      1 час 500,00
+      1,5 часа 650,00
+    `
+    const items = parseYukkiPrices(text)
+    const morning = items.find((i) => /вт–пт/i.test(i.title))
+    const general15 = items.find((i) => /^Разовое посещение 1,5 часа$/i.test(i.title))
+    const oneHour = items.find((i) => /1 час$/i.test(i.title) && !/1,5/.test(i.title))
+    assert.equal(morning?.price, 1100)
+    assert.equal(general15?.price, 1300)
+    assert.equal(oneHour?.price, 1000)
+    assert.ok(items.some((i) => /2 часа/i.test(i.title) && i.price === 1700))
+    assert.ok(!items.some((i) => i.price === 250 || i.price === 650))
+  })
+
+  it('Krasnoe Ozero parses 1–6h matrix and pass packs from CSV', async () => {
+    const { parseKrasnoeSkipassGroups } = await import('../resorts/krasnoe-ozero.mjs')
+    const { parseCsv } = await import('../lib/parse.mjs')
+    const csv = [
+      'Название,Показывать,Ключ страницы,Уточнение,1 час будни,2 часа будни,3 часа будни,4 часа будни,5 часов будни,6 часов будни,1 час выходные,2 часа выходные,3 часа выходные,4 часа выходные,5 часов выходные,6 часов выходные,1 проход,7 проходов,15 проходов',
+      'Взрослый (часы),yes,ski-pass,Стоимость БСК - 300 руб.,1500,2000,2500,2900,3200,3500,1900,2800,3500,3900,4300,4600,,,',
+      'Взрослый (проходы),yes,ski-pass,"Стоимость БСК - 300 руб., проходы сохраняются",,,,,,,,,,,,,300,2000,3500',
+      '"Дети (до 12 лет), пенсионеры (часы)",yes,ski-pass,,1200,1500,1800,2100,2300,2500,1500,2000,2500,2900,3200,3500,,,',
+      '"Дети (до 12 лет), пенсионеры (проходы)",yes,ski-pass,,,,,,,,,,,,,,300,1500,2500',
+    ].join('\n')
+    const { rows } = parseCsv(csv)
+    const groups = parseKrasnoeSkipassGroups(rows)
+    const adultHours = groups.find((g) => /Взрослый \(часы\)/i.test(g.category))
+    const adultPass = groups.find((g) => /Взрослый \(проходы\)/i.test(g.category))
+    assert.equal(adultHours?.rows?.length, 6)
+    assert.equal(adultHours.rows[0].prices[0].price, 1500)
+    assert.equal(adultHours.rows[5].prices[1].price, 4600)
+    assert.equal(adultPass?.rows?.length, 3)
+    assert.equal(adultPass.rows[0].prices[0].price, 300)
+    assert.equal(adultPass.rows[2].prices[0].price, 3500)
+    assert.ok(groups.some((g) => /Дети.*\(часы\)/i.test(g.category) && g.rows.length === 6))
+    assert.ok(groups.some((g) => /Дети.*\(проходы\)/i.test(g.category) && g.rows.length === 3))
+  })
+
   it('Igora snapshot yields structured groups with site categories', () => {
     const html = readFileSync(join(root, 'data/snapshots/igora/price.html'), 'utf8')
     const { groups } = parseIgoraPriceTables(html)
