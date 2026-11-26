@@ -27,6 +27,7 @@ import { scrapeDropPark } from './scrape/resorts/drop-park.mjs'
 import { scrapeOkhtaPark } from './scrape/resorts/okhta-park.mjs'
 import { scrapeIgora } from './scrape/resorts/igora.mjs'
 import { scrapeSevernySklon } from './scrape/resorts/severny-sklon.mjs'
+import { scrapePutilovoPark } from './scrape/resorts/putilovo-park.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const outDir = join(root, 'public', 'data')
@@ -44,11 +45,12 @@ const PARSERS = {
   'okhta-park': scrapeOkhtaPark,
   igora: scrapeIgora,
   'severny-sklon': scrapeSevernySklon,
+  'putilovo-park': scrapePutilovoPark,
 }
 
 const WAVE1 = ['tuutari-park', 'zolotaya-dolina', 'lazurnye-ozera', 'puhtolova-gora', 'yukki']
 const WAVE2 = ['krasnoe-ozero', 'snezhny', 'drop-park', 'okhta-park']
-const WAVE3 = ['igora', 'severny-sklon']
+const WAVE3 = ['igora', 'severny-sklon', 'putilovo-park']
 
 function parseArgs(argv) {
   const args = { dryRun: false, only: null, skipOptional: false, wave: null }
@@ -166,6 +168,19 @@ function applySeedFixes(resorts) {
       webcam_url: 'https://drop-park.ru/snow-park',
       sourcesAdd: ['https://drop-park.ru/snow-park', 'https://t.me/s/dropsnowpark'],
       community_links: ['https://t.me/dropsnowpark'],
+    },
+    'putilovo-park': {
+      prices_format: 'html',
+      prices_url: 'https://sportpark.pro/snowrider',
+      website: 'https://sportpark.pro/',
+      sourcesAdd: [
+        'https://sportpark.pro/',
+        'https://sportpark.pro/snowrider',
+        'https://t.me/s/SPORTPARKPUTILOVO',
+      ],
+      community_links: ['https://t.me/SPORTPARKPUTILOVO'],
+      notes:
+        'Сноупарк с быстрым канатом; катание по предварительной регистрации и оплате. Официальный сайт sportpark.pro (лендинг Flexbe; на ноябрь 2026 иногда недоступен) — новости и режим в Telegram @SPORTPARKPUTILOVO. Публичной VK-группы не найдено. Координаты — с карты бронирования sportpark.pro.',
     },
     'okhta-park': {
       prices_format: 'html_mixed',

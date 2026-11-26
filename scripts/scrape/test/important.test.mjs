@@ -11,6 +11,7 @@ import {
   detectLazurnyeImportantFromPages,
   detectOkhtaImportant,
   detectPuhtolovaImportant,
+  detectPutilovoTelegramImportant,
   detectTuutariImportant,
   detectZoldolImportant,
   extractPublishedAtFromHtml,
@@ -18,14 +19,28 @@ import {
   mergeImportantFailSoft,
   mergeImportantFromDailyScrape,
   parseKrasnoeSiteNewsTexts,
+  putilovoOffSeasonMatch,
+  putilovoTelegramPostRelevant,
 } from '../lib/important.mjs'
 import { httpDateToIso, ruDateLabelToIso } from '../lib/parse.mjs'
 import { parseTelegramChannelHtml } from '../lib/telegram.mjs'
+import {
+  parsePutilovoHoursFromText,
+  parsePutilovoSitePrices,
+} from '../resorts/putilovo-park.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 const krasnoeTgFixture = join(
   dirname(fileURLToPath(import.meta.url)),
   'fixtures/redlakeclub-tg.html',
+)
+const putilovoTgFixture = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'fixtures/sportparkputilovo-tg.html',
+)
+const putilovoSiteFixture = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'fixtures/sportpark-snowrider.html',
 )
 
 describe('important detectors', () => {
@@ -544,5 +559,102 @@ describe('Krasnoe Telegram (@redlakeclub)', () => {
     ])
     assert.ok(!next.find((i) => i.id === 'krasnoe-tg-1000'))
     assert.ok(next.find((i) => i.id === 'krasnoe-tg-1841'))
+  })
+})
+
+describe('Спортпарк Путилово (@SPORTPARKPUTILOVO)', () => {
+  it('parses entrance ticket from snowrider landing fixture', () => {
+    const html = readFileSync(putilovoSiteFixture, 'utf8')
+    const { items } = parsePutilovoSitePrices(html)
+    assert.ok(items.length >= 1)
+    assert.equal(items[0].price, 1500)
+    assert.match(items[0].title, /билет/i)
+  })
+
+  it('parses session hours from TG-style copy', () => {
+    const pack = parsePutilovoHoursFromText(
+      'Всех желающих ждем завтра 11.03.2026 с 12:00-19:00 с быстрым канатом',
+    )
+    assert.ok(pack)
+    assert.equal(pack.periods[0].open, '12:00')
+    assert.equal(pack.periods[0].close, '19:00')
+  })
+
+  it('includes schedule / season / shred event; skips photo fluff', () => {
+    assert.equal(
+      putilovoTelegramPostRelevant(
+        'Всех желающих ждем завтра 11.03.2026 с 12:00-19:00. Регистрация и оплата обязательны.',
+      ),
+      true,
+    )
+    assert.equal(
+      putilovoTelegramPostRelevant(
+        'Всем привет! К предстоящему зимнему сезону мы расширяем и увеличиваем наш склон под сноупарк!',
+      ),
+      true,
+    )
+    assert.equal(
+      putilovoTelegramPostRelevant(
+        'Приветствуем вас! Новый сноупарк в СПОРТПАРК Путилово! ШРЕДСИМПОЗИУМ vol.3 — контесты с призовым фондом',
+      ),
+      true,
+    )
+    assert.equal(
+      putilovoTelegramPostRelevant('Респект всем кто топил снег и полировал фигуры сегодня!'),
+      false,
+    )
+    assert.equal(
+      putilovoTelegramPostRelevant('Если едешь сегодня кататься к нам в путилово ставь + в комментарии!'),
+      false,
+    )
+  })
+
+  it('detects off-season and filtered cards from TG fixture', () => {
+    assert.equal(
+      putilovoOffSeasonMatch(
+        'Грустно сообщать об этом ,но увидимся в следующем сезоне — вы лучшие',
+      ),
+      true,
+    )
+    const html = readFileSync(putilovoTgFixture, 'utf8')
+    const posts = parseTelegramChannelHtml(html)
+    assert.ok(posts.length >= 5)
+    const items = detectPutilovoTelegramImportant(html, 'https://t.me/s/SPORTPARKPUTILOVO', {
+      // Fixture posts are from March/June 2026 — allow older cards in unit tests.
+      maxAgeDays: 400,
+    })
+    assert.ok(
+      items.some((i) => i.id === 'putilovo-off-season'),
+      `expected off-season, got ${items.map((i) => i.id)}`,
+    )
+    assert.ok(
+      items.some((i) => i.id.startsWith('putilovo-tg-')),
+      `expected tg cards, got ${items.map((i) => i.id)}`,
+    )
+    assert.ok(!items.some((i) => /ставь \+/i.test(i.title)))
+  })
+
+  it('keeps previous putilovo-tg cards when TG scrape soft-fails', () => {
+    const prev = [
+      {
+        id: 'putilovo-tg-16',
+        resortId: 'putilovo-park',
+        title: 'сеанс',
+        severity: 'info',
+        updatedAt: '2026-03-10T00:00:00Z',
+      },
+      {
+        id: 'putilovo-off-season',
+        resortId: 'putilovo-park',
+        title: 'межсезонье',
+        severity: 'info',
+        updatedAt: '2026-03-14T00:00:00Z',
+      },
+    ]
+    const next = mergeImportantFailSoft(prev, [
+      { resortId: 'putilovo-park', ok: false, items: [], error: 'TG down' },
+    ])
+    assert.ok(next.find((i) => i.id === 'putilovo-tg-16'))
+    assert.ok(next.find((i) => i.id === 'putilovo-off-season'))
   })
 })

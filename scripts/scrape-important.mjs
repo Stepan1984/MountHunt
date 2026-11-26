@@ -32,6 +32,10 @@ import {
   parseHoursFromCsv,
 } from './scrape/resorts/krasnoe-ozero.mjs'
 import { DROP_PAGE_URL, DROP_TG_URL } from './scrape/resorts/drop-park.mjs'
+import {
+  PUTILOVO_TG_URL,
+  fetchPutilovoTelegramImportant,
+} from './scrape/resorts/putilovo-park.mjs'
 import { LAZURNYE_HOME_URL, LAZURNYE_NEWS_URL } from './scrape/resorts/lazurnye-ozera.mjs'
 import {
   OKHTA_LENTA_URL,
@@ -206,6 +210,16 @@ const CHECKERS = [
     async run() {
       const { body, lastModified } = await fetchUrlResult(PUHT_NEWS_URL)
       return detectPuhtolovaImportant(body, PUHT_NEWS_URL, { lastModified })
+    },
+  },
+  {
+    id: 'putilovo-park',
+    async run() {
+      const tg = await fetchPutilovoTelegramImportant()
+      if (!tg.tgFetched) {
+        throw new Error(`Putilovo: TG preview unavailable (${PUTILOVO_TG_URL})`)
+      }
+      return { items: tg.items, clearPrefixes: true }
     },
   },
 ]

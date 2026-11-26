@@ -22,7 +22,7 @@
   {
     "resortId": "igora",
     "scrapedAt": "2026-11-25T15:22:54Z",
-    "sourceUrl": "https://igora.ru/en/working-hours/",
+    "sourceUrl": "https://igora.ru/working-hours/",
     "summary": "пн–пт: 11:00–22:00; сб: 10:00–23:00; вс: 10:00–21:00",
     "periods": [
       {
@@ -236,6 +236,21 @@
       }
     ],
     "status": "partial",
+    "slopesOpen": false
+  },
+  {
+    "resortId": "putilovo-park",
+    "scrapedAt": "2026-11-26T11:20:04Z",
+    "sourceUrl": "https://t.me/SPORTPARKPUTILOVO/27",
+    "summary": "по сеансам: 12:00–19:00. Снежный сезон закрыт — открытие уточняйте в Telegram парка",
+    "periods": [
+      {
+        "days": "по сеансам",
+        "open": "12:00",
+        "close": "19:00"
+      }
+    ],
+    "status": "ok",
     "slopesOpen": false
   },
   {

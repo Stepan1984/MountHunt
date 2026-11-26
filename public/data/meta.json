@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-25T20:31:15Z",
+  "updatedAt": "2026-11-26T11:20:04Z",
   "source": "scrape-wave1+wave2+wave3",
-  "note": "Волны 1–3: zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park, igora, severny-sklon; failed: tuutari-park · Важное 2026-11-26T02:37:54Z",
+  "note": "Волны 1–3: zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park, igora, severny-sklon, putilovo-park; failed: tuutari-park",
   "resortsScraped": [
     {
       "id": "tuutari-park",
@@ -101,8 +101,16 @@
       "itemCount": 0,
       "summary": "Склон: часы не найдены на сайте. Ресторан: пн–чт (бар) 11:00–21:00; пт 11:00–21:00; сб–вс 10:00–22:00",
       "importantInconclusive": false
+    },
+    {
+      "id": "putilovo-park",
+      "error": null,
+      "prices": "ok",
+      "hours": "ok",
+      "itemCount": 1,
+      "summary": "по сеансам: 12:00–19:00. Снежный сезон закрыт — открытие уточняйте в Telegram парка",
+      "importantInconclusive": false,
+      "clearImportantPrefixes": true
     }
-  ],
-  "importantScrapedAt": "2026-11-26T02:37:54Z",
-  "importantNote": "Важное: ok 7, fail 1"
+  ]
 }
