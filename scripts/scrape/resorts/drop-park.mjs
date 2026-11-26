@@ -380,7 +380,7 @@ export function parseDropParkPriceList(html) {
     return { open, close }
   }
 
-  let summary = 'Часы работы уточняйте на сайте'
+  let summary = 'Нет данных о часах'
   let hoursStatus = 'partial'
   if (periods.length) {
     summary = periods.map((p) => `${p.days.replace(/\s*\(.*\)/, '')}: ${p.open}–${p.close}`).join('; ')

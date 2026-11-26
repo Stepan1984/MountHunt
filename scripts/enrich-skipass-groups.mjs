@@ -259,7 +259,7 @@ function enrichKrasnoe(snap) {
         prices: [r.weekday || { price: null }, r.weekend || { price: null }],
         note: r.note,
       })),
-      note: 'Стоимость БСК уточняйте на сайте',
+      note: undefined,
     },
   ])
 }
@@ -311,7 +311,7 @@ function enrichIgora(snap) {
     snap.status = 'partial'
   }
   if (merged.filledSkiPass) {
-    const extra = 'Часть тарифов может быть неполной — уточняйте на сайте курорта'
+    const extra = 'Часть тарифов может быть неполной'
     if (!String(snap.note || '').includes('Часть тарифов может быть неполной')) {
       snap.note = snap.note ? `${snap.note}. ${extra}` : extra
     }

@@ -157,7 +157,7 @@ export async function scrapeSnezhny() {
       : []
     const important = importantFromNews.length ? importantFromNews : importantFromHours
 
-    let hoursSummary = 'Режим склонов уточняйте на сайте курорта…'
+    let hoursSummary = 'Нет данных о режиме склонов'
     let hoursSource = HOME_URL
     let hoursStatus = 'partial'
     if (important.length) {
@@ -177,7 +177,7 @@ export async function scrapeSnezhny() {
         groups,
         status: groups.length ? 'ok' : 'partial',
         note: groups.length
-          ? 'Сезонные/подъёмные тарифы со страницы ски-пассов; уточняйте на сайте'
+          ? 'Сезонные/подъёмные тарифы со страницы ски-пассов'
           : 'Таблицы ски-пассов не удалось прочитать',
       }),
       hours: hoursSnapshot({

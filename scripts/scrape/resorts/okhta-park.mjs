@@ -294,7 +294,7 @@ function parseTrailHours(html) {
   const $ = loadHtml(html)
   const text = cleanText($('body').text())
   const periods = []
-  let summary = 'Часы трасс уточняйте на сайте'
+  let summary = 'Нет данных о часах трасс'
 
   const compact = text.match(
     /Время работы\s*Пн[–\-]?Пт:\s*([\d:]+)[–\-]([\d:]+)\s*Сб[–\-]?Вс:\s*([\d:]+)[–\-]([\d:]+)/i,

@@ -33,7 +33,7 @@ export function ResortCard({
   if (!inactive) {
     const rawHours = h?.summary ? localizePublicText(h.summary) : null
     // Never show raw URLs/paths on cards — strip them, keep the human summary.
-    hoursText = rawHours ? stripUrlsFromText(rawHours) || 'уточняйте на сайте' : 'нет данных'
+    hoursText = rawHours ? stripUrlsFromText(rawHours) || 'нет данных' : 'нет данных'
   }
 
   return (

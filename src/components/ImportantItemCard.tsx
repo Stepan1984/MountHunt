@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { LinkedText } from './LinkedText'
-import { formatImportantDate } from '../lib/data'
+import { formatImportantDate, publicImportantBody } from '../lib/data'
 import type { ImportantItem } from '../types'
 
 type Props = {
@@ -16,6 +16,7 @@ export function ImportantItemCard({ item, resortName }: Props) {
   const titleStartsWithResort = Boolean(
     resortName && item.resortId && item.title.startsWith(resortName),
   )
+  const body = publicImportantBody(item.body)
 
   return (
     <li className="important__item">
@@ -34,9 +35,9 @@ export function ImportantItemCard({ item, resortName }: Props) {
           item.title
         )}
       </h3>
-      {item.body && (
+      {body && (
         <p>
-          <LinkedText text={item.body} />
+          <LinkedText text={body} />
         </p>
       )}
     </li>

@@ -170,6 +170,43 @@ export function pricesFor(resortId: string, prices: PriceSnapshot[]): PriceSnaps
 const SCRAPER_NOTE_MARKERS =
   /playwright|\/ssr\b|\bssr\b|snapshot:|github actions|дождаться успешного|не live|status:\s*unavailable|status unavailable|csv виджета|публичн\w*\s+csv|html-сним|\btilda\b|nohref|sev-sklon|без js|виджет на главной|извлечены\s+ocr/i
 
+/**
+ * Drop visitor-facing «уточняйте…» / актуальность-disclaimer captions
+ * (hours, notes, important, price footnotes). About/footer copy is hardcoded
+ * and does not go through this helper.
+ */
+export function stripUtochnyayteDisclaimers(text: string): string {
+  let t = text
+  // Parenthetical asides: (уточняйте открытие на сайте)
+  t = t.replace(/\s*\([^)]*уточня(?:йте|ть)[^)]*\)/gi, '')
+  // Trailing / mid clauses after dash or semicolon that ask to уточняйте / уточнять…
+  t = t.replace(/\s*[—–\-;:]\s*[^.—–;:\n]*уточня(?:йте|ть)[^.\n]*(?=[.]|$)/gi, '')
+  // «… — уточнять открытие перед выездом»
+  t = t.replace(/\s*[—–-]\s*уточня(?:йте|ть)\s+открытие\s+перед\s+выездом\.?/gi, '')
+  // Whole sentences that are уточняйте / «актуальн…» / «перед выездом…» disclaimers.
+  t = t
+    .split(/(?<=[.!…])\s+/)
+    .map((part) => part.trim())
+    .filter((part) => {
+      if (!part) return false
+      if (/уточня(?:йте|ть)/i.test(part) && /сайт|телеграм|telegram|оператор|курорт|режим|открыт/i.test(part)) {
+        return false
+      }
+      if (/^актуальн\w*\s+(?:открытые\s+дни|график|режим|цены)\b/i.test(part)) return false
+      if (/перед\s+выездом\s+(?:проверьте|сверьте|сверяйте)/i.test(part)) return false
+      if (/это\s+не\s+оферта/i.test(part) && /выезд|сайт/i.test(part)) return false
+      return true
+    })
+    .join(' ')
+  return t
+    .replace(/\s*…\s*$/g, '')
+    .replace(/\.\s*\./g, '.')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([.,;:!?])/g, '$1')
+    .replace(/^[,;.\s]+/, '')
+    .trim()
+}
+
 /** Strip scrape/tooling clauses; keep visitor-facing blurb. */
 function stripScraperClauses(text: string): string {
   return text
@@ -191,16 +228,34 @@ function stripScraperClauses(text: string): string {
     .trim()
 }
 
-/** Visitor-facing resort blurb — drop scrape/tooling sentences. */
+/** Visitor-facing resort blurb — drop scrape/tooling and уточняйте disclaimers. */
 export function publicResortNotes(notes: string | null | undefined): string | null {
   if (!notes?.trim()) return null
   // Split on sentence ends only (not `;` — used in normal blurbs).
   const parts = notes
     .split(/(?<=[.!])\s+/)
     .map((p) => stripScraperClauses(p))
-    .filter((p) => p.length > 0 && !SCRAPER_NOTE_MARKERS.test(p))
+    .map((p) => stripUtochnyayteDisclaimers(p))
+    .filter((p) => {
+      if (!p.length || SCRAPER_NOTE_MARKERS.test(p)) return false
+      // Meta / ops asides that belong in sources, not the visitor blurb.
+      if (/публичн\w*\s+vk/i.test(p)) return false
+      if (/координаты\s*[—–-]/i.test(p)) return false
+      if (/лендинг\s+flexbe/i.test(p)) return false
+      if (/кнопка\s+«сайт курорта»/i.test(p)) return false
+      if (/новости и режим/i.test(p)) return false
+      if (/бронирование и оплата\s*[—–-]/i.test(p)) return false
+      return true
+    })
 
   const cleaned = parts.join(' ').replace(/\s+/g, ' ').trim()
+  return cleaned || null
+}
+
+/** Important / news card body without актуальность-disclaimer sentences. */
+export function publicImportantBody(body: string | null | undefined): string | null {
+  if (!body?.trim()) return null
+  const cleaned = stripUtochnyayteDisclaimers(body)
   return cleaned || null
 }
 
@@ -236,13 +291,15 @@ export function publicPriceNote(note: string | null | undefined): string | null 
   if (!note?.trim()) return null
   if (SCRAPER_NOTE_MARKERS.test(note)) return null
   // Soft-rewrite common tooling phrasing that still slipped into committed data.
-  const cleaned = stripContactClausesFromPriceNote(
-    note
-      .replace(/\bsnow-park\b/gi, 'сноупарка')
-      .replace(/\bski-?pass\b/gi, 'ски-пасс')
-      .replace(/\s*извлечены\s+ocr\s+из\s+скана\s+pdf[^.;]*/gi, ' со скана прейскуранта')
-      .replace(/\s+/g, ' ')
-      .trim(),
+  const cleaned = stripUtochnyayteDisclaimers(
+    stripContactClausesFromPriceNote(
+      note
+        .replace(/\bsnow-park\b/gi, 'сноупарка')
+        .replace(/\bski-?pass\b/gi, 'ски-пасс')
+        .replace(/\s*извлечены\s+ocr\s+из\s+скана\s+pdf[^.;]*/gi, ' со скана прейскуранта')
+        .replace(/\s+/g, ' ')
+        .trim(),
+    ),
   )
   return cleaned || null
 }
@@ -252,16 +309,18 @@ export function publicPriceNote(note: string | null | undefined): string | null 
  * Raw URLs are turned into hyperlinks by LinkedText / ExternalLink — not shown as slash text.
  */
 export function localizePublicText(text: string): string {
-  return text
-    .replace(/https?:\/\/igora\.ru\/en\/working-hours\/?/gi, 'https://igora.ru/working-hours/')
-    .replace(/\/en\/working-hours/gi, '/working-hours')
-    // Drop scrape/tooling asides that must never reach visitors.
-    .replace(/\s*\(виджет[^)]*\)/gi, '')
-    .replace(/\s*\(CSV[^)]*\)/gi, '')
-    .replace(/\s*;?\s*без\s+JS\s+недоступен/gi, '')
-    .replace(/\bsnow-park\b/gi, 'сноупарка')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return stripUtochnyayteDisclaimers(
+    text
+      .replace(/https?:\/\/igora\.ru\/en\/working-hours\/?/gi, 'https://igora.ru/working-hours/')
+      .replace(/\/en\/working-hours/gi, '/working-hours')
+      // Drop scrape/tooling asides that must never reach visitors.
+      .replace(/\s*\(виджет[^)]*\)/gi, '')
+      .replace(/\s*\(CSV[^)]*\)/gi, '')
+      .replace(/\s*;?\s*без\s+JS\s+недоступен/gi, '')
+      .replace(/\bsnow-park\b/gi, 'сноупарка')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  )
 }
 
 const IMPORTANT_CHROME_IDS = new Set(['mvp-data-note', 'map-note'])

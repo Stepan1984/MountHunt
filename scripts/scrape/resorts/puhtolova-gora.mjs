@@ -122,7 +122,7 @@ export async function scrapePuhtolovaGora() {
     }
     const summary = summaryParts.length
       ? summaryParts.join('; ')
-      : 'Часы работы уточняйте на сайте (часто пн–вт выходной)'
+      : 'Часто пн–вт выходной'
 
     const embeds = extractIframeSrcs(loadHtml(camHtml), WEBCAM_URL)
     const important = newsHtml ? detectPuhtolovaImportant(newsHtml, NEWS_URL) : []

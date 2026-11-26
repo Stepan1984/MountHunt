@@ -1,5 +1,10 @@
+import { publicPriceNote } from '../lib/data'
 import type { PriceItem, SkipassGroup } from '../types'
 import { DataTable } from './DataTable'
+
+function visitorNote(note: string | null | undefined): string | null {
+  return publicPriceNote(note)
+}
 
 function formatRub(price: number | null | undefined): string {
   if (price == null) return '—'
@@ -51,7 +56,9 @@ export function SkipassTables({
           return (
             <section key={`${title}-${groupIdx}`} className="skipass-group" aria-label={title}>
               <h3 className="skipass-group__title">{title}</h3>
-              {group.note ? <p className="skipass-group__note">{group.note}</p> : null}
+              {visitorNote(group.note) ? (
+                <p className="skipass-group__note">{visitorNote(group.note)}</p>
+              ) : null}
               <DataTable aria-label={title}>
                 <thead>
                   <tr>
@@ -75,17 +82,18 @@ export function SkipassTables({
                     <tr key={`${row.name}-${row.duration ?? ''}-${idx}`}>
                       <th scope="row">
                         {row.name}
-                        {row.note ? <span className="mh-table__note">{row.note}</span> : null}
+                        {visitorNote(row.note) ? (
+                          <span className="mh-table__note">{visitorNote(row.note)}</span>
+                        ) : null}
                       </th>
                       {showDuration ? <td>{row.duration || '—'}</td> : null}
                       {(singleCol ? [group.columns[0]] : group.columns).map((col, ci) => {
                         const cell = row.prices[ci]
+                        const cellNote = visitorNote(cell?.note)
                         return (
                           <td key={col} className="mh-table__num">
                             <span className="mh-table__amount">{formatRub(cell?.price)}</span>
-                            {cell?.note ? (
-                              <span className="mh-table__note">{cell.note}</span>
-                            ) : null}
+                            {cellNote ? <span className="mh-table__note">{cellNote}</span> : null}
                           </td>
                         )
                       })}
@@ -121,7 +129,9 @@ export function SkipassTables({
               <th scope="row">
                 {item.title}
                 {item.unit ? <span className="muted"> · {item.unit}</span> : null}
-                {item.note ? <span className="mh-table__note">{item.note}</span> : null}
+                {visitorNote(item.note) ? (
+                  <span className="mh-table__note">{visitorNote(item.note)}</span>
+                ) : null}
               </th>
               <td className="mh-table__num">
                 <span className="mh-table__amount">

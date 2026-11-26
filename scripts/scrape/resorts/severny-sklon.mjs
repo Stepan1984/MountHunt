@@ -58,7 +58,7 @@ export async function scrapeSevernySklon() {
 
     // Price note = tariffs only. Contacts → resort.phone/email; address → resort.area.
     const priceNote = [
-      'Цены на ски-пассы и подъёмники на официальном сайте не опубликованы — уточняйте у курорта',
+      'Цены на ски-пассы и подъёмники на официальном сайте не опубликованы',
       fakeSkiCta ? 'На сайте нет рабочей ссылки на тарифы' : null,
     ]
       .filter(Boolean)
