@@ -405,6 +405,39 @@ describe('Krasnoe Telegram (@redlakeclub)', () => {
     )
   })
 
+  it('includes colloquial season-open posts (redlakeclub/1849 style)', () => {
+    const open1849 = `МЫ ОТКРЫВАЕМСЯ
+Друзья, в эту субботу, 28.11 стартует зимний сезон!
+Снежная магия уже в процессе: пушки трудятся, склоны становятся идеальными!
+Запускаем
+Основную трассу №4
+Учебную трассу №10
+Кресельный подъемник №1
+Ленточный подъемник №6
+Так же будет работать прокат горнолыжного оборудования и служба инструкторов!`
+    assert.equal(krasnoeTelegramPostRelevant(open1849), true)
+    assert.equal(krasnoeTelegramPostRelevant('МЫ ОТКРЫВАЕМСЯ — ждём всех на склонах'), true)
+    assert.equal(krasnoeTelegramPostRelevant('Друзья, 28.11 стартует зимний сезон!'), true)
+    assert.equal(
+      krasnoeTelegramPostRelevant('ЗАПУСТИЛИ ПУШКИ. Сезон совсем скоро'),
+      false,
+      'snow guns / soon ≠ open announcement',
+    )
+    const items = detectKrasnoeTelegramImportant(
+      `<div class="tgme_widget_message" data-post="redlakeclub/1849">
+        <div class="tgme_widget_message_text">${open1849.replace(/\n/g, '<br/>')}</div>
+        <a class="tgme_widget_message_date" href="https://t.me/redlakeclub/1849">
+          <time datetime="2026-11-25T17:10:56+00:00"></time>
+        </a>
+      </div>`,
+      'https://t.me/s/redlakeclub',
+    )
+    assert.ok(items.some((i) => i.id === 'krasnoe-tg-1849'), `got ${items.map((i) => i.id)}`)
+    const card = items.find((i) => i.id === 'krasnoe-tg-1849')
+    assert.equal(card.severity, 'info')
+    assert.match(card.title, /открываемся/i)
+  })
+
   it('detects matching posts from fixture HTML', () => {
     const html = readFileSync(krasnoeTgFixture, 'utf8')
     const items = detectKrasnoeTelegramImportant(html, 'https://t.me/s/redlakeclub')

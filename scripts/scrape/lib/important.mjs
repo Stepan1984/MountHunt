@@ -342,8 +342,10 @@ export function krasnoeTelegramPostRelevant(text) {
     /соревнован\w*|чемпионат|кубок\b|конкурс\w*(?:\s+\w+){0,3}\s+(?:по|среди|на)\b/i.test(t)
   const schedule =
     /график\s+работ|режим\s+работ|расписан\w*|час[ыа]?\s+работ|работаем\s+с\s+\d/i.test(t)
+  // Season / slope: include colloquial openers («открываемся», «стартует сезон»,
+  // «запускаем трассу»), not only «открытие сезона» / «сезон открыт».
   const seasonSlope =
-    /открытие\s+сезон|сезон\s+(?:20\d{2}\s*[–\-/]\s*20\d{2}\s+)?(?:открыт|закрыт|закончен)|открыт[аы]?\s+(?:сезон|склон|трасс)|склон[ыа]?\s+(?:открыт|закрыт)|трасс[ыа]?\s+(?:открыт|закрыт)|закрыт[аы]?\s+до\s+сезон|закрытие\s+сезон/i.test(
+    /открываемс|открываем\s+сезон|открытие\s+сезон|стартует\s+(?:\S+\s+){0,2}сезон|сезон\s+стартует|сезон\s+(?:20\d{2}\s*[–\-/]\s*20\d{2}\s+)?(?:открыт|закрыт|закончен|стартует)|открыт[аы]?\s+(?:сезон|склон|трасс)|склон[ыа]?\s+(?:открыт|закрыт)|трасс[ыа]?\s+(?:открыт|закрыт)|закрыт[аы]?\s+до\s+сезон|закрытие\s+сезон|запускаем.{0,80}трасс/i.test(
       t,
     )
   const lift =
@@ -363,6 +365,10 @@ export function krasnoeTelegramPostRelevant(text) {
   return true
 }
 
+/** Soft open-announcement cues (keep severity info even when lifts are listed). */
+const KRASNOE_TG_SEASON_OPEN_CUE =
+  /розыгрыш|соревнован|открытие\s+сезон|сезон\s+открыт|открываемс|открываем\s+сезон|стартует\s+(?:\S+\s+){0,2}сезон|сезон\s+стартует|запускаем.{0,80}трасс/i
+
 /**
  * @param {string} text
  * @returns {'info' | 'warn'}
@@ -370,7 +376,7 @@ export function krasnoeTelegramPostRelevant(text) {
 function krasnoeTelegramSeverity(text) {
   if (
     /график\s+работ|режим\s+работ|закрыт|не\s+работает|подъ[её]мник/i.test(text) &&
-    !/розыгрыш|соревнован|открытие\s+сезон|сезон\s+открыт/i.test(text)
+    !KRASNOE_TG_SEASON_OPEN_CUE.test(text)
   ) {
     return 'warn'
   }
