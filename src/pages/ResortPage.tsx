@@ -128,10 +128,7 @@ export function ResortPage({ data }: { data: SiteData }) {
 
       <header className="resort-detail__header">
         <div>
-          <p className="resort-detail__brand-kicker">MountHunt</p>
           <h1>{resort.name}</h1>
-          {/* District only — full street address is sole under «Локация». */}
-          <p className="resort-detail__area">{resort.city_or_district || resort.area}</p>
         </div>
         {!inactive && badge ? (
           closed ? (

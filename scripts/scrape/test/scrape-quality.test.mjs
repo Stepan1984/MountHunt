@@ -359,9 +359,11 @@ describe('resort page block semantics', () => {
     const src = readFileSync(join(root, 'src/pages/ResortPage.tsx'), 'utf8')
     assert.match(src, /hours → prices if active/)
     assert.match(src, /features → contacts → location/)
-    assert.match(src, /city_or_district \|\| resort\.area/)
     assert.match(src, /resort-contacts-title/)
     assert.match(src, /resort-location-title/)
+    // Header: title only — no brand kicker or district line.
+    assert.doesNotMatch(src, /resort-detail__brand-kicker/)
+    assert.doesNotMatch(src, /resort-detail__area/)
     // Address hyperlink appears once (Location), not also in the header.
     const addressLinks = src.match(/resort-detail__address/g) || []
     assert.equal(addressLinks.length, 1)
