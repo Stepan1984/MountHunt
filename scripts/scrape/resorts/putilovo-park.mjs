@@ -19,7 +19,6 @@ import {
   loadHtml,
   priceSnapshot,
 } from '../lib/parse.mjs'
-import { appendHoursExtraNote } from '../lib/slope-status.mjs'
 import { parseTelegramChannelHtml } from '../lib/telegram.mjs'
 
 export const PUTILOVO_HOME_URL = 'https://sportpark.pro/'
@@ -186,13 +185,12 @@ export async function scrapePutilovoPark() {
       : []
     const slopeStatus = detectPutilovoSlopeStatus(site.html, tgHtml)
 
-    const hoursSummary = appendHoursExtraNote(
+    // Season-closed note duplicates the card badge — keep schedule-only summary.
+    const hoursSummary =
       hoursPack?.summary ||
-        (tgFetched
-          ? 'Часы сеансов публикуют в Telegram перед открытыми днями'
-          : 'Часы сеансов публикуют в Telegram'),
-      slopeStatus.note,
-    )
+      (tgFetched
+        ? 'Часы сеансов публикуют в Telegram перед открытыми днями'
+        : 'Часы сеансов публикуют в Telegram')
 
     return {
       resortId,

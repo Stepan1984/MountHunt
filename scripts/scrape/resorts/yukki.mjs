@@ -180,7 +180,7 @@ export async function scrapeYukki() {
     const periods = []
     let hoursStatus = 'partial'
     if (hoursMatch) {
-      summary = `ежедневно ${hoursMatch[1]}–${hoursMatch[2]}`
+      summary = `ежедневно: ${hoursMatch[1]}–${hoursMatch[2]}`
       periods.push({ days: 'ежедневно', open: hoursMatch[1], close: hoursMatch[2] })
       hoursStatus = 'ok'
     }

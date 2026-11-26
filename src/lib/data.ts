@@ -1,3 +1,4 @@
+import { stripUrlsFromText } from './links'
 import type {
   HoursSnapshot,
   ImportantItem,
@@ -161,6 +162,166 @@ export function hoursLeadText(
   if (looseLead === loosePeriods) return null
 
   return lead
+}
+
+const WEEKDAY_ABBR = new Set(['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'])
+
+/** «ср., чт., пт.» / «пн, вт» → «ср–пт» / «пн–вт»; keep other labels. */
+function normalizeCardDaysLabel(raw: string): string {
+  let days = raw
+    .trim()
+    .replace(/\s*\([^)]*полный[^)]*\)/gi, '')
+    .replace(/\s*\([^)]*по\s+прайсу[^)]*\)/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!days) return ''
+
+  const parts = days.split(/\s*,\s*/).map((p) => p.replace(/\.$/, '').trim().toLowerCase())
+  if (parts.length >= 2 && parts.every((p) => WEEKDAY_ABBR.has(p))) {
+    return `${parts[0]}–${parts[parts.length - 1]}`
+  }
+
+  return days
+    .replace(/\s*[-−—]\s*/g, '–')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function normalizeCardTime(raw: string | null | undefined): string {
+  const s = (raw || '').trim().replace(/\./g, ':')
+  if (!s) return ''
+  const m = s.match(/^(\d{1,2}):(\d{2})$/)
+  if (!m) return s
+  return `${Number(m[1])}:${m[2]}`
+}
+
+/**
+ * Canonical card schedule line from structured periods:
+ * «пн–пт: 11:00–22:00; сб–вс: 9:00–22:30».
+ */
+export function formatCardHoursFromPeriods(periods: HoursPeriod[] | undefined): string | null {
+  if (!periods?.length) return null
+  const seen = new Set<string>()
+  const parts: string[] = []
+  for (const p of periods) {
+    const days = normalizeCardDaysLabel(p.days || '')
+    if (!days) continue
+    const key = days.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    const open = normalizeCardTime(p.open)
+    const close = normalizeCardTime(p.close)
+    if (open && close) {
+      parts.push(`${days}: ${open}–${close}`)
+    } else {
+      parts.push(`${days}: выходной`)
+    }
+  }
+  return parts.length ? parts.join('; ') : null
+}
+
+/** Cyrillic-safe letter run (JS `\w` is ASCII-only without the unicode flag). */
+const CY = '[а-яёa-z]*'
+
+/**
+ * Drop slope open/closed status prose that duplicates card badges
+ * («Склоны открыты/закрыты»). Keep real schedule fragments.
+ */
+export function stripSlopeStatusFromCardHours(text: string): string {
+  let t = text.trim()
+  if (!t) return ''
+
+  // Whole leading status sentences / dated closed-until-season lines.
+  t = t.replace(
+    new RegExp(
+      `^(?:на\\s+\\d{1,2}\\.\\d{1,2}(?:\\.\\d{2,4})?\\s*:\\s*)?(?:горнолыжн${CY}\\s+)?(?:склон(?:ы|ов|а)?|трасс${CY})(?:\\s*\\/\\s*подъ[её]мник${CY})?\\s+(?:открыт${CY}|закрыт${CY})(?:\\s+на\\s+летн${CY}\\s+период)?(?:\\s+до\\s+сезон${CY})?[.!?]?\\s*`,
+      'gi',
+    ),
+    '',
+  )
+  t = t.replace(new RegExp(`^(?:снежн${CY}\\s+)?сезон\\s+закрыт\\.?\\s*`, 'gi'), '')
+  t = t.replace(new RegExp(`^закрыт(?:ы|а|о)?\\s+до\\s+сезон${CY}[.!?]?\\s*`, 'gi'), '')
+
+  // Trailing / mid status clauses after . or —
+  t = t.replace(
+    new RegExp(`\\s*[.]\\s*(?:снежн${CY}\\s+)?сезон\\s+закрыт(?:\\s*[—–-].*)?$`, 'gi'),
+    '',
+  )
+  t = t.replace(
+    new RegExp(
+      `\\s*[.]\\s*(?:горнолыжн${CY}\\s+)?склон${CY}\\s+(?:открыт${CY}|закрыт${CY})(?:\\s+на\\s+летн${CY}\\s+период)?(?:\\s+до\\s+сезон${CY})?.*$`,
+      'gi',
+    ),
+    '',
+  )
+  t = t.replace(
+    new RegExp(`\\s*[—–-]\\s*(?:снежн${CY}\\s+)?сезон\\s+закрыт(?:\\s*[—–-].*)?$`, 'gi'),
+    '',
+  )
+
+  // Scraper glue when status was prepended to a real schedule.
+  t = t.replace(/^\s*ближайший\s+график\s*\([^)]*\)\s*:\s*/i, '')
+  t = t.replace(new RegExp(`закрыт(?:ы|а|о)?\\s+до\\s+сезон${CY}`, 'gi'), '')
+
+  return t
+    .replace(/\s+/g, ' ')
+    .replace(/^[,;.\s]+|[,;.\s]+$/g, '')
+    .trim()
+}
+
+/** True when the leftover string is only open/closed status, not a schedule. */
+function isPureSlopeStatusHours(text: string): boolean {
+  const t = text.trim()
+  if (!t) return true
+  if (/\d{1,2}\s*[:.]\s*\d{2}/.test(t)) return false
+  return new RegExp(
+    `сезон\\s+закрыт|склон${CY}\\s+(?:открыт|закрыт)|закрыт${CY}\\s+до\\s+сезон|горнолыжн${CY}\\s+склон`,
+    'i',
+  ).test(t)
+}
+
+/**
+ * Normalize free-text hours into the same card style as periods formatting.
+ */
+export function normalizeCardHoursSummary(text: string): string {
+  let t = stripSlopeStatusFromCardHours(text)
+  if (!t || isPureSlopeStatusHours(t)) return ''
+
+  t = t
+    .replace(/\s*[;|]\s*/g, '; ')
+    // Convert HH.MM→HH:MM only inside time ranges (do not touch dates like 25.11.2026).
+    .replace(/(\d{1,2})\.(\d{2})(?=\s*[-−—–]\s*\d)/g, '$1:$2')
+    .replace(/(?<=[-−—–]\s*)(\d{1,2})\.(\d{2})\b/g, '$1:$2')
+    .replace(/(\d{1,2}:\d{2})\s*[-−—]\s*(\d{1,2}:\d{2})/g, '$1–$2')
+    // «будни 12:00–18:00» / «ежедневно 10:00–21:00» → colon before times
+    .replace(
+      /(^|;\s*)([^;:]+?)\s+(\d{1,2}:\d{2}\s*–\s*\d{1,2}:\d{2})/g,
+      '$1$2: $3',
+    )
+    .replace(/\s+/g, ' ')
+    .replace(/^[,;.\s]+|[,;.\s]+$/g, '')
+    .replace(/…\s*$/g, '')
+    .trim()
+
+  return t
+}
+
+/**
+ * Active-card «Часы» line: unified schedule format, no slope status badge duplicates.
+ * Prefer structured `periods`; fall back to cleaned summary.
+ */
+export function cardHoursText(hours: HoursSnapshot | undefined): string {
+  if (!hours) return 'нет данных'
+
+  const fromPeriods = formatCardHoursFromPeriods(hours.periods)
+  if (fromPeriods) return fromPeriods
+
+  const raw = (hours.summary || '').trim()
+  if (!raw) return 'нет данных'
+  const cleaned = normalizeCardHoursSummary(
+    stripUrlsFromText(localizePublicText(raw)),
+  )
+  return cleaned || 'нет данных'
 }
 
 export function pricesFor(resortId: string, prices: PriceSnapshot[]): PriceSnapshot | undefined {

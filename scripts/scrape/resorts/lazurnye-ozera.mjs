@@ -80,8 +80,7 @@ export async function scrapeLazurnyeOzera() {
       HOME_URL,
       { homeUrl: HOME_URL, newsUrl: NEWS_URL },
     )
-    const seasonClosed = important.some((i) => i.id === 'lazurnye-season-closed')
-
+    // Closed-season status → hours.slopesOpen / card badge only — not hours.summary.
     let summary = 'Нет данных о режиме'
     const periods = []
     const hoursMatch = text.match(
@@ -102,11 +101,6 @@ export async function scrapeLazurnyeOzera() {
       summary = `пн: выходной; вт–пт: ${openWd}–${closeWd}; сб–вс: ${openWe}–${closeWe}`
     } else if (hoursMatch) {
       summary = `пн: выходной; вт–пт: ${norm(hoursMatch[1])}–${norm(hoursMatch[2])}; сб–вс: ${norm(hoursMatch[3])}–${norm(hoursMatch[4])}`
-    }
-    if (seasonClosed) {
-      summary = summary && summary !== 'Нет данных о режиме'
-        ? `Сезон закрыт. ${summary}`
-        : 'Сезон закрыт'
     }
     const slopeStatus = detectLazurnyeSlopeStatus(homeHtml, important)
 

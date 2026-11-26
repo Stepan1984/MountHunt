@@ -384,7 +384,6 @@ export function parseDropParkPriceList(html) {
   let hoursStatus = 'partial'
   if (periods.length) {
     summary = periods.map((p) => `${p.days.replace(/\s*\(.*\)/, '')}: ${p.open}–${p.close}`).join('; ')
-    summary = `По прайсу сноупарка — ${summary}`
     hoursStatus = 'partial'
   }
 

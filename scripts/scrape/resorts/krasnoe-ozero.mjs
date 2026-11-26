@@ -164,10 +164,12 @@ export function parseHoursFromCsv(csv) {
     bits.push(`Трассы: ${sample.val || 'нет данных'} (${dateCol})`)
   }
 
-  let summary = bits.slice(0, 4).join('; ') || `График на ${dateCol}: данные по склонам не найдены`
-  if (closedUntilSeason || (allClosed && slopes.length)) {
-    summary = `На ${dateCol}: склоны/подъёмники закрыты до сезона`
-  }
+  // Closed-until-season → slopesOpen / badge; keep schedule bits in summary when present.
+  let summary =
+    bits.slice(0, 4).join('; ') ||
+    (closedUntilSeason || (allClosed && slopes.length)
+      ? `График на ${dateCol}`
+      : `График на ${dateCol}: данные по склонам не найдены`)
 
   const pack = {
     closedUntilSeason,

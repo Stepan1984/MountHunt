@@ -602,6 +602,12 @@ main {
   overflow-wrap: anywhere;
 }
 
+/* Unified schedule line on every active card («пн–пт: 11:00–22:00; …»). */
+.resort-card__hours {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;

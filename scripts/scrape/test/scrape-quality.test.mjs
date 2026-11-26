@@ -281,10 +281,11 @@ describe('visitor-facing copy avoids scrape jargon', () => {
 })
 
 describe('closed-season card honesty signals', () => {
-  it('lazurnye prefixes hours with Сезон закрыт when site says so', () => {
+  it('lazurnye keeps hours.summary schedule-only (closed season → slopesOpen/badge)', () => {
     const src = readFileSync(join(root, 'scripts/scrape/resorts/lazurnye-ozera.mjs'), 'utf8')
-    assert.match(src, /Сезон закрыт/)
-    assert.match(src, /seasonClosed/)
+    assert.doesNotMatch(src, /Сезон закрыт\. \$\{summary\}/)
+    assert.doesNotMatch(src, /summary = `Сезон закрыт/)
+    assert.match(src, /slopesOpen:\s*slopeStatus\.slopesOpen/)
   })
 
   it('UI slopesBadgeLabel uses slopesOpen fail-soft (never invent open)', () => {
@@ -295,8 +296,12 @@ describe('closed-season card honesty signals', () => {
     assert.match(dataSrc, /slopesOpen === true/)
     assert.match(dataSrc, /Склоны открыты/)
     assert.match(dataSrc, /Склоны закрыты/)
+    assert.match(dataSrc, /cardHoursText/)
+    assert.match(dataSrc, /stripSlopeStatusFromCardHours/)
     // Active cards: open/closed slope badges from scrape signal; prices on detail.
     assert.match(cardSrc, /slopesBadgeLabel/)
+    assert.match(cardSrc, /cardHoursText/)
+    assert.match(cardSrc, /resort-card__hours/)
     assert.match(cardSrc, /badge--open/)
     assert.match(cardSrc, /badge--warn/)
     assert.doesNotMatch(cardSrc, /statusLabel/)

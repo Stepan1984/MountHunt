@@ -45,9 +45,9 @@ export async function scrapeSevernySklon() {
     if (fri) periods.push({ days: 'пт', open: fri[1], close: fri[2] })
     if (weekend) periods.push({ days: 'сб–вс', open: weekend[1], close: weekend[2] })
     if (periods.length) {
-      summary = `Склон: часы не найдены на сайте. Ресторан: ${periods
-        .map((p) => `${p.days} ${p.open}–${p.close}`)
-        .join('; ')}`
+      summary = periods
+        .map((p) => `${p.days}: ${p.open}–${p.close}`)
+        .join('; ')
     } else if (restChunk) {
       summary = `Склон: часы не найдены. ${cleanText(restChunk).slice(0, 180)}`
     }
