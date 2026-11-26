@@ -146,10 +146,22 @@ npm run data:refresh
 ## Структура страниц
 
 - `/` — бренд MountHunt, карта, «Важное», список курортов
+- `/news` — лента новостей курортов
 - `/resort/:id` — детали: локация, часы, цены, камера, сайт
 - `/about` — источники и дисклеймер
 
 На карте по умолчанию только курорты со статусом `active` и координатами. Неясные/закрытые — во втором списке.
+
+---
+
+## SEO (robots / sitemap)
+
+В `public/` лежат `robots.txt` (Allow all) и `sitemap.xml` с абсолютными URL `https://mounthunt.ru/…` (главная, `/about`, `/news`, каждый `/resort/{id}` из `resorts.json`). Vite копирует их в корень `dist`. Пересборка sitemap: `npm run sitemap` (также вызывается из `npm run build`).
+
+Отправка в поиск (один раз после деплоя):
+
+1. **Google** — [Search Console](https://search.google.com/search-console) → добавить ресурс `https://mounthunt.ru` → Sitemaps → `https://mounthunt.ru/sitemap.xml`.
+2. **Яндекс** — [Вебмастер](https://webmaster.yandex.ru/) → добавить сайт → Индексирование → Файлы Sitemap → тот же URL.
 
 ---
 
@@ -158,7 +170,8 @@ npm run data:refresh
 | Команда | Описание |
 |---------|----------|
 | `npm run dev` | Разработка |
-| `npm run build` | Production-сборка |
+| `npm run sitemap` | Пересобрать `public/sitemap.xml` из `resorts.json` |
+| `npm run build` | Production-сборка (включая sitemap) |
 | `npm run preview` | Просмотр сборки |
 | `npm run scrape` | Сбор цен/часов → `public/data` |
 | `npm run scrape:important` | Лёгкий сбор блока «Важное» → `important.json` |
