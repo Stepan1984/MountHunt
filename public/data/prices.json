@@ -1,7 +1,7 @@
 [
   {
     "resortId": "okhta-park",
-    "scrapedAt": "2026-11-25T15:20:41Z",
+    "scrapedAt": "2026-11-26T17:25:46Z",
     "sourceUrl": "https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/",
     "currency": "RUB",
     "items": [
@@ -523,7 +523,7 @@
   },
   {
     "resortId": "igora",
-    "scrapedAt": "2026-11-25T15:22:54Z",
+    "scrapedAt": "2026-11-26T17:28:02Z",
     "sourceUrl": "https://igora.ru/price/",
     "currency": "RUB",
     "items": [
@@ -1316,7 +1316,7 @@
   },
   {
     "resortId": "tuutari-park",
-    "scrapedAt": "2026-11-25T12:16:12Z",
+    "scrapedAt": "2026-11-26T17:24:28Z",
     "sourceUrl": "https://www.2-park.ru/prices/lift/",
     "currency": "RUB",
     "items": [
@@ -1590,12 +1590,11 @@
         ]
       }
     ],
-    "status": "failed",
-    "note": "fetch failed"
+    "status": "ok"
   },
   {
     "resortId": "krasnoe-ozero",
-    "scrapedAt": "2026-11-25T20:21:32Z",
+    "scrapedAt": "2026-11-26T17:25:16Z",
     "sourceUrl": "https://krasnoeozero.ru/winter/skipass-and-lifts",
     "currency": "RUB",
     "items": [
@@ -2098,7 +2097,7 @@
   },
   {
     "resortId": "zolotaya-dolina",
-    "scrapedAt": "2026-11-25T20:21:25Z",
+    "scrapedAt": "2026-11-26T17:24:34Z",
     "sourceUrl": "https://zoldol.ru/price-winter",
     "currency": "RUB",
     "items": [
@@ -2541,12 +2540,11 @@
         ]
       }
     ],
-    "status": "ok",
-    "note": "Не является публичной офертой"
+    "status": "ok"
   },
   {
     "resortId": "snezhny",
-    "scrapedAt": "2026-11-25T15:20:26Z",
+    "scrapedAt": "2026-11-26T17:25:31Z",
     "sourceUrl": "https://snegny.ru/ски-пассы/",
     "currency": "RUB",
     "items": [
@@ -2791,19 +2789,19 @@
         "rawText": "4 900"
       },
       {
-        "title": "Абонемент «Взрослый» · сезон",
+        "title": "Абонемент \"Взрослый\" · сезон",
         "price": 44900,
         "unit": "сезон",
         "rawText": "44 900"
       },
       {
-        "title": "Абонемент «Детский» · сезон",
+        "title": "Абонемент \"Детский\" · сезон",
         "price": 32900,
         "unit": "сезон",
         "rawText": "32 900"
       },
       {
-        "title": "Абонемент «Буднего дня»** · сезон",
+        "title": "Абонемент \"Буднего дня\"** · сезон",
         "price": 17900,
         "unit": "сезон",
         "rawText": "17 900"
@@ -3060,7 +3058,7 @@
         ],
         "rows": [
           {
-            "name": "Абонемент «Взрослый»",
+            "name": "Абонемент \"Взрослый\"",
             "duration": "сезон",
             "prices": [
               {
@@ -3070,7 +3068,7 @@
             ]
           },
           {
-            "name": "Абонемент «Детский»",
+            "name": "Абонемент \"Детский\"",
             "duration": "сезон",
             "prices": [
               {
@@ -3080,7 +3078,7 @@
             ]
           },
           {
-            "name": "Абонемент «Буднего дня»**",
+            "name": "Абонемент \"Буднего дня\"**",
             "duration": "сезон",
             "prices": [
               {
@@ -3125,7 +3123,7 @@
   },
   {
     "resortId": "severny-sklon",
-    "scrapedAt": "2026-11-25T15:22:56Z",
+    "scrapedAt": "2026-11-26T17:28:05Z",
     "sourceUrl": "https://severnysklon.ru/",
     "currency": "RUB",
     "items": [],
@@ -3134,7 +3132,7 @@
   },
   {
     "resortId": "puhtolova-gora",
-    "scrapedAt": "2026-11-25T15:19:49Z",
+    "scrapedAt": "2026-11-26T17:24:48Z",
     "sourceUrl": "https://puhgora.ru/uslugi/ceny-na-podyomniki",
     "currency": "RUB",
     "items": [],
@@ -3143,7 +3141,7 @@
   },
   {
     "resortId": "yukki",
-    "scrapedAt": "2026-11-25T20:31:15Z",
+    "scrapedAt": "2026-11-26T17:25:04Z",
     "sourceUrl": "https://stc.lenobl.ru/media/content/docs/14180/%D0%A1%D0%9A_%D0%AE%D0%BA%D0%BA%D0%B8_%D0%9F%D1%80%D0%B8%D0%BA%D0%B0%D0%B7_%D0%BE%D1%82_19.08.2026_01-03-79%D0%BE%D0%B4_26_%D0%9E%D0%B1_%D1%83%D1%82%D0%B2%D0%B5%D1%80%D0%B6%D0%B4%D0%B5%D0%BD%D0%B8_%D0%BF%D1%80%D0%B5%D0%B9%D1%81%D0%BA%D1%83%D1%80%D0%B0%D0%BD%D1%82%D0%B0_%D0%BD%D0%B0_%D1%81%D0%BB%D1%83%D0%B3%D0%B8_01.09.26.pdf",
     "currency": "RUB",
     "items": [
@@ -3189,7 +3187,7 @@
   },
   {
     "resortId": "lazurnye-ozera",
-    "scrapedAt": "2026-11-25T15:19:42Z",
+    "scrapedAt": "2026-11-26T17:24:41Z",
     "sourceUrl": "https://lazoorsnow.ru/ceny",
     "currency": "RUB",
     "items": [
@@ -3305,7 +3303,7 @@
   },
   {
     "resortId": "drop-park",
-    "scrapedAt": "2026-11-25T15:20:30Z",
+    "scrapedAt": "2026-11-26T17:25:36Z",
     "sourceUrl": "https://drop-park.ru/snow-park",
     "currency": "RUB",
     "items": [

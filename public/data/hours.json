@@ -1,7 +1,7 @@
 [
   {
     "resortId": "okhta-park",
-    "scrapedAt": "2026-11-25T15:20:41Z",
+    "scrapedAt": "2026-11-26T17:25:46Z",
     "sourceUrl": "https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/",
     "summary": "пн–пт: 11:00–22:30; сб–вс: 9:00–22:30",
     "periods": [
@@ -17,12 +17,12 @@
       }
     ],
     "status": "ok",
-    "slopesOpen": true
+    "slopesOpen": false
   },
   {
     "resortId": "igora",
-    "scrapedAt": "2026-11-25T15:22:54Z",
-    "sourceUrl": "https://igora.ru/working-hours/",
+    "scrapedAt": "2026-11-26T17:28:02Z",
+    "sourceUrl": "https://igora.ru/en/working-hours/",
     "summary": "пн–пт: 11:00–22:00; сб: 10:00–23:00; вс: 10:00–21:00",
     "periods": [
       {
@@ -46,7 +46,7 @@
   },
   {
     "resortId": "tuutari-park",
-    "scrapedAt": "2026-11-25T12:16:12Z",
+    "scrapedAt": "2026-11-26T17:24:28Z",
     "sourceUrl": "https://www.2-park.ru/",
     "summary": "будни: 12:00–18:00; выходные: 10:00–18:00",
     "periods": [
@@ -61,24 +61,23 @@
         "close": "18:00"
       }
     ],
-    "status": "failed",
-    "slopesOpen": false,
-    "note": "Сбор данных не удался — показаны прежние данные"
+    "status": "ok",
+    "slopesOpen": true
   },
   {
     "resortId": "krasnoe-ozero",
-    "scrapedAt": "2026-11-25T20:21:32Z",
+    "scrapedAt": "2026-11-26T17:25:11Z",
     "sourceUrl": "https://krasnoeozero.ru/grafik/",
-    "summary": "Нет данных о режиме склонов",
+    "summary": "Подъемник кресельный №10: закрыт; Подъемник с крыши гостиницы: закрыт; Кресельный подъемник №1: закрыт; Ленточный подъемник № 6: закрыт",
     "periods": [],
     "status": "ok",
     "slopesOpen": false
   },
   {
     "resortId": "zolotaya-dolina",
-    "scrapedAt": "2026-11-25T20:21:25Z",
+    "scrapedAt": "2026-11-26T17:24:34Z",
     "sourceUrl": "https://zoldol.ru/vremya-raboty",
-    "summary": "Понедельник: выходной; Вторник: выходной; Среда: 12:00–22:00; Четверг: 12:00–22:00; Пятница: 12:00–23:00; Суббота: 11:00–23:00",
+    "summary": "Понедельник: выходной; Вторник: выходной; Среда: 12:00–22:00; Четверг: 12:00–22:00; Пятница: 12:00–23:00; Суббота: 11:00–23:00; Понедельник: выходной",
     "periods": [
       {
         "days": "Понедельник",
@@ -121,7 +120,7 @@
   },
   {
     "resortId": "snezhny",
-    "scrapedAt": "2026-11-25T15:20:26Z",
+    "scrapedAt": "2026-11-26T17:25:31Z",
     "sourceUrl": "https://snegny.ru/",
     "summary": "Нет данных о режиме склонов",
     "periods": [],
@@ -130,7 +129,7 @@
   },
   {
     "resortId": "severny-sklon",
-    "scrapedAt": "2026-11-25T15:22:56Z",
+    "scrapedAt": "2026-11-26T17:28:05Z",
     "sourceUrl": "https://severnysklon.ru/",
     "summary": "пн–чт (бар): 11:00–21:00; пт: 11:00–21:00; сб–вс: 10:00–22:00",
     "periods": [
@@ -155,9 +154,9 @@
   },
   {
     "resortId": "puhtolova-gora",
-    "scrapedAt": "2026-11-25T15:19:49Z",
+    "scrapedAt": "2026-11-26T17:24:48Z",
     "sourceUrl": "https://puhgora.ru/o-kurorte/chasy-raboty",
-    "summary": "ср–пт: 15:00–21:00; сб–вс: 10:00–21:00; пн–вт: выходной",
+    "summary": "ср., чт., пт.: 15:00–21:00; сб., вс.: 10:00–21:00; пн., вт.: выходной",
     "periods": [
       {
         "days": "ср., чт., пт.",
@@ -180,7 +179,7 @@
   },
   {
     "resortId": "yukki",
-    "scrapedAt": "2026-11-25T20:31:15Z",
+    "scrapedAt": "2026-11-26T17:25:04Z",
     "sourceUrl": "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/",
     "summary": "ежедневно: 10:00–21:00",
     "periods": [
@@ -195,7 +194,7 @@
   },
   {
     "resortId": "lazurnye-ozera",
-    "scrapedAt": "2026-11-25T15:19:42Z",
+    "scrapedAt": "2026-11-26T17:24:41Z",
     "sourceUrl": "https://lazoorsnow.ru/",
     "summary": "пн: выходной; вт–пт: 11:00–22:00; сб–вс: 10:00–22:00",
     "periods": [
@@ -220,7 +219,7 @@
   },
   {
     "resortId": "drop-park",
-    "scrapedAt": "2026-11-25T15:20:30Z",
+    "scrapedAt": "2026-11-26T17:25:36Z",
     "sourceUrl": "https://drop-park.ru/snow-park",
     "summary": "будни: 11:00–23:00; выходные и праздники: 10:00–21:00. Щётки (Джиб Палас) работают — это не горнолыжные склоны",
     "periods": [
@@ -240,7 +239,7 @@
   },
   {
     "resortId": "putilovo-park",
-    "scrapedAt": "2026-11-26T11:20:04Z",
+    "scrapedAt": "2026-11-26T17:28:15Z",
     "sourceUrl": "https://t.me/SPORTPARKPUTILOVO/27",
     "summary": "по сеансам: 12:00–19:00",
     "periods": [

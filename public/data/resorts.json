@@ -21,6 +21,7 @@
     ],
     "prices_url": "https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/",
     "webcam_embeds": [
+      "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/uchebniy_sklon/playlist.m3u8",
       "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/69kp2pvk06/playlist.m3u8",
       "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/7trzptz2/playlist.m3u8",
       "https://hlsrtsp-ohtapark.cdnvideo.ru/ohtapark-rtsp/130_art_10_katok/playlist.m3u8",
@@ -430,7 +431,8 @@
     ],
     "community_links": [
       "https://t.me/SPORTPARKPUTILOVO"
-    ]
+    ],
+    "prices_url": null
   },
   {
     "id": "orekhovo",
