@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import {
   detectDropParkImportant,
   detectKrasnoeImportantFromFlags,
+  detectKrasnoeTelegramImportant,
   detectLazurnyeImportant,
   detectLazurnyeImportantFromPages,
   detectOkhtaImportant,
@@ -13,12 +14,19 @@ import {
   detectTuutariImportant,
   detectZoldolImportant,
   extractPublishedAtFromHtml,
+  krasnoeTelegramPostRelevant,
   mergeImportantFailSoft,
   mergeImportantFromDailyScrape,
+  parseKrasnoeSiteNewsTexts,
 } from '../lib/important.mjs'
 import { httpDateToIso, ruDateLabelToIso } from '../lib/parse.mjs'
+import { parseTelegramChannelHtml } from '../lib/telegram.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
+const krasnoeTgFixture = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'fixtures/redlakeclub-tg.html',
+)
 
 describe('important detectors', () => {
   it('detects Zoldol closed slopes from hours copy', () => {
@@ -359,5 +367,149 @@ describe('catalog source detectors', () => {
       { homeUrl: 'https://lazoorsnow.ru/', newsUrl: 'https://lazoorsnow.ru/news' },
     )
     assert.equal(items[0].id, 'lazurnye-season-open')
+  })
+})
+
+describe('Krasnoe Telegram (@redlakeclub)', () => {
+  it('parses posts from t.me/s HTML fixture', () => {
+    const html = readFileSync(krasnoeTgFixture, 'utf8')
+    const posts = parseTelegramChannelHtml(html)
+    assert.ok(posts.length >= 6)
+    const schedule = posts.find((p) => p.postId === '1839')
+    assert.ok(schedule)
+    assert.match(schedule.text, /График работы курорта/i)
+    assert.equal(schedule.url, 'https://t.me/redlakeclub/1839')
+    assert.equal(schedule.publishedAt, '2026-11-16T10:10:37Z')
+  })
+
+  it('includes schedule and giveaway; skips booking/partner fluff', () => {
+    assert.equal(
+      krasnoeTelegramPostRelevant(
+        'График работы курорта «Красное Озеро» с 16 по 22 ноября. Кресельный подъёмник №10: закрыт',
+      ),
+      true,
+    )
+    assert.equal(
+      krasnoeTelegramPostRelevant('🎉 РОЗЫГРЫШ СКИ‑ПАССОВ на курорте «Красное Озеро»!'),
+      true,
+    )
+    assert.equal(
+      krasnoeTelegramPostRelevant(
+        'УСПЕЙ ЗАБРОНИРОВАТЬ коттедж на Новый год на горнолыжном курорте «Красное Озеро»!',
+      ),
+      false,
+    )
+    assert.equal(
+      krasnoeTelegramPostRelevant('Pet-friendly: ищем партнёров по товарам для питомцев'),
+      false,
+    )
+  })
+
+  it('detects matching posts from fixture HTML', () => {
+    const html = readFileSync(krasnoeTgFixture, 'utf8')
+    const items = detectKrasnoeTelegramImportant(html, 'https://t.me/s/redlakeclub')
+    const ids = items.map((i) => i.id)
+    assert.ok(ids.includes('krasnoe-tg-1839'), `expected schedule card, got ${ids.join(',')}`)
+    assert.ok(ids.includes('krasnoe-tg-1841'), `expected giveaway card, got ${ids.join(',')}`)
+    assert.ok(!ids.includes('krasnoe-tg-1840'), 'booking promo must be skipped')
+    assert.ok(!ids.includes('krasnoe-tg-1838'), 'partner ad must be skipped')
+    const schedule = items.find((i) => i.id === 'krasnoe-tg-1839')
+    assert.match(schedule.title, /Красное озеро/i)
+    assert.match(schedule.body || schedule.title, /график|подъёмник|подъемник/i)
+    assert.equal(schedule.sourceUrl, 'https://t.me/redlakeclub/1839')
+    assert.equal(schedule.publishedAt, '2026-11-16T10:10:37Z')
+  })
+
+  it('dedupes Telegram posts against site news titles', () => {
+    const html = readFileSync(krasnoeTgFixture, 'utf8')
+    const items = detectKrasnoeTelegramImportant(html, 'https://t.me/s/redlakeclub', {
+      siteNewsTexts: [
+        'График работы курорта Красное Озеро с 16 по 22 ноября',
+        'Новый формат проживания - гостиница 3*',
+      ],
+    })
+    assert.ok(!items.some((i) => i.id === 'krasnoe-tg-1839'), 'schedule duplicated on site')
+    assert.ok(items.some((i) => i.id === 'krasnoe-tg-1841'), 'giveaway kept')
+  })
+
+  it('parses Tilda feed JSON titles for dedupe', () => {
+    const texts = parseKrasnoeSiteNewsTexts(
+      JSON.stringify({
+        posts: [
+          { title: 'График работы курорта с 16 по 22 марта', descr: 'Часы работы' },
+          { title: 'Скидка -15%', descr: '' },
+        ],
+      }),
+    )
+    assert.ok(texts.includes('График работы курорта с 16 по 22 марта'))
+    assert.ok(texts.includes('Часы работы'))
+  })
+
+  it('keeps previous krasnoe-tg cards when clearPrefixes is false', () => {
+    const prev = [
+      {
+        id: 'krasnoe-slopes-closed',
+        resortId: 'krasnoe-ozero',
+        title: 'old closed',
+        severity: 'warn',
+        updatedAt: '2026-01-01T00:00:00Z',
+      },
+      {
+        id: 'krasnoe-tg-1839',
+        resortId: 'krasnoe-ozero',
+        title: 'old tg schedule',
+        severity: 'warn',
+        updatedAt: '2026-01-01T00:00:00Z',
+        publishedAt: '2026-11-16T10:10:37Z',
+      },
+    ]
+    const next = mergeImportantFailSoft(prev, [
+      {
+        resortId: 'krasnoe-ozero',
+        ok: true,
+        clearPrefixes: false,
+        items: [
+          {
+            id: 'krasnoe-slopes-closed',
+            resortId: 'krasnoe-ozero',
+            title: 'new closed',
+            severity: 'warn',
+            updatedAt: '2026-11-26T12:00:00Z',
+          },
+        ],
+      },
+    ])
+    assert.equal(next.find((i) => i.id === 'krasnoe-slopes-closed')?.title, 'new closed')
+    assert.ok(next.find((i) => i.id === 'krasnoe-tg-1839'), 'TG card kept while TG fetch soft-failed')
+  })
+
+  it('clears stale krasnoe-tg cards when TG scrape succeeds', () => {
+    const prev = [
+      {
+        id: 'krasnoe-tg-1000',
+        resortId: 'krasnoe-ozero',
+        title: 'stale',
+        severity: 'info',
+        updatedAt: '2026-01-01T00:00:00Z',
+      },
+    ]
+    const next = mergeImportantFailSoft(prev, [
+      {
+        resortId: 'krasnoe-ozero',
+        ok: true,
+        clearPrefixes: true,
+        items: [
+          {
+            id: 'krasnoe-tg-1841',
+            resortId: 'krasnoe-ozero',
+            title: 'розыгрыш',
+            severity: 'info',
+            updatedAt: '2026-11-26T12:00:00Z',
+          },
+        ],
+      },
+    ])
+    assert.ok(!next.find((i) => i.id === 'krasnoe-tg-1000'))
+    assert.ok(next.find((i) => i.id === 'krasnoe-tg-1841'))
   })
 })

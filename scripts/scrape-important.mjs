@@ -28,6 +28,7 @@ import {
 import { nowIso } from './scrape/lib/parse.mjs'
 import {
   KRASNOE_HOURS_CSV_URL,
+  fetchKrasnoeTelegramImportant,
   parseHoursFromCsv,
 } from './scrape/resorts/krasnoe-ozero.mjs'
 import { DROP_PAGE_URL, DROP_TG_URL } from './scrape/resorts/drop-park.mjs'
@@ -100,7 +101,19 @@ const CHECKERS = [
     async run() {
       const { body } = await fetchUrlResult(KRASNOE_HOURS_CSV_URL)
       // publishedAt comes from the CSV date column inside the detector.
-      return parseHoursFromCsv(body).important || []
+      const csvItems = parseHoursFromCsv(body).important || []
+      let tgItems = []
+      let tgFetched = false
+      try {
+        await sleep()
+        const tg = await fetchKrasnoeTelegramImportant()
+        tgItems = tg.items
+        tgFetched = tg.tgFetched
+      } catch {
+        tgItems = []
+        tgFetched = false
+      }
+      return { items: [...csvItems, ...tgItems], clearPrefixes: tgFetched }
     },
   },
   {
@@ -212,10 +225,19 @@ async function main() {
     process.stdout.write(`→ ${checker.id} … `)
     const started = Date.now()
     try {
-      const items = await checker.run()
+      const raw = await checker.run()
+      const pack =
+        raw && typeof raw === 'object' && !Array.isArray(raw) && Array.isArray(raw.items)
+          ? raw
+          : { items: Array.isArray(raw) ? raw : [], clearPrefixes: true }
       const ms = Date.now() - started
-      console.log(`ok (${ms}ms) items=${items.length}`)
-      results.push({ resortId: checker.id, ok: true, items })
+      console.log(`ok (${ms}ms) items=${pack.items.length}`)
+      results.push({
+        resortId: checker.id,
+        ok: true,
+        items: pack.items,
+        clearPrefixes: pack.clearPrefixes !== false,
+      })
     } catch (err) {
       const ms = Date.now() - started
       const message = String(err?.message || err)

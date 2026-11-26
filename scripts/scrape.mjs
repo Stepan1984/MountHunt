@@ -117,6 +117,7 @@ function applySeedFixes(resorts) {
         'https://krasnoeozero.ru/cam/',
         'https://krasnoeozero.ru/grafik/',
         'https://krasnoeozero.ru/events/news/',
+        'https://t.me/s/redlakeclub',
       ],
       sourcesDrop: [/cam\.html/],
       community_links: ['https://vk.com/redlakeclub', 'https://t.me/redlakeclub'],
@@ -366,6 +367,7 @@ async function main() {
       itemCount: result.prices?.items?.length ?? 0,
       summary: result.hours?.summary || null,
       importantInconclusive: Boolean(result.importantInconclusive),
+      clearImportantPrefixes: result.clearImportantPrefixes !== false,
     })
 
     if (i < targets.length - 1) await sleep()
