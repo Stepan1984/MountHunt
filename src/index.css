@@ -673,11 +673,6 @@ main {
   font-size: clamp(2rem, 5vw, 2.8rem);
 }
 
-.resort-detail__area {
-  color: var(--muted);
-  margin: 0;
-}
-
 /* Single licensed hero — only when photo metadata exists; no placeholder. */
 .resort-detail__photo {
   margin: 0 0 1.25rem;
