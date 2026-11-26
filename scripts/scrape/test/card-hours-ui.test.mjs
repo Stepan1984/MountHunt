@@ -84,10 +84,25 @@ function stripSlopeStatusFromCardHours(text) {
   return t.replace(/\s+/g, ' ').replace(/^[,;.\s]+|[,;.\s]+$/g, '').trim()
 }
 
+function hasRealCardHoursTimes(text) {
+  if (/\d{1,2}:\d{2}/.test(text)) return true
+  if (/\d{1,2}\.\d{2}\s*[-−—–]\s*\d{1,2}([:.]\d{2})?/.test(text)) return true
+  return false
+}
+
+function isBlankHoursScheduleLabel(text) {
+  const t = text.trim()
+  if (!t) return true
+  if (hasRealCardHoursTimes(t)) return false
+  if (/^(?:график\s+)?на\s+\d{1,2}\.\d{1,2}(?:\.\d{2,4})?\.?$/i.test(t)) return true
+  if (/^график\s+на\s+\d{1,2}\.\d{1,2}(?:\.\d{2,4})?\s*:/i.test(t)) return true
+  return false
+}
+
 function isPureSlopeStatusHours(text) {
   const t = text.trim()
   if (!t) return true
-  if (/\d{1,2}\s*[:.]\s*\d{2}/.test(t)) return false
+  if (hasRealCardHoursTimes(t)) return false
   return new RegExp(
     `сезон\\s+закрыт|склон${CY}\\s+(?:открыт|закрыт)|закрыт${CY}\\s+до\\s+сезон|горнолыжн${CY}\\s+склон`,
     'i',
@@ -96,7 +111,7 @@ function isPureSlopeStatusHours(text) {
 
 function normalizeCardHoursSummary(text) {
   let t = stripSlopeStatusFromCardHours(text)
-  if (!t || isPureSlopeStatusHours(t)) return ''
+  if (!t || isPureSlopeStatusHours(t) || isBlankHoursScheduleLabel(t)) return ''
   t = t
     .replace(/\s*[;|]\s*/g, '; ')
     .replace(/(\d{1,2})\.(\d{2})(?=\s*[-−—–]\s*\d)/g, '$1:$2')
@@ -110,6 +125,7 @@ function normalizeCardHoursSummary(text) {
     .replace(/^[,;.\s]+|[,;.\s]+$/g, '')
     .replace(/…\s*$/g, '')
     .trim()
+  if (!t || isBlankHoursScheduleLabel(t)) return ''
   return t
 }
 
@@ -151,6 +167,36 @@ describe('card hours UI helpers', () => {
     )
   })
 
+  it('date-only schedule labels become нет данных on cards', () => {
+    assert.equal(normalizeCardHoursSummary('График на 25.11.2026'), '')
+    assert.equal(normalizeCardHoursSummary('На 25.11.2026'), '')
+    assert.equal(
+      normalizeCardHoursSummary('График на 25.11.2026: данные по склонам не найдены'),
+      '',
+    )
+    assert.equal(
+      cardHoursText({
+        resortId: 'krasnoe-ozero',
+        summary: 'График на 25.11.2026',
+        periods: [],
+      }),
+      'нет данных',
+    )
+    assert.equal(
+      cardHoursText({
+        resortId: 'krasnoe-ozero',
+        summary: 'Нет данных о режиме склонов',
+        periods: [],
+      }),
+      'Нет данных о режиме склонов',
+    )
+    // Real times after a date label must stay.
+    assert.equal(
+      normalizeCardHoursSummary('График на 25.11.2026: 10:00–18:00'),
+      'График на 25.11.2026: 10:00–18:00',
+    )
+  })
+
   it('formats periods into a unified card line', () => {
     assert.equal(
       formatCardHoursFromPeriods([
@@ -171,6 +217,8 @@ describe('card hours UI helpers', () => {
       const line = cardHoursText(h)
       assert.doesNotMatch(line, STATUS_LEAK, h.resortId)
       assert.ok(line.length > 0, h.resortId)
+      // Never a bare date-only «График на …» with empty schedule.
+      assert.doesNotMatch(line, /^(?:график\s+)?на\s+\d{1,2}\.\d{1,2}/i, h.resortId)
     }
   })
 

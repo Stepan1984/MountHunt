@@ -165,11 +165,8 @@ export function parseHoursFromCsv(csv) {
   }
 
   // Closed-until-season → slopesOpen / badge; keep schedule bits in summary when present.
-  let summary =
-    bits.slice(0, 4).join('; ') ||
-    (closedUntilSeason || (allClosed && slopes.length)
-      ? `График на ${dateCol}`
-      : `График на ${dateCol}: данные по склонам не найдены`)
+  // No real times → plain «нет данных» phrasing (never bare «График на DATE»).
+  let summary = bits.slice(0, 4).join('; ') || 'Нет данных о режиме склонов'
 
   const pack = {
     closedUntilSeason,
