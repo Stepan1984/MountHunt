@@ -151,6 +151,8 @@ export function hoursLeadText(
 ): string | null {
   const lead = summary?.trim() || null
   if (!lead) return null
+  // Date-only «График на …» with no times → let the page show «Нет данных».
+  if (isBlankHoursScheduleLabel(lead)) return null
   if (!periods?.length) return lead
 
   const fromPeriods = periods.map((p) => `${p.days}${p.open}${p.close}`).join('')
@@ -269,11 +271,36 @@ export function stripSlopeStatusFromCardHours(text: string): string {
     .trim()
 }
 
+/**
+ * True when text has real clock times (not calendar dates like 25.11.2026).
+ * Colon times are unambiguous; dotted times only count inside a range.
+ */
+function hasRealCardHoursTimes(text: string): boolean {
+  if (/\d{1,2}:\d{2}/.test(text)) return true
+  if (/\d{1,2}\.\d{2}\s*[-−—–]\s*\d{1,2}([:.]\d{2})?/.test(text)) return true
+  return false
+}
+
+/**
+ * Date-only / empty schedule labels with no open–close times
+ * (e.g. «График на 25.11.2026» left after status strip).
+ */
+export function isBlankHoursScheduleLabel(text: string): boolean {
+  const t = text.trim()
+  if (!t) return true
+  if (hasRealCardHoursTimes(t)) return false
+  // «График на 25.11.2026» / «На 25.11.2026»
+  if (/^(?:график\s+)?на\s+\d{1,2}\.\d{1,2}(?:\.\d{2,4})?\.?$/i.test(t)) return true
+  // «График на 25.11.2026: данные по склонам не найдены»
+  if (/^график\s+на\s+\d{1,2}\.\d{1,2}(?:\.\d{2,4})?\s*:/i.test(t)) return true
+  return false
+}
+
 /** True when the leftover string is only open/closed status, not a schedule. */
 function isPureSlopeStatusHours(text: string): boolean {
   const t = text.trim()
   if (!t) return true
-  if (/\d{1,2}\s*[:.]\s*\d{2}/.test(t)) return false
+  if (hasRealCardHoursTimes(t)) return false
   return new RegExp(
     `сезон\\s+закрыт|склон${CY}\\s+(?:открыт|закрыт)|закрыт${CY}\\s+до\\s+сезон|горнолыжн${CY}\\s+склон`,
     'i',
@@ -285,7 +312,7 @@ function isPureSlopeStatusHours(text: string): boolean {
  */
 export function normalizeCardHoursSummary(text: string): string {
   let t = stripSlopeStatusFromCardHours(text)
-  if (!t || isPureSlopeStatusHours(t)) return ''
+  if (!t || isPureSlopeStatusHours(t) || isBlankHoursScheduleLabel(t)) return ''
 
   t = t
     .replace(/\s*[;|]\s*/g, '; ')
@@ -303,6 +330,7 @@ export function normalizeCardHoursSummary(text: string): string {
     .replace(/…\s*$/g, '')
     .trim()
 
+  if (!t || isBlankHoursScheduleLabel(t)) return ''
   return t
 }
 
