@@ -142,9 +142,9 @@ export async function scrapeTuutari() {
       })
     }
     if (wd && we) {
-      summary = `будни ${fmt(wd)}; выходные ${fmt(we)}`
+      summary = `будни: ${fmt(wd)}; выходные: ${fmt(we)}`
     } else if (weekday && weekend) {
-      summary = `будни ${fmt(weekday)}; выходные ${fmt(weekend)}`
+      summary = `будни: ${fmt(weekday)}; выходные: ${fmt(weekend)}`
     }
 
     const $c = loadHtml(camHtml)

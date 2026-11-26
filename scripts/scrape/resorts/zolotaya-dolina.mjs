@@ -80,12 +80,9 @@ export async function scrapeZolotayaDolina() {
     const text = cleanText($h('body').text())
     const important = detectZoldolImportant(hoursHtml, HOURS_URL)
     const slopeStatus = detectZoldolSlopeStatus(hoursHtml)
+    // Slope closed status → slopesOpen / badge; hours.summary stays schedule-only.
     let summary = 'См. график на сайте'
     const periods = []
-
-    if (important.length) {
-      summary = 'Горнолыжные склоны закрыты на летний период'
-    }
 
     const dayLines = [...text.matchAll(
       /(Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье)\s*;\s*[\d.]+\s*;\s*([^;]+?)(?=(?:Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье)|Бургерная|Велопарк|$)/gi,
@@ -102,13 +99,11 @@ export async function scrapeZolotayaDolina() {
           bits.push(`${days}: ${openClose[1]}–${openClose[2]}`)
         } else if (/закрыт/i.test(val)) {
           periods.push({ days, open: '', close: '' })
-          bits.push(`${days}: закрыто`)
+          bits.push(`${days}: выходной`)
         }
       }
-      if (bits.length && !/закрыты на летний/i.test(summary)) {
+      if (bits.length) {
         summary = bits.join('; ')
-      } else if (bits.length) {
-        summary = `${summary}. Ближайший график (прочее): ${bits.slice(0, 3).join('; ')}…`
       }
     }
 
@@ -132,7 +127,7 @@ export async function scrapeZolotayaDolina() {
         sourceUrl: HOURS_URL,
         summary,
         periods,
-        status: /закрыты на летний/i.test(summary) || periods.length ? 'ok' : 'partial',
+        status: periods.length ? 'ok' : 'partial',
         slopesOpen: slopeStatus.slopesOpen,
       }),
       webcamUrl: WEBCAM_URL,

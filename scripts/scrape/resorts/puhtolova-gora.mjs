@@ -108,7 +108,7 @@ export async function scrapePuhtolovaGora() {
         const oc = hours.match(/(\d{1,2}:\d{2})\s*[-–—]\s*(\d{1,2}:\d{2})/)
         if (oc) {
           periods.push({ days: cleanText(days), open: oc[1], close: oc[2] })
-          summaryParts.push(`${cleanText(days)} ${oc[1]}–${oc[2]}`)
+          summaryParts.push(`${cleanText(days)}: ${oc[1]}–${oc[2]}`)
         } else if (/выходн/i.test(hours) || /выходн/i.test(days)) {
           periods.push({ days: cleanText(days), open: '', close: '' })
           summaryParts.push(`${cleanText(days)}: выходной`)

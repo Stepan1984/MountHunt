@@ -1,10 +1,5 @@
 import { Link } from 'react-router-dom'
-import {
-  hoursFor,
-  localizePublicText,
-  slopesBadgeLabel,
-} from '../lib/data'
-import { stripUrlsFromText } from '../lib/links'
+import { cardHoursText, hoursFor, slopesBadgeLabel } from '../lib/data'
 import type { HoursSnapshot, ImportantItem, Resort } from '../types'
 
 type Props = {
@@ -27,14 +22,9 @@ export function ResortCard({
   const badge = !inactive ? slopesBadgeLabel(resort.id, h, important) : null
   const closed = badge === 'Склоны закрыты'
 
-  // Active only: live hours. Prices live on the detail page, not on cards.
+  // Active only: unified schedule line (no slope status prose — badges cover that).
   // Дикие / неясные / закрытые — omit facts entirely.
-  let hoursText: string | null = null
-  if (!inactive) {
-    const rawHours = h?.summary ? localizePublicText(h.summary) : null
-    // Never show raw URLs/paths on cards — strip them, keep the human summary.
-    hoursText = rawHours ? stripUrlsFromText(rawHours) || 'нет данных' : 'нет данных'
-  }
+  const hoursText = !inactive ? cardHoursText(h) : null
 
   return (
     <article className={`resort-card resort-card--${resort.status}${compact ? ' resort-card--compact' : ''}${closed ? ' resort-card--slopes-closed' : ''}`}>
@@ -60,7 +50,7 @@ export function ResortCard({
         <dl className="resort-card__facts">
           <div>
             <dt>Часы</dt>
-            <dd>{hoursText}</dd>
+            <dd className="resort-card__hours">{hoursText}</dd>
           </div>
         </dl>
       ) : null}
