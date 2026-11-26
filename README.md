@@ -2,7 +2,7 @@
 
 Агрегатор горнолыжных курортов Санкт-Петербурга и Ленинградской области.
 
-Сайт на русском: карточки курортов, интерактивная карта (Leaflet + OSM), раздел «Важное», страницы курортов со ссылками на сайт и камеры. Цены и часы — из ежедневного scrape официальных публичных страниц (волны 1–2) либо плейсхолдеры.
+Сайт на русском: карточки курортов, интерактивная карта (Leaflet + OSM), раздел «Важное», страницы курортов со ссылками на сайт и камеры. Цены и часы — из scrape дважды в день официальных публичных страниц (волны 1–2) либо плейсхолдеры.
 
 **Стек:** Vite + React + TypeScript · статика для GitHub Pages · Node scrapers (cheerio / PDF+OCR).
 
@@ -122,11 +122,11 @@ Seed-обновление без сети:
 npm run data:refresh
 ```
 
-### Ежедневный workflow (цены / часы)
+### Workflow цен / часов (дважды в день)
 
 `.github/workflows/daily-data-refresh.yml`:
 
-- **cron** `0 5 * * *` (05:00 UTC ≈ 08:00 Europe/Moscow) + ручной `workflow_dispatch`
+- **cron** `0 7 * * *` и `0 19 * * *` (07:00 / 19:00 UTC = 10:00 / 22:00 Europe/Moscow) + ручной `workflow_dispatch`
 - ставит poppler + tesseract, `npm ci`, Playwright Chromium, `npm run scrape` (волны 1–3)
 - коммитит `public/data` (+ seed-фиксы), если есть diff
 - Igora: live Playwright only in Actions (no `IGORA_HTML_DIR` / `IGORA_ALLOW_SNAPSHOT`; scraper also refuses snapshots when `CI`/`GITHUB_ACTIONS` is set). Offline HTML remains local opt-in.
