@@ -149,6 +149,7 @@ npm run data:refresh
 - `/news` — лента новостей курортов
 - `/resort/:id` — детали: локация, часы, цены, камера, сайт
 - `/about` — источники и дисклеймер
+- `/contacts` — контакты проекта
 
 На карте по умолчанию только курорты со статусом `active` и координатами. Неясные/закрытые — во втором списке.
 
@@ -156,7 +157,7 @@ npm run data:refresh
 
 ## SEO (robots / sitemap)
 
-В `public/` лежат `robots.txt` (Allow all) и `sitemap.xml` с абсолютными URL `https://mounthunt.ru/…` (главная, `/about`, `/news`, каждый `/resort/{id}` из `resorts.json`). Vite копирует их в корень `dist`. Пересборка sitemap: `npm run sitemap` (также вызывается из `npm run build`).
+В `public/` лежат `robots.txt` (Allow all) и `sitemap.xml` с абсолютными URL `https://mounthunt.ru/…` (главная, `/about`, `/news`, `/contacts`, каждый `/resort/{id}` из `resorts.json`). Vite копирует их в корень `dist`. Пересборка sitemap: `npm run sitemap` (также вызывается из `npm run build`).
 
 Отправка в поиск (один раз после деплоя):
 

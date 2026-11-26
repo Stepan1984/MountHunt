@@ -36,6 +36,7 @@ export function Header() {
           <HomeHashNavLink hash="#resorts">Курорты</HomeHashNavLink>
           <NavLink to="/news">Новости</NavLink>
           <NavLink to="/about">О проекте</NavLink>
+          <NavLink to="/contacts">Контакты</NavLink>
         </nav>
       </div>
     </header>
