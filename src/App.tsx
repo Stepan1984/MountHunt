@@ -4,6 +4,7 @@ import { Header } from './components/Header'
 import { ScrollToHash } from './components/ScrollToHash'
 import { useSiteData } from './hooks/useSiteData'
 import { AboutPage } from './pages/AboutPage'
+import { ContactsPage } from './pages/ContactsPage'
 import { HomePage } from './pages/HomePage'
 import { NewsPage } from './pages/NewsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -42,6 +43,7 @@ export default function App() {
               <Route path="/news" element={<NewsPage data={state.data} />} />
               <Route path="/resort/:id" element={<ResortPage data={state.data} />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/contacts" element={<ContactsPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           )}
