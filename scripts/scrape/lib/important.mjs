@@ -1,5 +1,5 @@
 /**
- * Shared «Важное» helpers: detectors + fail-soft merge for 2h / daily scrapes.
+ * Shared «Важное» helpers: detectors + fail-soft merge for hourly / daily scrapes.
  * Prefs: only site «Важное» as the notification surface (no email/Telegram push).
  * Official resort pages may still announce season status (e.g. Okhta opening).
  *
@@ -682,7 +682,7 @@ export function mergeImportantFromDailyScrape(prev, importantAdds, scrapeResults
     chromeNote: importantItem({
       id: 'mvp-data-note',
       title: 'Данные обновляются регулярно',
-      body: 'Цены и часы — ежедневно; блок «Важное» — примерно каждые 2 часа с официальных страниц курортов. Это не оферта — перед выездом сверяйте с сайтом курорта.',
+      body: 'Цены и часы — ежедневно; блок «Важное» — примерно каждый час с официальных страниц курортов. Это не оферта — перед выездом сверяйте с сайтом курорта.',
       severity: 'info',
     }),
   })

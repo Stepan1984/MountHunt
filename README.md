@@ -122,22 +122,22 @@ Seed-обновление без сети:
 npm run data:refresh
 ```
 
-### Ежедневный workflow
+### Ежедневный workflow (цены / часы)
 
 `.github/workflows/daily-data-refresh.yml`:
 
-- **cron** `0 5 * * *` (05:00 UTC) + ручной `workflow_dispatch`
+- **cron** `0 5 * * *` (05:00 UTC ≈ 08:00 Europe/Moscow) + ручной `workflow_dispatch`
 - ставит poppler + tesseract, `npm ci`, Playwright Chromium, `npm run scrape` (волны 1–3)
 - коммитит `public/data` (+ seed-фиксы), если есть diff
 - Igora: live Playwright only in Actions (no `IGORA_HTML_DIR` / `IGORA_ALLOW_SNAPSHOT`; scraper also refuses snapshots when `CI`/`GITHUB_ACTIONS` is set). Offline HTML remains local opt-in.
 
-### «Важное» каждые 2 часа
+### «Важное» / новости каждый час
 
 `.github/workflows/important-refresh.yml`:
 
-- **cron** `0 */2 * * *` (каждые 2 часа UTC) + `workflow_dispatch`
-- лёгкий HTTP-only scrape (`npm run scrape:important`) — без Playwright/OCR
-- обновляет `public/data/important.json` (+ метка в `meta.json`)
+- **cron** `0 * * * *` (каждый час в :00 UTC ≈ каждый час в :00 Europe/Moscow) + `workflow_dispatch`
+- лёгкий HTTP-only scrape (`npm run scrape:important`) — без Playwright/OCR; только news/important
+- обновляет `public/data/important.json` (+ метка в `meta.json`); push на `main` запускает Deploy to GitHub Pages
 - **fail-soft**: сбой одного курорта сохраняет прошлые пункты по нему; job не валится из‑за частичных ошибок
 - на карточках «Важного» — `publishedAt` (дата новости/графика/страницы с источника); время scrape только в «Снимок» (`meta.importantScrapedAt`)
 

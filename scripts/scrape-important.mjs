@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Lightweight «Важное» scrape (every ~2 hours).
+ * Lightweight «Важное» / news scrape (hourly).
  *
  * Fetches only notice-relevant pages (no Playwright / OCR / full prices).
  * Fail-soft: per-resort errors keep previous managed items; job exits 0 unless
@@ -228,7 +228,7 @@ async function main() {
   const chromeNote = importantItem({
     id: 'mvp-data-note',
     title: 'Данные обновляются регулярно',
-    body: 'Цены и часы — ежедневно; блок «Важное» — примерно каждые 2 часа с официальных страниц курортов. Это не оферта — перед выездом сверяйте с сайтом курорта.',
+    body: 'Цены и часы — ежедневно; блок «Важное» — примерно каждый час с официальных страниц курортов. Это не оферта — перед выездом сверяйте с сайтом курорта.',
     severity: 'info',
   })
 

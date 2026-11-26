@@ -1,5 +1,6 @@
-# Ежедневный сбор цен/часов (волны 1–3) → public/data → commit.
-# Cron: 05:00 UTC ≈ 08:00 Europe/Moscow.
+# Ежедневный сбор цен/часов и прочего non-news (волны 1–3) → public/data → commit.
+# Новости / «Важное» — отдельно: important-refresh.yml (каждый час).
+# Cron: 05:00 UTC ≈ 08:00 Europe/Moscow (MSK = UTC+3).
 name: Daily data refresh
 
 on:
