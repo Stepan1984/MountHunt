@@ -23,7 +23,7 @@ export function LinkedText({ text, className }: Props) {
         className={className}
         href={onlyLink.href}
         target="_blank"
-        rel="noreferrer"
+        rel="noopener noreferrer"
       >
         {onlyLink.label}
       </a>
@@ -37,7 +37,7 @@ export function LinkedText({ text, className }: Props) {
           return <span key={i}>{part.value}</span>
         }
         return (
-          <a key={i} href={part.href} target="_blank" rel="noreferrer">
+          <a key={i} href={part.href} target="_blank" rel="noopener noreferrer">
             {part.label}
           </a>
         )
@@ -56,7 +56,7 @@ type ExternalLinkProps = {
 /** External link with a Russian label derived from the URL when none given. */
 export function ExternalLink({ href, label, className, children }: ExternalLinkProps) {
   return (
-    <a className={className} href={href} target="_blank" rel="noreferrer">
+    <a className={className} href={href} target="_blank" rel="noopener noreferrer">
       {children ?? label ?? linkLabelForUrl(href)}
     </a>
   )

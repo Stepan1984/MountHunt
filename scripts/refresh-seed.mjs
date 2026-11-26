@@ -66,17 +66,18 @@ function ensureHours() {
           .replaceAll('https://igora.ru/en/working-hours/', 'https://igora.ru/working-hours/')
           .replace(
             /Часы склонов уточняйте на https?:\/\/igora\.ru\/(?:en\/)?working-hours\/?/gi,
-            'Часы склонов уточняйте на сайте курорта',
+            'Нет данных о часах склонов',
           )
           .replace(
             /Режим склонов уточняйте на главной snegny\.ru[^.!]*/gi,
-            'Режим склонов уточняйте на сайте курорта',
+            'Нет данных о режиме склонов',
           )
+          .replace(/\s*[—–\-;:]?\s*[^.—–;:\n]*уточняйте[^.\n]*/gi, '')
           .replace(/https?:\/\/[^\s]+/gi, '')
           .replace(/\s{2,}/g, ' ')
           .replace(/\s+([.,;:!?])/g, '$1')
           .trim()
-        if (!summary) summary = 'Часы работы уточняйте на сайте курорта'
+        if (!summary) summary = 'Нет данных о часах'
       }
       if (typeof sourceUrl === 'string') {
         sourceUrl = sourceUrl.replace('/en/working-hours/', '/working-hours/')
@@ -103,6 +104,17 @@ function ensurePrices() {
   const existing = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : []
   const byId = new Map(existing.map((p) => [p.resortId, p]))
   const next = resorts.map((r) => {
+    if (r.booking_url) {
+      return {
+        resortId: r.id,
+        scrapedAt: null,
+        sourceUrl: r.booking_url,
+        currency: 'RUB',
+        items: [],
+        status: 'unavailable',
+        note: 'Цены на странице не публикуем — бронирование и оплата по ссылке на сайте курорта',
+      }
+    }
     const prev = byId.get(r.id)
     if (prev) return prev
     return {

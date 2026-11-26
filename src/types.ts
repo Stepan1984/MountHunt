@@ -55,6 +55,11 @@ export type Resort = {
   email?: string | null
   prices_format: string
   prices_url?: string
+  /**
+   * Outbound booking / payment page. When set, the prices section shows a
+   * hyperlink instead of a scraped tariff table (no MountHunt checkout).
+   */
+  booking_url?: string | null
   status: ResortStatus
   notes: string
   sources: string[]

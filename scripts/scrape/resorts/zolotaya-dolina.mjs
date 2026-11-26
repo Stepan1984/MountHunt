@@ -84,7 +84,7 @@ export async function scrapeZolotayaDolina() {
     const periods = []
 
     if (important.length) {
-      summary = 'Горнолыжные склоны закрыты на летний период (уточняйте открытие на сайте)'
+      summary = 'Горнолыжные склоны закрыты на летний период'
     }
 
     const dayLines = [...text.matchAll(
@@ -124,7 +124,7 @@ export async function scrapeZolotayaDolina() {
         groups,
         status: groups.length ? 'ok' : 'partial',
         note: groups.length
-          ? 'Не является публичной офертой — уточняйте на сайте курорта'
+          ? undefined
           : 'Не удалось извлечь таблицы ски-пассов',
       }),
       hours: hoursSnapshot({

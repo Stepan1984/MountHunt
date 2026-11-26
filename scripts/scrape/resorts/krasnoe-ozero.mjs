@@ -112,7 +112,7 @@ export function parseHoursFromCsv(csv) {
       hours: hoursSnapshot({
         resortId: 'krasnoe-ozero',
         sourceUrl: HOURS_PAGE_URL,
-        summary: 'Режим склонов уточняйте на сайте курорта',
+        summary: 'Нет данных о режиме склонов',
         status: 'partial',
         // Unknown schedule → fail-soft closed for badges.
         slopesOpen: false,
@@ -269,7 +269,7 @@ export function parseKrasnoeSkipassGroups(rows) {
         category: hourName,
         columns: [...dayColumns],
         rows: hourRows,
-        note: 'Стоимость БСК уточняйте на сайте',
+        note: undefined,
       })
     }
 
@@ -296,7 +296,7 @@ export function parseKrasnoeSkipassGroups(rows) {
         category: passName,
         columns: ['Цена'],
         rows: passRows,
-        note: note || 'Проходы сохраняются до конца сезона — уточняйте на сайте',
+        note: note || 'Проходы сохраняются до конца сезона',
       })
     }
   }
@@ -337,7 +337,7 @@ export async function scrapeKrasnoeOzero() {
           hours: hoursSnapshot({
             resortId,
             sourceUrl: HOURS_PAGE_URL,
-            summary: 'Режим склонов уточняйте на сайте курорта',
+            summary: 'Нет данных о режиме склонов',
             status: 'partial',
           }),
           important: [],
@@ -366,7 +366,7 @@ export async function scrapeKrasnoeOzero() {
         status: groups.length ? 'ok' : 'partial',
         note: groups.length
           ? undefined
-          : 'Цены на ски-пассы на сайте не найдены — уточняйте на странице тарифов',
+          : 'Цены на ски-пассы на сайте не найдены',
       }),
       hours: hoursPack.hours,
       webcamUrl: WEBCAM_URL,

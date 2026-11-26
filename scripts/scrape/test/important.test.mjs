@@ -24,10 +24,7 @@ import {
 } from '../lib/important.mjs'
 import { httpDateToIso, ruDateLabelToIso } from '../lib/parse.mjs'
 import { parseTelegramChannelHtml } from '../lib/telegram.mjs'
-import {
-  parsePutilovoHoursFromText,
-  parsePutilovoSitePrices,
-} from '../resorts/putilovo-park.mjs'
+import { parsePutilovoHoursFromText } from '../resorts/putilovo-park.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 const krasnoeTgFixture = join(
@@ -37,10 +34,6 @@ const krasnoeTgFixture = join(
 const putilovoTgFixture = join(
   dirname(fileURLToPath(import.meta.url)),
   'fixtures/sportparkputilovo-tg.html',
-)
-const putilovoSiteFixture = join(
-  dirname(fileURLToPath(import.meta.url)),
-  'fixtures/sportpark-snowrider.html',
 )
 
 describe('important detectors', () => {
@@ -563,14 +556,6 @@ describe('Krasnoe Telegram (@redlakeclub)', () => {
 })
 
 describe('Спортпарк Путилово (@SPORTPARKPUTILOVO)', () => {
-  it('parses entrance ticket from snowrider landing fixture', () => {
-    const html = readFileSync(putilovoSiteFixture, 'utf8')
-    const { items } = parsePutilovoSitePrices(html)
-    assert.ok(items.length >= 1)
-    assert.equal(items[0].price, 1500)
-    assert.match(items[0].title, /билет/i)
-  })
-
   it('parses session hours from TG-style copy', () => {
     const pack = parsePutilovoHoursFromText(
       'Всех желающих ждем завтра 11.03.2026 с 12:00-19:00 с быстрым канатом',

@@ -122,7 +122,7 @@ export async function scrapeTuutari() {
 
     const $h = loadHtml(hoursHtml)
     const body = cleanText($h('body').text())
-    let summary = 'Режим парка уточняйте на сайте'
+    let summary = 'Нет данных о режиме парка'
     const periods = []
     const weekday = body.match(/Режим работы парка:.*?Будние дни с\s*(\d{1,2})[-.:](\d{2})\s*до\s*(\d{1,2})[-.:](\d{2})/i)
     const weekend = body.match(/Режим работы парка:.*?Выходные дни с\s*(\d{1,2})[-.:](\d{2})\s*до\s*(\d{1,2})[-.:](\d{2})/i)

@@ -12,6 +12,7 @@ import {
   hoursLeadText,
   localizePublicText,
   pricesFor,
+  publicImportantBody,
   publicPriceNote,
   publicResortNotes,
   resortAddressQuery,
@@ -67,8 +68,13 @@ export function ResortPage({ data }: { data: SiteData }) {
   const prices = inactive ? undefined : pricesFor(resort.id, data.prices)
   const important = data.important.filter((i) => i.resortId === resort.id)
   const hasCoords = resort.lat != null && resort.lon != null
+  // Booking outbound link replaces the tariff table (no scraped prices).
+  const bookingUrl = !inactive ? resort.booking_url || undefined : undefined
+  const hasBookingLink = Boolean(bookingUrl)
   // Dedicated tariff page only — do not fall back to homepage (already «Сайт курорта»).
-  const tariffsUrl = prices?.sourceUrl || resort.prices_url || undefined
+  const tariffsUrl = hasBookingLink
+    ? undefined
+    : prices?.sourceUrl || resort.prices_url || undefined
   const hoursSourceUrl = hours?.sourceUrl || undefined
   // Skip section source links when they duplicate the official homepage button.
   const hoursLink =
@@ -91,13 +97,16 @@ export function ResortPage({ data }: { data: SiteData }) {
   const badge = !inactive ? slopesBadgeLabel(resort.id, hours, data.important) : null
   const closed = badge === 'Склоны закрыты'
   const visitorNotes = publicResortNotes(resort.notes)
-  const visitorPriceNote = inactive ? null : publicPriceNote(prices?.note)
-  const priceItems = prices?.items ?? []
-  const priceGroups = prices?.groups ?? []
+  const visitorPriceNote = inactive || hasBookingLink ? null : publicPriceNote(prices?.note)
+  const priceItems = hasBookingLink ? [] : (prices?.items ?? [])
+  const priceGroups = hasBookingLink ? [] : (prices?.groups ?? [])
   const hasSkipassTables = priceGroups.some((g) => g.rows?.length > 0)
   const webcamStreams = resolveWebcamPlayers(resort.webcam_url, resort.webcam_embeds)
   const webcamLink = webcamExternalLink(resort.webcam_url, resort.webcam_embeds)
-  const communityLinks = resort.community_links ?? []
+  // Hide community URL when it already powers «Сайт курорта» (e.g. Putilovo → Telegram).
+  const communityLinks = (resort.community_links ?? []).filter(
+    (url) => !sameExternalUrl(url, resort.website),
+  )
   const features = resort.features ?? []
   const phone = resort.phone?.trim() || null
   const email = resort.email?.trim() || null
@@ -181,7 +190,9 @@ export function ResortPage({ data }: { data: SiteData }) {
         <section className="resort-detail__important" aria-labelledby="resort-important-title">
           <h2 id="resort-important-title">Важное</h2>
           <ul className="important__list important__list--detail">
-            {important.map((item) => (
+            {important.map((item) => {
+              const body = publicImportantBody(item.body)
+              return (
               <li key={item.id} className="important__item">
                 {item.publishedAt ? (
                   <div className="important__meta">
@@ -189,9 +200,9 @@ export function ResortPage({ data }: { data: SiteData }) {
                   </div>
                 ) : null}
                 <h3>{item.title}</h3>
-                {item.body && (
+                {body && (
                   <p>
-                    <LinkedText text={item.body} />
+                    <LinkedText text={body} />
                   </p>
                 )}
                 {item.sourceUrl && (
@@ -200,7 +211,8 @@ export function ResortPage({ data }: { data: SiteData }) {
                   </ExternalLink>
                 )}
               </li>
-            ))}
+              )
+            })}
           </ul>
         </section>
       )}
@@ -270,7 +282,11 @@ export function ResortPage({ data }: { data: SiteData }) {
                 </ExternalLink>
               )}
             </div>
-            {priceItems.length > 0 || hasSkipassTables ? (
+            {hasBookingLink && bookingUrl ? (
+              <p>
+                <ExternalLink href={bookingUrl}>бронирование и оплата</ExternalLink>
+              </p>
+            ) : priceItems.length > 0 || hasSkipassTables ? (
               <SkipassTables
                 groups={priceGroups}
                 items={priceItems}
@@ -287,19 +303,21 @@ export function ResortPage({ data }: { data: SiteData }) {
                 )}
               </p>
             )}
-            {visitorPriceNote && (priceItems.length > 0 || hasSkipassTables) && (
+            {!hasBookingLink && visitorPriceNote && (priceItems.length > 0 || hasSkipassTables) && (
               <p className="muted">
                 <LinkedText text={visitorPriceNote} />
               </p>
             )}
-            {prices?.status === 'failed' && (
+            {!hasBookingLink && prices?.status === 'failed' && (
               <p className="muted">
                 Последний сбор цен не удался — показаны прежние данные, если они были.
               </p>
             )}
-            <p className="muted">
-              Актуальность: {formatUpdatedAt(prices?.scrapedAt)} · {scrapeStatusLabel(prices?.status)}
-            </p>
+            {!hasBookingLink && (
+              <p className="muted">
+                Актуальность: {formatUpdatedAt(prices?.scrapedAt)} · {scrapeStatusLabel(prices?.status)}
+              </p>
+            )}
           </section>
         )}
 
@@ -328,9 +346,9 @@ export function ResortPage({ data }: { data: SiteData }) {
               <p className="detail-lead">
                 <LinkedText text={feature.summary} />
               </p>
-              {feature.hoursSummary && (
+              {feature.hoursSummary && localizePublicText(feature.hoursSummary) && (
                 <p>
-                  <LinkedText text={feature.hoursSummary} />
+                  <LinkedText text={localizePublicText(feature.hoursSummary)} />
                 </p>
               )}
               {featurePeriods.length > 0 && (
@@ -390,9 +408,9 @@ export function ResortPage({ data }: { data: SiteData }) {
                   <a href={featureTel}>{feature.phone}</a>
                 </p>
               )}
-              {feature.note && (
+              {feature.note && localizePublicText(feature.note) && (
                 <p className="muted">
-                  <LinkedText text={feature.note} />
+                  <LinkedText text={localizePublicText(feature.note)} />
                 </p>
               )}
             </section>

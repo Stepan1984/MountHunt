@@ -824,7 +824,7 @@ export function parseIgoraHours(html) {
   const $ = loadHtml(html)
   const text = cleanText($('body').text())
   const periods = []
-  let summary = 'Часы склонов уточняйте на сайте Игоры'
+  let summary = 'Нет данных о часах склонов'
 
   // Prefer explicit slope / working-hours wording (avoid false hits like "Montserrat").
   const slopeBlock = text.match(
@@ -947,7 +947,7 @@ export async function scrapeIgora() {
     const hours = hoursHtml
       ? parseIgoraHours(hoursHtml)
       : {
-          summary: 'Часы склонов уточняйте на сайте курорта',
+          summary: 'Нет данных о часах склонов',
           periods: [],
           status: 'partial',
         }
@@ -960,7 +960,7 @@ export async function scrapeIgora() {
       notes.push('Таблицы цен не удалось прочитать — смотрите сайт курорта')
     }
     if (fromSnapshot || incompleteLive) {
-      notes.push('Часть тарифов может быть неполной — уточняйте на сайте курорта')
+      notes.push('Часть тарифов может быть неполной')
     }
 
     const priceStatus = !items.length

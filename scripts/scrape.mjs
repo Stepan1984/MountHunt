@@ -74,6 +74,17 @@ function writeJson(path, data) {
 
 function blankPrice(resortId, resorts) {
   const r = resorts.find((x) => x.id === resortId)
+  if (r?.booking_url) {
+    return {
+      resortId,
+      scrapedAt: null,
+      sourceUrl: r.booking_url,
+      currency: 'RUB',
+      items: [],
+      status: 'unavailable',
+      note: 'Цены на странице не публикуем — бронирование и оплата по ссылке на сайте курорта',
+    }
+  }
   return {
     resortId,
     scrapedAt: null,
@@ -170,17 +181,20 @@ function applySeedFixes(resorts) {
       community_links: ['https://t.me/dropsnowpark'],
     },
     'putilovo-park': {
-      prices_format: 'html',
-      prices_url: 'https://sportpark.pro/snowrider',
-      website: 'https://sportpark.pro/',
+      prices_format: 'booking_url',
+      prices_url: null,
+      booking_url: 'https://sportpark.pro/snowrider',
+      // «Сайт курорта» → Telegram; бронирование — отдельная ссылка в блоке цен.
+      website: 'https://t.me/SPORTPARKPUTILOVO',
       sourcesAdd: [
         'https://sportpark.pro/',
         'https://sportpark.pro/snowrider',
+        'https://t.me/SPORTPARKPUTILOVO',
         'https://t.me/s/SPORTPARKPUTILOVO',
       ],
       community_links: ['https://t.me/SPORTPARKPUTILOVO'],
       notes:
-        'Сноупарк с быстрым канатом; катание по предварительной регистрации и оплате. Официальный сайт sportpark.pro (лендинг Flexbe; на ноябрь 2026 иногда недоступен) — новости и режим в Telegram @SPORTPARKPUTILOVO. Публичной VK-группы не найдено. Координаты — с карты бронирования sportpark.pro.',
+        'Сноупарк с быстрым канатом; катание по предварительной регистрации и оплате.',
     },
     'okhta-park': {
       prices_format: 'html_mixed',
@@ -236,7 +250,7 @@ function applySeedFixes(resorts) {
         'https://t.me/sev_sklon',
         'https://max.ru/join/vvFZpjgzC9kPllpcOfsQiEZzEEz00AmbiHT9OJoKQTw',
       ],
-      notes: '4 склона у оз. Хепоярви; бугели. Актуальные цены уточняйте на сайте курорта.',
+      notes: '4 склона у оз. Хепоярви; бугели.',
     },
   }
   return resorts.map((r) => {
@@ -327,7 +341,11 @@ async function main() {
         ` prices=${priceStatus ?? '—'} hours=${hoursStatus ?? '—'} items=${result.prices?.items?.length ?? 0}`,
     )
 
-    if (result.prices) {
+    // booking_url resorts never scrape/store tariff rows — keep the empty placeholder.
+    const resortRec = resorts.find((x) => x.id === id)
+    if (resortRec?.booking_url) {
+      pricesById.set(id, blankPrice(id, resorts))
+    } else if (result.prices) {
       const merged = mergeSnapshot(pricesById.get(id), result.prices, id, (rid) =>
         blankPrice(rid, resorts),
       )
@@ -388,7 +406,9 @@ async function main() {
     if (i < targets.length - 1) await sleep()
   }
 
-  const prices = resorts.map((r) => pricesById.get(r.id) || blankPrice(r.id, resorts))
+  const prices = resorts.map((r) =>
+    r.booking_url ? blankPrice(r.id, resorts) : pricesById.get(r.id) || blankPrice(r.id, resorts),
+  )
   const hours = resorts.map((r) => hoursById.get(r.id) || blankHours(r.id, resorts))
   const important = mergeImportantFromDailyScrape(prevImportant, importantAdds, results)
 

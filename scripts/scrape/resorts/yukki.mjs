@@ -175,7 +175,7 @@ export async function scrapeYukki() {
     const hoursMatch = text.match(
       /Режим работы:\s*Ежедневно с\s*(\d{1,2}:\d{2})\s*до\s*(\d{1,2}:\d{2})/i,
     )
-    let summary = 'Часы работы уточняйте на странице СТЦ Юкки'
+    let summary = 'Нет данных о часах работы'
     /** @type {{ days: string, open: string, close: string }[]} */
     const periods = []
     let hoursStatus = 'partial'

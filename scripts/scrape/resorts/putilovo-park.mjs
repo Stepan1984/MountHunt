@@ -1,9 +1,10 @@
 /**
  * Спортпарк Путилово — snowpark with rope tow (ЛО, Кировский р-н).
  *
- * Prices/hours prefer official Flexbe landing sportpark.pro/snowrider.
- * When the live site is locked/down: optional Wayback snapshot, then TG posts
- * (t.me/s/SPORTPARKPUTILOVO). Fail-soft — empty/failed keeps last known snapshot.
+ * Prices are not scraped: the UI links to booking at sportpark.pro/snowrider.
+ * Hours / important / slope status use TG (t.me/s/SPORTPARKPUTILOVO) and
+ * optionally the Flexbe landing (live or Wayback) for schedule/slope copy.
+ * Fail-soft — empty/failed keeps last known hours/important snapshot.
  * No public VK community found (Nov 2026).
  */
 import { fetchUrl, fetchUrlResult, sleep } from '../lib/http.mjs'
@@ -16,7 +17,6 @@ import {
   cleanText,
   hoursSnapshot,
   loadHtml,
-  parsePrice,
   priceSnapshot,
 } from '../lib/parse.mjs'
 import { appendHoursExtraNote } from '../lib/slope-status.mjs'
@@ -30,51 +30,6 @@ export const PUTILOVO_SITE_WAYBACK_URL =
   'https://web.archive.org/web/20260420020716/https://sportpark.pro/snowrider'
 
 const RESORT_ID = 'putilovo-park'
-
-/**
- * Ticket / day-pass lines from Flexbe landing HTML.
- * @param {string} html
- * @returns {{ items: object[], note?: string }}
- */
-export function parsePutilovoSitePrices(html) {
-  const text = cleanText(loadHtml(html || '<body></body>')('body').text())
-  /** @type {object[]} */
-  const items = []
-
-  const ticket = text.match(/входн(?:ой|ого)\s+билет[аы]?\s*[:\-]?\s*(\d[\d\s]*)\s*(?:₽|руб)/i)
-  if (ticket) {
-    const price = parsePrice(ticket[1])
-    if (price != null) {
-      items.push({
-        title: 'Входной билет',
-        price,
-        unit: 'день',
-        rawText: cleanText(ticket[0]),
-      })
-    }
-  }
-
-  // Generic «название: 1 500₽» fallbacks near snowpark words.
-  if (!items.length) {
-    const re =
-      /((?:входн(?:ой|ого)\s+билет|ски-?пасс|катани[ея]|день\s+катания)[^.]{0,40}?)(\d[\d\s]{2,6})\s*(?:₽|руб)/gi
-    let m
-    while ((m = re.exec(text))) {
-      const price = parsePrice(m[2])
-      if (price == null || price < 100 || price > 50_000) continue
-      const title = cleanText(m[1]).replace(/[:\-–—]\s*$/, '') || 'Тариф'
-      items.push({ title, price, unit: 'тариф', rawText: cleanText(m[0]) })
-      if (items.length >= 6) break
-    }
-  }
-
-  return {
-    items,
-    ...(items.length
-      ? { note: 'Тарифы с лендинга бронирования sportpark.pro' }
-      : {}),
-  }
-}
 
 /**
  * Session window from site copy (rare) or TG posts («с 12:00-19:00»).
@@ -132,37 +87,6 @@ export function parsePutilovoHoursFromTelegram(tgHtml) {
 }
 
 /**
- * Prices mentioned in TG (rare) — «билет 1500», «1500₽».
- * @param {string} tgHtml
- */
-export function parsePutilovoPricesFromTelegram(tgHtml) {
-  const posts = parseTelegramChannelHtml(tgHtml)
-  /** @type {object[]} */
-  const items = []
-  const seen = new Set()
-  for (const post of [...posts].reverse()) {
-    const t = post.text || ''
-    const m =
-      t.match(/входн(?:ой|ого)\s+билет[аы]?\s*[:\-]?\s*(\d[\d\s]*)\s*(?:₽|руб)/i) ||
-      t.match(/(?:билет|оплат\w+)\s*[:\-]?\s*(\d[\d\s]*)\s*(?:₽|руб)/i)
-    if (!m) continue
-    const price = parsePrice(m[1])
-    if (price == null || price < 100) continue
-    const key = `ticket|${price}`
-    if (seen.has(key)) continue
-    seen.add(key)
-    items.push({
-      title: 'Входной билет',
-      price,
-      unit: 'день',
-      rawText: cleanText(m[0]),
-    })
-    if (items.length >= 3) break
-  }
-  return items
-}
-
-/**
  * @param {string} siteHtml
  * @param {string} tgHtml
  */
@@ -178,7 +102,7 @@ export function detectPutilovoSlopeStatus(siteHtml, tgHtml) {
   if (putilovoOffSeasonMatch(combined)) {
     return {
       slopesOpen: false,
-      note: 'Снежный сезон закрыт — открытие уточняйте в Telegram парка',
+      note: 'Снежный сезон закрыт',
     }
   }
   // Booking landing with open-day copy but no off-season → still not alpine-open certainty.
@@ -202,7 +126,7 @@ export async function fetchPutilovoTelegramImportant() {
 }
 
 /**
- * Try live landing, then Wayback archive of the same URL.
+ * Try live landing, then Wayback archive of the same URL (hours/slope copy only).
  * @returns {Promise<{ html: string, sourceUrl: string, fetched: boolean }>}
  */
 async function fetchPutilovoSiteHtml() {
@@ -219,6 +143,20 @@ async function fetchPutilovoSiteHtml() {
   } catch {
     return { html: '', sourceUrl: PUTILOVO_SITE_URL, fetched: false }
   }
+}
+
+/**
+ * Empty price placeholder — MountHunt does not scrape Putilovo tariffs.
+ * Scrape runner also forces this for any resort with booking_url.
+ */
+function putilovoBookingPrices() {
+  return priceSnapshot({
+    resortId: RESORT_ID,
+    sourceUrl: PUTILOVO_SITE_URL,
+    items: [],
+    status: 'unavailable',
+    note: 'Цены на странице не публикуем — бронирование и оплата по ссылке на сайте курорта',
+  })
 }
 
 /**
@@ -239,15 +177,6 @@ export async function scrapePutilovoPark() {
       tgFetched = false
     }
 
-    const sitePrices = parsePutilovoSitePrices(site.html)
-    const tgPrices = tgFetched ? parsePutilovoPricesFromTelegram(tgHtml) : []
-    const priceItems = sitePrices.items.length ? sitePrices.items : tgPrices
-    const priceSource = sitePrices.items.length
-      ? site.sourceUrl
-      : tgPrices.length
-        ? PUTILOVO_TG_URL
-        : site.sourceUrl
-
     const tgHours = tgFetched ? parsePutilovoHoursFromTelegram(tgHtml) : null
     const siteHours = site.html ? parsePutilovoHoursFromText(loadHtml(site.html)('body').text()) : null
     const hoursPack = tgHours || (siteHours ? { ...siteHours, sourceUrl: site.sourceUrl } : null)
@@ -255,38 +184,19 @@ export async function scrapePutilovoPark() {
     const important = tgFetched
       ? detectPutilovoTelegramImportant(tgHtml, PUTILOVO_TG_URL)
       : []
-    // Off-season stable card when TG says season ended and no fresher open signal.
     const slopeStatus = detectPutilovoSlopeStatus(site.html, tgHtml)
-    if (
-      tgFetched &&
-      putilovoOffSeasonMatch(parseTelegramChannelHtml(tgHtml).map((p) => p.text).join('\n')) &&
-      !putilovoSeasonOpenMatch(parseTelegramChannelHtml(tgHtml).map((p) => p.text).join('\n'))
-    ) {
-      // Detector already emits putilovo-tg-* for the closing post; managed id fills hourly path.
-    }
 
-    const hasPrices = priceItems.length > 0
     const hoursSummary = appendHoursExtraNote(
       hoursPack?.summary ||
         (tgFetched
           ? 'Часы сеансов публикуют в Telegram перед открытыми днями'
-          : 'Часы работы уточняйте в Telegram и на сайте'),
+          : 'Часы сеансов публикуют в Telegram'),
       slopeStatus.note,
     )
 
     return {
       resortId,
-      prices: priceSnapshot({
-        resortId,
-        sourceUrl: priceSource,
-        items: priceItems,
-        status: hasPrices ? 'ok' : 'failed',
-        note: hasPrices
-          ? sitePrices.items.length
-            ? sitePrices.note || 'Тарифы с лендинга бронирования'
-            : 'Тарифы из постов Telegram (сайт недоступен)'
-          : 'Цены на сайте и в Telegram не найдены — сохранены прежние данные',
-      }),
+      prices: putilovoBookingPrices(),
       hours: hoursSnapshot({
         resortId,
         sourceUrl: hoursPack?.sourceUrl || (tgFetched ? PUTILOVO_TG_URL : site.sourceUrl),
@@ -304,13 +214,7 @@ export async function scrapePutilovoPark() {
     return {
       resortId,
       error: String(err?.message || err),
-      prices: priceSnapshot({
-        resortId,
-        sourceUrl: PUTILOVO_SITE_URL,
-        items: [],
-        status: 'failed',
-        note: String(err?.message || err),
-      }),
+      prices: putilovoBookingPrices(),
       hours: hoursSnapshot({
         resortId,
         sourceUrl: PUTILOVO_TG_URL,
