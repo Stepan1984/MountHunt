@@ -7,6 +7,10 @@
  * Scrape time lives on meta.importantScrapedAt (freshness), not on cards.
  */
 import { cleanText, httpDateToIso, loadHtml, nowIso, ruDateLabelToIso } from './parse.mjs'
+import {
+  isDuplicateOfSiteNews,
+  parseTelegramChannelHtml,
+} from './telegram.mjs'
 
 /** Stable ids owned by automated important scrapers (cleared when a check succeeds without them). */
 export const MANAGED_IMPORTANT_IDS = Object.freeze({
@@ -20,8 +24,19 @@ export const MANAGED_IMPORTANT_IDS = Object.freeze({
   'puhtolova-gora': Object.freeze(['puhtolova-season-open']),
 })
 
+/**
+ * Dynamic managed id prefixes (e.g. Telegram posts). Cleared on successful scrape
+ * unless the result sets `clearPrefixes: false` (TG fetch failed — keep previous cards).
+ */
+export const MANAGED_IMPORTANT_PREFIXES = Object.freeze({
+  'krasnoe-ozero': Object.freeze(['krasnoe-tg-']),
+})
+
 /** Max age for dated news cards used as «Важное» (stale season-open posts drop out). */
 export const IMPORTANT_NEWS_MAX_AGE_DAYS = 60
+
+/** Cap Telegram-derived Krasnoe cards per scrape. */
+export const KRASNOE_TG_IMPORTANT_LIMIT = 5
 
 /**
  * @param {string | null | undefined} iso
@@ -311,6 +326,143 @@ export function detectKrasnoeImportantFromFlags(pack, sourceUrl) {
       ...(publishedAt ? { publishedAt } : {}),
     }),
   ]
+}
+
+/**
+ * Include: schedule/hours, season/slope open/close, lift changes, giveaways, competitions.
+ * Skip pure ads / booking promo when they do not also match include signals.
+ * @param {string} text
+ */
+export function krasnoeTelegramPostRelevant(text) {
+  const t = cleanText(text)
+  if (!t || t.length < 12) return false
+
+  const giveaway = /розыгрыш|разыгрыва\w*|разыграем/i.test(t)
+  const competition =
+    /соревнован\w*|чемпионат|кубок\b|конкурс\w*(?:\s+\w+){0,3}\s+(?:по|среди|на)\b/i.test(t)
+  const schedule =
+    /график\s+работ|режим\s+работ|расписан\w*|час[ыа]?\s+работ|работаем\s+с\s+\d/i.test(t)
+  const seasonSlope =
+    /открытие\s+сезон|сезон\s+(?:20\d{2}\s*[–\-/]\s*20\d{2}\s+)?(?:открыт|закрыт|закончен)|открыт[аы]?\s+(?:сезон|склон|трасс)|склон[ыа]?\s+(?:открыт|закрыт)|трасс[ыа]?\s+(?:открыт|закрыт)|закрыт[аы]?\s+до\s+сезон|закрытие\s+сезон/i.test(
+      t,
+    )
+  const lift =
+    /подъ[её]мник\w*.{0,40}(?:закрыт|открыт|не\s+работает|работает)|(?:закрыт|открыт|не\s+работает)\w*.{0,40}подъ[её]мник/i.test(
+      t,
+    )
+
+  if (!(giveaway || competition || schedule || seasonSlope || lift)) return false
+
+  // Booking / partner fluff that only name-drops a lift or «сезон» in a promo.
+  const promoOnly =
+    /успей\s+забронировать|бронирован\w+\s+коттедж|ищем\s+партн|pet-friendly|новогодн\w+\s+банкет|скидка\s*-?\s*\d+\s*%/i.test(
+      t,
+    )
+  if (promoOnly && !(giveaway || competition || schedule || lift)) return false
+
+  return true
+}
+
+/**
+ * @param {string} text
+ * @returns {'info' | 'warn'}
+ */
+function krasnoeTelegramSeverity(text) {
+  if (
+    /график\s+работ|режим\s+работ|закрыт|не\s+работает|подъ[её]мник/i.test(text) &&
+    !/розыгрыш|соревнован|открытие\s+сезон|сезон\s+открыт/i.test(text)
+  ) {
+    return 'warn'
+  }
+  return 'info'
+}
+
+/**
+ * First non-empty line → short Russian title; rest → body.
+ * @param {string} text
+ */
+export function krasnoeTelegramTitleBody(text) {
+  const lines = String(text || '')
+    .split('\n')
+    .map((l) => cleanText(l))
+    .filter(Boolean)
+  let title = (lines[0] || cleanText(text)).trim()
+  title = title
+    .replace(/^(?:[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]+\s*)+/gu, '')
+    .replace(/(?:\s*[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}⤵️👇⬇️⬅➡]+)+$/gu, '')
+    .trim()
+  if (title.length > 140) title = `${title.slice(0, 137).trim()}…`
+  if (!/^красн/i.test(title)) title = `Красное озеро: ${title}`
+  const bodyRaw = lines.slice(1).join(' ') || cleanText(text)
+  let body = cleanText(bodyRaw)
+  if (body.length > 420) body = `${body.slice(0, 417).trim()}…`
+  return { title, body }
+}
+
+/**
+ * Krasnoe official TG (@redlakeclub / t.me/s/redlakeclub) → filtered «Важное» cards.
+ * Dedupes against site news titles/descriptions when provided.
+ *
+ * @param {string} tgHtml
+ * @param {string} sourceUrl
+ * @param {{ siteNewsTexts?: string[], maxAgeDays?: number, limit?: number }} [opts]
+ */
+export function detectKrasnoeTelegramImportant(tgHtml, sourceUrl, opts = {}) {
+  const posts = parseTelegramChannelHtml(tgHtml)
+  const siteTexts = opts.siteNewsTexts || []
+  const maxAgeDays = opts.maxAgeDays ?? IMPORTANT_NEWS_MAX_AGE_DAYS
+  const limit = opts.limit ?? KRASNOE_TG_IMPORTANT_LIMIT
+  /** @type {object[]} */
+  const items = []
+
+  // Newest first (channel HTML is usually chronological ascending).
+  const ordered = [...posts].reverse()
+  for (const post of ordered) {
+    if (items.length >= limit) break
+    if (!krasnoeTelegramPostRelevant(post.text)) continue
+    if (post.publishedAt && !isFreshPublishedAt(post.publishedAt, maxAgeDays)) continue
+    if (isDuplicateOfSiteNews(post.text, siteTexts)) continue
+
+    const { title, body } = krasnoeTelegramTitleBody(post.text)
+    items.push(
+      importantItem({
+        id: `krasnoe-tg-${post.postId}`,
+        resortId: 'krasnoe-ozero',
+        title,
+        body,
+        severity: krasnoeTelegramSeverity(post.text),
+        sourceUrl: post.url || sourceUrl,
+        ...(post.publishedAt ? { publishedAt: post.publishedAt } : {}),
+      }),
+    )
+  }
+
+  return items
+}
+
+/**
+ * Parse Tilda feed JSON (krasnoeozero.ru/events/news/) into plain texts for dedupe.
+ * Fail-soft: bad JSON → [].
+ * @param {string} jsonText
+ * @returns {string[]}
+ */
+export function parseKrasnoeSiteNewsTexts(jsonText) {
+  if (!jsonText) return []
+  try {
+    const data = JSON.parse(jsonText)
+    const posts = Array.isArray(data?.posts) ? data.posts : []
+    /** @type {string[]} */
+    const out = []
+    for (const p of posts) {
+      const title = cleanText(p?.title || '')
+      const descr = cleanText(p?.descr || p?.description || '')
+      if (title) out.push(title)
+      if (descr && descr.length >= 8) out.push(descr)
+    }
+    return out
+  } catch {
+    return []
+  }
 }
 
 /**
@@ -608,12 +760,13 @@ export function detectLazurnyeImportantFromPages(htmlOrPages, sourceUrl, opts = 
 /**
  * Fail-soft merge:
  * - successful resort checks clear that resort's managed ids, then upsert new items
+ * - managed id prefixes (Telegram posts) clear unless `clearPrefixes: false`
  * - failed checks leave previous managed ids untouched
  * - chrome notes (mvp-data-note) always refreshed when provided
  * - publishedAt preserved from previous item when the new scrape has none
  *
  * @param {object[]} prev
- * @param {{ resortId: string, ok: boolean, items?: object[], error?: string }[]} results
+ * @param {{ resortId: string, ok: boolean, items?: object[], error?: string, clearPrefixes?: boolean }[]} results
  * @param {{ chromeNote?: object | null }} [opts]
  */
 export function mergeImportantFailSoft(prev, results, opts = {}) {
@@ -623,6 +776,15 @@ export function mergeImportantFailSoft(prev, results, opts = {}) {
     const managed = MANAGED_IMPORTANT_IDS[result.resortId] || []
     if (!result.ok) continue
     for (const id of managed) byId.delete(id)
+    const clearPrefixes = result.clearPrefixes !== false
+    if (clearPrefixes) {
+      const prefixes = MANAGED_IMPORTANT_PREFIXES[result.resortId] || []
+      if (prefixes.length) {
+        for (const id of [...byId.keys()]) {
+          if (prefixes.some((p) => id.startsWith(p))) byId.delete(id)
+        }
+      }
+    }
     for (const item of result.items || []) {
       if (!item?.id) continue
       // Managed ids were just cleared from byId — read prior publishedAt from prev.
@@ -646,10 +808,11 @@ export function mergeImportantFailSoft(prev, results, opts = {}) {
  * Daily full scrape helper: treat every target that returned (even with empty important)
  * as a successful clear for its managed ids when the resort scrape did not hard-fail.
  * `importantInconclusive: true` keeps previous managed ids (e.g. Drop Park TG down).
+ * `clearImportantPrefixes: false` keeps previous prefix-managed cards (e.g. Krasnoe TG down).
  *
  * @param {object[]} prev
  * @param {object[]} importantAdds
- * @param {{ id: string, error?: string | null, prices?: string | null, hours?: string | null, importantInconclusive?: boolean }[]} scrapeResults
+ * @param {{ id: string, error?: string | null, prices?: string | null, hours?: string | null, importantInconclusive?: boolean, clearImportantPrefixes?: boolean }[]} scrapeResults
  */
 export function mergeImportantFromDailyScrape(prev, importantAdds, scrapeResults) {
   const results = []
@@ -663,18 +826,19 @@ export function mergeImportantFromDailyScrape(prev, importantAdds, scrapeResults
 
   for (const r of scrapeResults || []) {
     const hardFail = Boolean(r.error) || r.prices === 'failed'
-    if (!MANAGED_IMPORTANT_IDS[r.id]) continue
+    if (!MANAGED_IMPORTANT_IDS[r.id] && !MANAGED_IMPORTANT_PREFIXES[r.id]) continue
     results.push({
       resortId: r.id,
       ok: !hardFail && !r.importantInconclusive,
       items: addsByResort.get(r.id) || [],
       error: r.error || undefined,
+      clearPrefixes: r.clearImportantPrefixes !== false,
     })
   }
 
   // Also upsert any important items for resorts without managed-id registry.
   for (const [resortId, items] of addsByResort) {
-    if (MANAGED_IMPORTANT_IDS[resortId]) continue
+    if (MANAGED_IMPORTANT_IDS[resortId] || MANAGED_IMPORTANT_PREFIXES[resortId]) continue
     results.push({ resortId, ok: true, items })
   }
 

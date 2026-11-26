@@ -1,5 +1,9 @@
-import { fetchUrl, sleep } from '../lib/http.mjs'
-import { detectKrasnoeImportantFromFlags } from '../lib/important.mjs'
+import { fetchUrl, fetchUrlResult, sleep } from '../lib/http.mjs'
+import {
+  detectKrasnoeImportantFromFlags,
+  detectKrasnoeTelegramImportant,
+  parseKrasnoeSiteNewsTexts,
+} from '../lib/important.mjs'
 import {
   cleanText,
   hoursSnapshot,
@@ -19,9 +23,38 @@ const CSV_URL =
 export const KRASNOE_HOURS_PAGE_URL = 'https://krasnoeozero.ru/grafik/'
 export const KRASNOE_HOURS_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSuTEvLg230S45pOu7aSVs--gOtknAPG2vYD6HwVEMcwTHhAd33FlU6aGrWAmQB68F4uDWeYkgzuWbj/pub?gid=1367114585&single=true&output=csv'
+/** Public TG preview (no Bot API). Channel @redlakeclub. */
+export const KRASNOE_TG_URL = 'https://t.me/s/redlakeclub'
+export const KRASNOE_NEWS_PAGE_URL = 'https://krasnoeozero.ru/events/news/'
+/** Tilda feed JSON used by the site news listing (for TG↔site dedupe). */
+export const KRASNOE_NEWS_FEED_URL =
+  'https://feeds.tildacdn.com/api/getfeed/?feeduid=498258978831-727634401901&size=20&slice=1'
 const HOURS_PAGE_URL = KRASNOE_HOURS_PAGE_URL
 const HOURS_CSV_URL = KRASNOE_HOURS_CSV_URL
 const WEBCAM_URL = 'https://krasnoeozero.ru/cam/'
+
+/**
+ * Fetch Krasnoe Telegram (+ optional site news texts for dedupe). Fail-soft per source.
+ * @returns {Promise<{ items: object[], tgFetched: boolean }>}
+ */
+export async function fetchKrasnoeTelegramImportant() {
+  let siteNewsTexts = []
+  try {
+    const { body } = await fetchUrlResult(KRASNOE_NEWS_FEED_URL)
+    siteNewsTexts = parseKrasnoeSiteNewsTexts(body)
+  } catch {
+    siteNewsTexts = []
+  }
+
+  try {
+    await sleep()
+    const { body } = await fetchUrlResult(KRASNOE_TG_URL)
+    const items = detectKrasnoeTelegramImportant(body, KRASNOE_TG_URL, { siteNewsTexts })
+    return { items, tgFetched: true }
+  } catch {
+    return { items: [], tgFetched: false }
+  }
+}
 
 /** @param {string} h */
 function isDateHeader(h) {
@@ -312,6 +345,18 @@ export async function scrapeKrasnoeOzero() {
 
     const embeds = camHtml ? extractIvideon(camHtml) : []
 
+    let tgItems = []
+    let tgFetched = false
+    try {
+      await sleep()
+      const tg = await fetchKrasnoeTelegramImportant()
+      tgItems = tg.items
+      tgFetched = tg.tgFetched
+    } catch {
+      tgItems = []
+      tgFetched = false
+    }
+
     return {
       resortId,
       prices: priceSnapshot({
@@ -327,7 +372,9 @@ export async function scrapeKrasnoeOzero() {
       webcamUrl: WEBCAM_URL,
       // ivideon embed stays on splash / no playable video in-page — link-only.
       cameraEmbeds: embeds.filter(() => false),
-      important: hoursPack.important,
+      important: [...(hoursPack.important || []), ...tgItems],
+      // Keep previous krasnoe-tg-* cards when the public TG preview is unreachable.
+      clearImportantPrefixes: tgFetched,
     }
   } catch (err) {
     return {
