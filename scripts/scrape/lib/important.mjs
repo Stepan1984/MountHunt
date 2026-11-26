@@ -22,6 +22,7 @@ export const MANAGED_IMPORTANT_IDS = Object.freeze({
   snezhny: Object.freeze(['snezhny-hours-notice']),
   'drop-park': Object.freeze(['drop-off-season']),
   'puhtolova-gora': Object.freeze(['puhtolova-season-open']),
+  'putilovo-park': Object.freeze(['putilovo-off-season']),
 })
 
 /**
@@ -30,6 +31,7 @@ export const MANAGED_IMPORTANT_IDS = Object.freeze({
  */
 export const MANAGED_IMPORTANT_PREFIXES = Object.freeze({
   'krasnoe-ozero': Object.freeze(['krasnoe-tg-']),
+  'putilovo-park': Object.freeze(['putilovo-tg-']),
 })
 
 /** Max age for dated news cards used as «Важное» (stale season-open posts drop out). */
@@ -37,6 +39,9 @@ export const IMPORTANT_NEWS_MAX_AGE_DAYS = 60
 
 /** Cap Telegram-derived Krasnoe cards per scrape. */
 export const KRASNOE_TG_IMPORTANT_LIMIT = 5
+
+/** Cap Telegram-derived Putilovo cards per scrape. */
+export const PUTILOVO_TG_IMPORTANT_LIMIT = 5
 
 /**
  * @param {string | null | undefined} iso
@@ -441,6 +446,160 @@ export function detectKrasnoeTelegramImportant(tgHtml, sourceUrl, opts = {}) {
         ...(post.publishedAt ? { publishedAt: post.publishedAt } : {}),
       }),
     )
+  }
+
+  return items
+}
+
+/**
+ * Putilovo TG include: schedule/session hours, season open/close, slope expansion,
+ * contests / shred symposium. Skip pure photo-report / «ставь +» fluff.
+ * @param {string} text
+ */
+export function putilovoTelegramPostRelevant(text) {
+  const t = cleanText(text)
+  if (!t || t.length < 12) return false
+
+  const schedule =
+    /(?:с\s*)?\d{1,2}:\d{2}\s*(?:[-–—]|до)\s*\d{1,2}:\d{2}|ждём\s+завтра|ждем\s+завтра|бронируйте\s+(?:своё|свое)?\s*катание|регистрация\s+(?:и\s+)?оплат|открыта\s+регистрация|сбор\s+гостей/i.test(
+      t,
+    )
+  const seasonSlope =
+    /следующ(?:ем|ий)\s+сезон|сезон\s+(?:закрыт|закончен|открыт)|увидимся\s+в\s+следующ|расширяем.{0,40}склон|увеличиваем.{0,40}склон|открыт(?:ые)?\s+дни|новый\s+сноупарк|приглашаем.{0,40}сноупарк/i.test(
+      t,
+    )
+  const lift =
+    /(?:быстр(?:ый|ым)\s+)?канат\w*|подъ[её]мник\w*/i.test(t) &&
+    /(?:открыт|закрыт|работает|не\s+работает|катани)/i.test(t)
+  const event =
+    /шредсимпозиум|shred\s*symposium|контест\w*|соревнован\w*|призов(?:ой|ым)\s+фонд|cash\s+for\s+lines/i.test(
+      t,
+    )
+
+  if (!(schedule || seasonSlope || lift || event)) return false
+
+  const fluffOnly =
+    /^(?:респект|ловите\s+полный\s+фото|фото\s+отчет|солнечные\s+лайны)/i.test(t) ||
+    (/ставь\s*\+|ставьте\s*\+/i.test(t) && !schedule && !event && !seasonSlope)
+
+  if (fluffOnly) return false
+  return true
+}
+
+/**
+ * @param {string} text
+ */
+export function putilovoOffSeasonMatch(text) {
+  const t = cleanText(text)
+  if (!t) return false
+  return (
+    /увидимся\s+в\s+следующ(?:ем|ий)\s+сезон/i.test(t) ||
+    /сезон\s+(?:закрыт|закончен)/i.test(t) ||
+    /растопил(?:и|а)?\s+(?:весь\s+)?парк/i.test(t)
+  )
+}
+
+/**
+ * @param {string} text
+ */
+export function putilovoSeasonOpenMatch(text) {
+  const t = cleanText(text)
+  if (!t) return false
+  return (
+    /открыт(?:ые)?\s+дни\s+в\s+(?:новом\s+)?сноупарк/i.test(t) ||
+    /новый\s+сноупарк\s+в\s+спортпарк/i.test(t) ||
+    /приглашаем.{0,60}(?:посетить|кататься).{0,40}сноупарк/i.test(t) ||
+    /сезон\s+открыт/i.test(t) ||
+    /стартует\s+(?:\S+\s+){0,2}сезон/i.test(t)
+  )
+}
+
+/**
+ * @param {string} text
+ * @returns {'info' | 'warn'}
+ */
+function putilovoTelegramSeverity(text) {
+  if (putilovoOffSeasonMatch(text) || /закрыт|не\s+работает/i.test(text)) return 'warn'
+  return 'info'
+}
+
+/**
+ * @param {string} text
+ */
+export function putilovoTelegramTitleBody(text) {
+  const lines = String(text || '')
+    .split('\n')
+    .map((l) => cleanText(l))
+    .filter(Boolean)
+  let title = (lines[0] || cleanText(text)).trim()
+  title = title
+    .replace(/^(?:[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]+\s*)+/gu, '')
+    .replace(/(?:\s*[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}⤵️👇⬇️⬅➡]+)+$/gu, '')
+    .trim()
+  if (title.length > 140) title = `${title.slice(0, 137).trim()}…`
+  if (!/путилов|спортпарк/i.test(title)) title = `Спортпарк Путилово: ${title}`
+  const bodyRaw = lines.slice(1).join(' ') || cleanText(text)
+  let body = cleanText(bodyRaw)
+  if (body.length > 420) body = `${body.slice(0, 417).trim()}…`
+  return { title, body }
+}
+
+/**
+ * Official TG (@SPORTPARKPUTILOVO / t.me/s/SPORTPARKPUTILOVO) → filtered «Важное».
+ *
+ * @param {string} tgHtml
+ * @param {string} sourceUrl
+ * @param {{ maxAgeDays?: number, limit?: number }} [opts]
+ */
+export function detectPutilovoTelegramImportant(tgHtml, sourceUrl, opts = {}) {
+  const posts = parseTelegramChannelHtml(tgHtml)
+  const maxAgeDays = opts.maxAgeDays ?? IMPORTANT_NEWS_MAX_AGE_DAYS
+  const limit = opts.limit ?? PUTILOVO_TG_IMPORTANT_LIMIT
+  /** @type {object[]} */
+  const items = []
+
+  const ordered = [...posts].reverse()
+  /** @type {object | null} */
+  let offSeasonCard = null
+
+  for (const post of ordered) {
+    if (putilovoOffSeasonMatch(post.text) && !offSeasonCard) {
+      offSeasonCard = importantItem({
+        id: 'putilovo-off-season',
+        resortId: 'putilovo-park',
+        title: 'Спортпарк Путилово: межсезонье',
+        body:
+          'В канале парка указано, что снежный сезон закончен. Актуальные открытые дни уточняйте в Telegram.',
+        severity: 'info',
+        sourceUrl: post.url || sourceUrl,
+        ...(post.publishedAt ? { publishedAt: post.publishedAt } : {}),
+      })
+    }
+
+    if (items.length >= limit) continue
+    if (!putilovoTelegramPostRelevant(post.text)) continue
+    if (post.publishedAt && !isFreshPublishedAt(post.publishedAt, maxAgeDays)) continue
+
+    const { title, body } = putilovoTelegramTitleBody(post.text)
+    items.push(
+      importantItem({
+        id: `putilovo-tg-${post.postId}`,
+        resortId: 'putilovo-park',
+        title,
+        body,
+        severity: putilovoTelegramSeverity(post.text),
+        sourceUrl: post.url || sourceUrl,
+        ...(post.publishedAt ? { publishedAt: post.publishedAt } : {}),
+      }),
+    )
+  }
+
+  // Stable off-season id (like Drop Park): keep even when the closing post is older than maxAge.
+  if (offSeasonCard) {
+    const hasFresherOpen = items.some((i) =>
+      putilovoSeasonOpenMatch(`${i.title} ${i.body || ''}`),
+    )
+    if (!hasFresherOpen) return [offSeasonCard, ...items]
   }
 
   return items

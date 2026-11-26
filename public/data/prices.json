@@ -3755,6 +3755,22 @@
     "note": "Прайс сноупарка: ски-пасс (будни / выходные), инструктор, оборудование, сезонный абонемент"
   },
   {
+    "resortId": "putilovo-park",
+    "scrapedAt": "2026-11-26T11:20:04Z",
+    "sourceUrl": "https://web.archive.org/web/20260420020716/https://sportpark.pro/snowrider",
+    "currency": "RUB",
+    "items": [
+      {
+        "title": "Входной билет",
+        "price": 1500,
+        "unit": "день",
+        "rawText": "Входной билет: 1500₽"
+      }
+    ],
+    "status": "ok",
+    "note": "Тарифы с лендинга бронирования sportpark.pro"
+  },
+  {
     "resortId": "orekhovo",
     "scrapedAt": null,
     "sourceUrl": null,

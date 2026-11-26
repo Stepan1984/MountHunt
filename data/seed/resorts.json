@@ -125,7 +125,8 @@
       "https://krasnoeozero.ru/grafik/",
       "https://krasnoeozero.ru/winter/winter-activities/naduvnoe-prizemlenie/",
       "https://taplink.cc/progression_spot",
-      "https://krasnoeozero.ru/events/news/"
+      "https://krasnoeozero.ru/events/news/",
+      "https://t.me/s/redlakeclub"
     ],
     "webcam_embeds": [],
     "features": [
@@ -404,6 +405,31 @@
     ],
     "community_links": [
       "https://t.me/dropsnowpark"
+    ]
+  },
+  {
+    "id": "putilovo-park",
+    "name": "Спортпарк Путилово",
+    "area": "ЛО, Кировский р-н, Путиловское СП, с. Путилово",
+    "city_or_district": "Путилово",
+    "lat": 59.86426,
+    "lon": 31.40299,
+    "website": "https://sportpark.pro/",
+    "webcam_url": null,
+    "prices_format": "html",
+    "prices_url": "https://sportpark.pro/snowrider",
+    "status": "active",
+    "phone": "+7 (911) 818-10-55",
+    "notes": "Сноупарк с быстрым канатом; катание по предварительной регистрации и оплате. Официальный сайт sportpark.pro (лендинг Flexbe; на ноябрь 2026 иногда недоступен) — новости и режим в Telegram @SPORTPARKPUTILOVO. Публичной VK-группы не найдено. Координаты — с карты бронирования sportpark.pro.",
+    "sources": [
+      "https://sportpark.pro/",
+      "https://sportpark.pro/snowrider",
+      "https://t.me/SPORTPARKPUTILOVO",
+      "https://t.me/s/SPORTPARKPUTILOVO",
+      "https://web.archive.org/web/20260420020716/https://sportpark.pro/snowrider"
+    ],
+    "community_links": [
+      "https://t.me/SPORTPARKPUTILOVO"
     ]
   },
   {

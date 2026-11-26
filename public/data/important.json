@@ -4,7 +4,7 @@
     "title": "Данные обновляются регулярно",
     "body": "Цены и часы — дважды в день (около 10:00 и 22:00 МСК); блок «Важное» — примерно каждый час с официальных страниц курортов. Это не оферта — перед выездом сверяйте с сайтом курорта.",
     "severity": "info",
-    "updatedAt": "2026-11-26T02:37:54Z"
+    "updatedAt": "2026-11-26T11:20:04Z"
   },
   {
     "id": "tuutari-season-prep",
@@ -64,5 +64,15 @@
     "updatedAt": "2026-11-26T02:37:52Z",
     "sourceUrl": "https://t.me/s/dropsnowpark",
     "publishedAt": "2026-11-09T13:00:41Z"
+  },
+  {
+    "id": "putilovo-off-season",
+    "resortId": "putilovo-park",
+    "title": "Спортпарк Путилово: межсезонье",
+    "body": "В канале парка указано, что снежный сезон закончен. Актуальные открытые дни уточняйте в Telegram.",
+    "severity": "info",
+    "updatedAt": "2026-11-26T11:20:04Z",
+    "sourceUrl": "https://t.me/SPORTPARKPUTILOVO/30",
+    "publishedAt": "2026-03-14T18:10:20Z"
   }
 ]
