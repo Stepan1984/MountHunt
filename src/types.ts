@@ -157,7 +157,7 @@ export type Meta = {
   updatedAt: string
   source: string
   note?: string
-  /** Last successful «Важное» scrape (2h job). */
+  /** Last successful «Важное» scrape (hourly job). */
   importantScrapedAt?: string
   importantNote?: string
 }

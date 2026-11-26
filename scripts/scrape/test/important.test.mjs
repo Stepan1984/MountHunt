@@ -245,12 +245,12 @@ describe('mergeImportantFromDailyScrape', () => {
 })
 
 describe('important workflow wiring', () => {
-  it('package + workflow expose scrape:important every 2h', () => {
+  it('package + workflow expose scrape:important hourly', () => {
     const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
     assert.equal(pkg.scripts['scrape:important'], 'node scripts/scrape-important.mjs')
 
     const wf = readFileSync(join(root, '.github/workflows/important-refresh.yml'), 'utf8')
-    assert.match(wf, /cron:\s*'0 \*\/2 \* \* \*'/)
+    assert.match(wf, /cron:\s*'0 \* \* \* \*'/)
     assert.match(wf, /npm run scrape:important/)
     assert.match(wf, /important\.json/)
     assert.doesNotMatch(wf, /playwright|tesseract|IGORA_/i)
