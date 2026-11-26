@@ -179,6 +179,8 @@ main {
   align-items: center;
   min-height: 2.5rem;
   padding: 0.35rem 0.15rem;
+  /* Multi-word labels («О проекте») must stay one line so the row stays aligned. */
+  white-space: nowrap;
 }
 
 .site-nav a:hover,
@@ -1236,16 +1238,18 @@ main {
     width: 100%;
     flex-wrap: nowrap;
     justify-content: space-between;
-    gap: 0;
+    align-items: center;
+    gap: 0.2rem;
   }
 
   .site-nav a {
-    flex: 1 1 0;
+    /* Size to label width — equal flex columns crush «О проекте» on ~360px. */
+    flex: 0 0 auto;
     justify-content: center;
     min-height: 2.75rem;
-    padding: 0.55rem 0.2rem;
+    padding: 0.55rem 0.1rem;
     text-align: center;
-    font-size: 0.86rem;
+    font-size: 0.82rem;
   }
 
   .hero {
