@@ -127,9 +127,7 @@ export function ResortPage({ data }: { data: SiteData }) {
       </p>
 
       <header className="resort-detail__header">
-        <div>
-          <h1>{resort.name}</h1>
-        </div>
+        <h1>{resort.name}</h1>
         {!inactive && badge ? (
           closed ? (
             <span className="badge badge--warn">{badge}</span>
