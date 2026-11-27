@@ -282,20 +282,21 @@ function clarifyRentalDurationLabel(raw, index, allDurations) {
 }
 
 /**
- * Leaf day labels under each duration band (exact site wording).
+ * Leaf day labels under each duration band.
+ * Weekdays show only «Пн–Пт» (drop redundant «Будни», normalize casing/dash).
  * @param {string} raw
  */
 function clarifyRentalDayLabel(raw) {
   const t = cleanText(raw)
   if (!t) return t
-  if (/будни|пн/i.test(t) && !/сб|вс|выходн|праздн/i.test(t)) return 'Будни, Пн-Пт'
+  if (/будни|пн/i.test(t) && !/сб|вс|выходн|праздн/i.test(t)) return 'Пн–Пт'
   if (/сб|вс|праздн|выходн/i.test(t)) return 'Сб-Вс, Праздники'
   return t
 }
 
 /**
  * Weekday/weekend rental matrix with nested headers like the site / instructor UI:
- * top = duration bands (colspan 2), leaf = Будни, Пн-Пт | Сб-Вс, Праздники.
+ * top = duration bands (colspan 2), leaf = Пн–Пт | Сб-Вс, Праздники.
  * Tubing (ватрушки) is split into its own group with the same header shape.
  * @param {string[][]} rows
  * @returns {{ rental: object | null, tubing: object | null }}
@@ -317,7 +318,7 @@ function parseRentalWeekdayMatrix(rows) {
   /** @type {string[]} */
   const columns = []
   for (let d = 0; d < durations.length; d++) {
-    const wd = clarifyRentalDayLabel(dayRow[d * 2] || 'Будни, Пн-Пт')
+    const wd = clarifyRentalDayLabel(dayRow[d * 2] || 'Пн–Пт')
     const we = clarifyRentalDayLabel(dayRow[d * 2 + 1] || 'Сб-Вс, Праздники')
     columns.push(wd, we)
   }

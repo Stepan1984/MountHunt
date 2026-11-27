@@ -514,7 +514,7 @@ describe('skipass groups', () => {
 
     const rental = groups.find((g) => /^Прокат снаряжения$/i.test(g.category))
     assert.ok(rental, 'expected rental equipment group')
-    // Nested site headers: duration bands × Будни/Сб-Вс (same UI as instructor).
+    // Nested site headers: duration bands × Пн–Пт / Сб-Вс (same UI as instructor).
     assert.ok(Array.isArray(rental.columnGroups) && rental.columnGroups.length === 4)
     assert.deepEqual(
       rental.columnGroups.map((g) => g.label),
@@ -527,13 +527,13 @@ describe('skipass groups', () => {
     )
     assert.ok(rental.columnGroups.every((g) => g.span === 2))
     assert.deepEqual(rental.columns, [
-      'Будни, Пн-Пт',
+      'Пн–Пт',
       'Сб-Вс, Праздники',
-      'Будни, Пн-Пт',
+      'Пн–Пт',
       'Сб-Вс, Праздники',
-      'Будни, Пн-Пт',
+      'Пн–Пт',
       'Сб-Вс, Праздники',
-      'Будни, Пн-Пт',
+      'Пн–Пт',
       'Сб-Вс, Праздники',
     ])
     const kit = rental.rows.find((r) => /^Горнолыжный комплект$/i.test(r.name || ''))
