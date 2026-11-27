@@ -691,19 +691,82 @@ export function operationalImportant(items: ImportantItem[]): ImportantItem[] {
   return deduped
 }
 
+/** Normalize title+body for feed collision checks (RU near-duplicates). */
+function normalizeFeedText(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/["«»„“”']/g, '')
+    .replace(/[^\p{L}\p{N}\s]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function normalizeFeedUrl(url: string | undefined): string {
+  if (!url) return ''
+  try {
+    const u = new URL(url)
+    u.hash = ''
+    u.search = ''
+    return `${u.protocol}//${u.host.toLowerCase()}${u.pathname.replace(/\/+$/, '') || '/'}`
+  } catch {
+    return url.trim().toLowerCase()
+  }
+}
+
+function feedSourceRank(item: ImportantItem): number {
+  const url = item.sourceUrl || ''
+  if (/t\.me\//i.test(url)) return 20
+  if (/vk\.com\//i.test(url)) return 30
+  if (url) return 10
+  return 40
+}
+
+function feedTextsCollide(a: ImportantItem, b: ImportantItem): boolean {
+  const ua = normalizeFeedUrl(a.sourceUrl)
+  const ub = normalizeFeedUrl(b.sourceUrl)
+  if (ua && ub && ua === ub) return true
+  if (a.resortId && b.resortId && a.resortId !== b.resortId) return false
+  const ta = normalizeFeedText(`${a.title || ''} ${a.body || ''}`)
+  const tb = normalizeFeedText(`${b.title || ''} ${b.body || ''}`)
+  if (!ta || !tb || ta.length < 12 || tb.length < 12) return false
+  if (ta === tb) return true
+  const aTitle = normalizeFeedText(a.title || '')
+  const bTitle = normalizeFeedText(b.title || '')
+  if (aTitle.length >= 12 && bTitle.length >= 12) {
+    if (ta.includes(bTitle) || tb.includes(aTitle)) return true
+  }
+  return false
+}
+
 /**
  * Full news feed for `/news`: all non-chrome Important items, newest first
- * (publication date, else scrape stamp). No severity boost or warn dedupe.
+ * (publication date, else scrape stamp). Drops URL/text collisions across sources.
  */
 export function allImportantNews(items: ImportantItem[]): ImportantItem[] {
-  return [...items]
+  const sorted = [...items]
     .filter((item) => !IMPORTANT_CHROME_IDS.has(item.id))
     .sort((a, b) => {
+      const rank = feedSourceRank(a) - feedSourceRank(b)
+      if (rank !== 0) return rank
       const aTime = new Date(importantDateIso(a)).getTime()
       const bTime = new Date(importantDateIso(b)).getTime()
       if (aTime !== bTime) return bTime - aTime
       return a.id.localeCompare(b.id)
     })
+
+  const deduped: ImportantItem[] = []
+  for (const item of sorted) {
+    if (deduped.some((k) => feedTextsCollide(k, item))) continue
+    deduped.push(item)
+  }
+
+  return deduped.sort((a, b) => {
+    const aTime = new Date(importantDateIso(a)).getTime()
+    const bTime = new Date(importantDateIso(b)).getTime()
+    if (aTime !== bTime) return bTime - aTime
+    return a.id.localeCompare(b.id)
+  })
 }
 
 /** Managed «Важное» ids that mean alpine slopes are open (info severity). */

@@ -6,6 +6,7 @@
  * Cards show publishedAt (news / schedule / page date from the source).
  * Scrape time lives on meta.importantScrapedAt (freshness), not on cards.
  */
+import { dedupeImportantNewsItems } from './news-dedupe.mjs'
 import { cleanText, httpDateToIso, loadHtml, nowIso, ruDateLabelToIso } from './parse.mjs'
 import {
   isDuplicateOfSiteNews,
@@ -30,7 +31,17 @@ export const MANAGED_IMPORTANT_IDS = Object.freeze({
  * unless the result sets `clearPrefixes: false` (TG fetch failed — keep previous cards).
  */
 export const MANAGED_IMPORTANT_PREFIXES = Object.freeze({
-  'krasnoe-ozero': Object.freeze(['krasnoe-tg-']),
+  'okhta-park': Object.freeze(['okhta-tg-', 'okhta-vk-']),
+  igora: Object.freeze(['igora-tg-', 'igora-vk-']),
+  'tuutari-park': Object.freeze(['tuutari-vk-']),
+  'krasnoe-ozero': Object.freeze(['krasnoe-tg-', 'krasnoe-vk-']),
+  'zolotaya-dolina': Object.freeze(['zoldol-tg-', 'zoldol-vk-']),
+  snezhny: Object.freeze(['snezhny-tg-', 'snezhny-vk-']),
+  'severny-sklon': Object.freeze(['severny-tg-', 'severny-vk-']),
+  'puhtolova-gora': Object.freeze(['puhtolova-vk-']),
+  yukki: Object.freeze(['yukki-vk-']),
+  'lazurnye-ozera': Object.freeze(['lazurnye-tg-', 'lazurnye-vk-']),
+  'drop-park': Object.freeze(['drop-tg-']),
   'putilovo-park': Object.freeze(['putilovo-tg-']),
 })
 
@@ -966,7 +977,8 @@ export function mergeImportantFailSoft(prev, results, opts = {}) {
     byId.set(opts.chromeNote.id, opts.chromeNote)
   }
 
-  return [...byId.values()]
+  // Cross-source collision: same URL / near-duplicate title+body → keep one card.
+  return dedupeImportantNewsItems([...byId.values()])
 }
 
 /**
