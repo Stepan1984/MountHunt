@@ -396,51 +396,6 @@ export function stripUtochnyayteDisclaimers(text: string): string {
     .trim()
 }
 
-/** Strip scrape/tooling clauses; keep visitor-facing blurb. */
-function stripScraperClauses(text: string): string {
-  return text
-    .replace(/\s*цены\s*[—–-]\s*playwright[^.;]*/gi, '')
-    .replace(/\s*;?\s*цены и график из публичных csv[^.;]*/gi, '')
-    .replace(/:?\s*ski-pass на сайте не опубликован[^.;]*/gi, '')
-    .replace(/\s*[—–-]\s*статус unavailable/gi, '')
-    .replace(/\s*статус unavailable[^.;]*/gi, '')
-    .replace(/\s*часы\s*[—–-]\s*\/working-hours\/\.?/gi, '')
-    .replace(/\s*цены\s*[—–-]\s*playwright\/ssr[^.]*\/price\/\.?/gi, '')
-    .replace(/\s*на\s*\/price\/\.?/gi, '')
-    .replace(/\s*\/working-hours\/\.?/gi, '')
-    .replace(/\s*\/price\/\.?/gi, '')
-    .replace(/https?:\/\/[^\s.;]+/gi, '')
-    .replace(/\s*:\s*;/g, ';')
-    .replace(/\s*;\s*;/g, ';')
-    .replace(/[;:\s]+$/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-/** Visitor-facing resort blurb — drop scrape/tooling and уточняйте disclaimers. */
-export function publicResortNotes(notes: string | null | undefined): string | null {
-  if (!notes?.trim()) return null
-  // Split on sentence ends only (not `;` — used in normal blurbs).
-  const parts = notes
-    .split(/(?<=[.!])\s+/)
-    .map((p) => stripScraperClauses(p))
-    .map((p) => stripUtochnyayteDisclaimers(p))
-    .filter((p) => {
-      if (!p.length || SCRAPER_NOTE_MARKERS.test(p)) return false
-      // Meta / ops asides that belong in sources, not the visitor blurb.
-      if (/публичн\w*\s+vk/i.test(p)) return false
-      if (/координаты\s*[—–-]/i.test(p)) return false
-      if (/лендинг\s+flexbe/i.test(p)) return false
-      if (/кнопка\s+«сайт курорта»/i.test(p)) return false
-      if (/новости и режим/i.test(p)) return false
-      if (/бронирование и оплата\s*[—–-]/i.test(p)) return false
-      return true
-    })
-
-  const cleaned = parts.join(' ').replace(/\s+/g, ' ').trim()
-  return cleaned || null
-}
-
 /** Important / news card body without актуальность-disclaimer sentences. */
 export function publicImportantBody(body: string | null | undefined): string | null {
   if (!body?.trim()) return null

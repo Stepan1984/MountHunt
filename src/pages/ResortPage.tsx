@@ -14,7 +14,6 @@ import {
   pricesFor,
   publicImportantBody,
   publicPriceNote,
-  publicResortNotes,
   resortAddressQuery,
   resortPhotoUrl,
   scrapeStatusLabel,
@@ -29,7 +28,7 @@ const PRICE_PREVIEW = 8
 
 /**
  * Shared resort-detail section order:
- * header → [photo] → notes → site → webcam → important → [hours → prices if active] →
+ * header → [photo] → site → webcam → important → [hours → prices if active] →
  * features → contacts → location → links
  * Hours / prices sections are omitted for дикие / неясные / закрытые (status !== active).
  * Photo: at most one licensed hero; omitted when no verified image of this place.
@@ -96,7 +95,6 @@ export function ResortPage({ data }: { data: SiteData }) {
   // Slope badges only for active resorts; inactive detail pages show none.
   const badge = !inactive ? slopesBadgeLabel(resort.id, hours, data.important) : null
   const closed = badge === 'Склоны закрыты'
-  const visitorNotes = publicResortNotes(resort.notes)
   const visitorPriceNote = inactive || hasBookingLink ? null : publicPriceNote(prices?.note)
   const priceItems = hasBookingLink ? [] : (prices?.items ?? [])
   const priceGroups = hasBookingLink ? [] : (prices?.groups ?? [])
@@ -155,12 +153,6 @@ export function ResortPage({ data }: { data: SiteData }) {
             {` · ${resort.photo.license}`}
           </figcaption>
         </figure>
-      )}
-
-      {visitorNotes && (
-        <p className="resort-detail__notes">
-          <LinkedText text={visitorNotes} />
-        </p>
       )}
 
       {/* Top CTA: only the official site — hours / tariffs / cam live in their sections. */}

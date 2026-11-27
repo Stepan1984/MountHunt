@@ -727,10 +727,6 @@ main {
   color: var(--ice);
 }
 
-.resort-detail__notes {
-  font-size: 1.02rem;
-}
-
 .resort-detail__actions {
   display: flex;
   flex-wrap: wrap;
