@@ -540,6 +540,23 @@ main {
   color: var(--pine);
 }
 
+.important__source {
+  margin: 0.65rem 0 0;
+  font-size: 0.88rem;
+}
+
+.important__source a {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  font-weight: 500;
+}
+
+.important__source a:hover {
+  color: var(--pine);
+}
+
 .resort-grid {
   grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
 }
@@ -974,6 +991,14 @@ main {
   margin-top: 2rem;
 }
 
+.privacy-page__updated {
+  margin-top: 2rem;
+}
+
+.contacts-page__privacy {
+  margin-top: 1.75rem;
+}
+
 /* Shared pine/ice data tables (skipass, flat prices, hours). */
 .mh-table-wrap {
   display: block;
@@ -1155,6 +1180,13 @@ main {
 
 .site-footer__contacts a {
   word-break: break-word;
+}
+
+.site-footer__note {
+  margin-top: 0.55rem;
+  max-width: 42rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
 }
 
 .not-found h1 {

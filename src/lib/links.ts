@@ -19,6 +19,22 @@ export function sameExternalUrl(
   return Boolean(left && right && left === right)
 }
 
+/** Short Russian label for a news / Important card source link. */
+export function newsSourceLabel(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./i, '').toLowerCase()
+    if (host === 't.me' || host.endsWith('.telegram.org') || host === 'telegram.me') {
+      return 'Telegram'
+    }
+    if (host === 'vk.com' || host.endsWith('.vk.com') || host === 'vk.ru') {
+      return 'ВКонтакте'
+    }
+  } catch {
+    /* ignore */
+  }
+  return 'Источник'
+}
+
 /** Human-readable Russian label for an external URL shown in the UI. */
 export function linkLabelForUrl(url: string, fallback = 'Открыть ссылку'): string {
   let parsed: URL

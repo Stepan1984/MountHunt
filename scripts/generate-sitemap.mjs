@@ -18,7 +18,14 @@ if (!Array.isArray(resorts)) {
   process.exit(1)
 }
 
-const paths = ['/', '/about', '/news', '/contacts', ...resorts.map((r) => `/resort/${r.id}`)]
+const paths = [
+  '/',
+  '/about',
+  '/news',
+  '/contacts',
+  '/privacy',
+  ...resorts.map((r) => `/resort/${r.id}`),
+]
 
 const body = paths
   .map(
