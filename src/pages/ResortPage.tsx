@@ -215,7 +215,7 @@ export function ResortPage({ data }: { data: SiteData }) {
 
         {!inactive && (
           <section
-            className={hasSkipassTables ? 'detail-grid__wide' : undefined}
+            className="detail-grid__wide"
             aria-labelledby="resort-prices-title"
           >
             <div className="detail-section__head">

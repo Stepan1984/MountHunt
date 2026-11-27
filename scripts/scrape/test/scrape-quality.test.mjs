@@ -418,6 +418,32 @@ describe('resort page block semantics', () => {
     const addressLinks = src.match(/resort-detail__address/g) || []
     assert.equal(addressLinks.length, 1)
   })
+
+  it('ResortPage detail-grid sections are always full-width (like Локация)', () => {
+    const src = readFileSync(join(root, 'src/pages/ResortPage.tsx'), 'utf8')
+    // Prices must not be half-width when skipass tables are absent.
+    assert.doesNotMatch(
+      src,
+      /hasSkipassTables\s*\?\s*['"]detail-grid__wide['"]/,
+    )
+    assert.match(src, /aria-labelledby="resort-prices-title"[\s\S]*?className="detail-grid__wide"|className="detail-grid__wide"[\s\S]*?aria-labelledby="resort-prices-title"/)
+    for (const id of [
+      'resort-hours-title',
+      'resort-prices-title',
+      'resort-location-title',
+      'resort-links-title',
+      'resort-contacts-title',
+    ]) {
+      assert.match(src, new RegExp(id))
+    }
+    // Every detail-grid <section> carries detail-grid__wide (no bare half-column).
+    const grid = src.slice(src.indexOf('className="detail-grid"'))
+    const sections = [...grid.matchAll(/<section\b([^>]*)>/g)].map((m) => m[1])
+    assert.ok(sections.length >= 4)
+    for (const attrs of sections) {
+      assert.match(attrs, /detail-grid__wide/, `section missing wide: ${attrs.slice(0, 80)}`)
+    }
+  })
 })
 
 describe('Igora Playwright waits for attached tables', () => {
