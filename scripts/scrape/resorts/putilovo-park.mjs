@@ -86,11 +86,16 @@ export function parsePutilovoHoursFromTelegram(tgHtml) {
 }
 
 /**
+ * Prefer live TG + live site. Ignore Wayback / archive site HTML for open
+ * (stale snapshot must not invent «Склоны открыты»).
  * @param {string} siteHtml
  * @param {string} tgHtml
+ * @param {{ siteIsArchive?: boolean }} [opts]
  */
-export function detectPutilovoSlopeStatus(siteHtml, tgHtml) {
-  const siteText = cleanText(loadHtml(siteHtml || '<body></body>')('body').text())
+export function detectPutilovoSlopeStatus(siteHtml, tgHtml, opts = {}) {
+  const siteText = opts.siteIsArchive
+    ? ''
+    : cleanText(loadHtml(siteHtml || '<body></body>')('body').text())
   const posts = parseTelegramChannelHtml(tgHtml)
   const tgText = posts.map((p) => p.text).join('\n')
   const combined = [siteText, tgText].filter(Boolean).join('\n')
@@ -183,7 +188,8 @@ export async function scrapePutilovoPark() {
     const important = tgFetched
       ? detectPutilovoTelegramImportant(tgHtml, PUTILOVO_TG_URL)
       : []
-    const slopeStatus = detectPutilovoSlopeStatus(site.html, tgHtml)
+    const siteIsArchive = /web\.archive\.org/i.test(site.sourceUrl || '')
+    const slopeStatus = detectPutilovoSlopeStatus(site.html, tgHtml, { siteIsArchive })
 
     // Season-closed note duplicates the card badge — keep schedule-only summary.
     const hoursSummary =

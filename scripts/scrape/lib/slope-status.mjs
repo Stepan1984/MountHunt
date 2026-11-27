@@ -4,11 +4,26 @@
  * Badge rule (UI): only claim «Склоны открыты» when slopesOpen === true.
  * Fail-soft: missing/unknown → not open (never invent «open»).
  *
+ * Collision policy (shared across resorts):
+ * - Trust official widgets / fresh managed «Важное» ids over page noise.
+ * - Ignore stale news-archive HTML (old «открыты склоны» posts).
+ * - Leftover «предпродажа» stays closed unless a *clear* open signal exists
+ *   (service widget, season-open match, or fresh important open id).
+ * - Explicit closed / closed-until-season beats weak alpine phrase matches.
+ *
  * Non-alpine extras (щётки, подушка/airbag) are NOT alpine slopes — keep
  * slopesOpen false and surface them in hours.summary when detected.
  */
 import { cleanText, loadHtml } from './parse.mjs'
 import { okhtaSeasonOpenMatch } from './important.mjs'
+
+/** Managed important ids that mean alpine slopes are open (fresh sources). */
+export const SLOPE_OPEN_IMPORTANT_IDS = Object.freeze([
+  'okhta-season-open',
+  'tuutari-season-open',
+  'puhtolova-season-open',
+  'lazurnye-season-open',
+])
 
 /**
  * @param {boolean | null | undefined} slopesOpen
@@ -18,6 +33,55 @@ export function normalizeSlopesOpen(slopesOpen) {
   if (slopesOpen === true) return true
   if (slopesOpen === false) return false
   return undefined
+}
+
+/**
+ * @param {string} text
+ */
+export function hasPresaleSignal(text) {
+  return /предпродаж/i.test(cleanText(text))
+}
+
+/**
+ * Fresh managed «Важное» season-open id present.
+ * @param {object[]} importantItems
+ * @param {string | string[]} openIds
+ */
+export function hasFreshImportantOpen(importantItems = [], openIds) {
+  const ids = new Set(Array.isArray(openIds) ? openIds : [openIds])
+  return importantItems.some((i) => i?.id && ids.has(i.id))
+}
+
+/**
+ * Resolve open vs closed when signals collide.
+ *
+ * Clear open (widget / season-open copy / fresh important) wins over predprodazh.
+ * Weak alpine phrase alone does NOT override predprodazh or explicit closed.
+ *
+ * @param {{
+ *   clearOpen?: boolean,
+ *   weakOpen?: boolean,
+ *   closed?: boolean,
+ *   dayClosed?: boolean,
+ *   presale?: boolean,
+ * }} signals
+ * @returns {boolean}
+ */
+export function resolveSlopeOpenCollision(signals = {}) {
+  const closed = Boolean(signals.closed || signals.dayClosed)
+  const clearOpen = Boolean(signals.clearOpen)
+  const weakOpen = Boolean(signals.weakOpen)
+  const presale = Boolean(signals.presale)
+
+  // Explicit closed / day-tariff closed always wins (fail-soft closed badge).
+  if (closed) return false
+  // Widget / fresh season-open / managed important — open even with leftover predprodazh.
+  if (clearOpen) return true
+  // Predprodazh without a clear open signal → closed (not «Склоны открыты»).
+  if (presale) return false
+  // Weak alpine phrase only when nothing contradicts it.
+  if (weakOpen) return true
+  return false
 }
 
 /**
@@ -146,17 +210,15 @@ export function detectDropParkSlopeStatus(pageHtml, tgHtml) {
     !/сезон\s+[\d/]+\s+закончен/i.test(combined)
 
   return {
-    slopesOpen: Boolean(alpineOpen),
+    slopesOpen: resolveSlopeOpenCollision({
+      clearOpen: Boolean(alpineOpen),
+      closed: seasonFinished,
+    }),
     brushesOpen: extras.brushesOpen,
     note: extras.note,
   }
 }
 
-/**
- * Okhta: reuse season-open detector; day-closed / no open → closed.
- * @param {{ trailsHtml?: string, lentaHtml?: string, homeHtml?: string }} pages
- * @param {{ dayClosed?: boolean }} [opts]
- */
 /**
  * Okhta trails page marks alpine service with Bitrix widget class
  * `service_widget_status--open` (caption «Горнолыжные трассы»).
@@ -174,6 +236,12 @@ export function okhtaTrailsServiceOpen(trailsHtml) {
   return /горнолыжные\s+трассы\s+открыто/i.test(trailsText)
 }
 
+/**
+ * Okhta: trust trails widget + season-open copy; day-closed / no clear open → closed.
+ * Clear open wins over leftover «предпродажа»; weak alpine alone does not.
+ * @param {{ trailsHtml?: string, lentaHtml?: string, homeHtml?: string }} pages
+ * @param {{ dayClosed?: boolean }} [opts]
+ */
 export function detectOkhtaSlopeStatus(pages, opts = {}) {
   const trailsHtml = pages.trailsHtml || ''
   const trailsText = cleanText(loadHtml(trailsHtml || '<body></body>')('body').text())
@@ -181,18 +249,19 @@ export function detectOkhtaSlopeStatus(pages, opts = {}) {
   const homeText = cleanText(loadHtml(pages.homeHtml || '<body></body>')('body').text())
   const combined = [trailsText, lentaText, homeText].filter(Boolean).join('\n')
 
-  if (
-    okhtaTrailsServiceOpen(trailsHtml) ||
-    okhtaSeasonOpenMatch(combined) ||
-    alpineSlopesOpenMatch(combined)
-  ) {
-    // Opening / live «Открыто» widget wins over leftover «предпродажа» / day-tariff closed.
-    return { slopesOpen: true }
+  const widgetOpen = okhtaTrailsServiceOpen(trailsHtml)
+  const seasonOpen = okhtaSeasonOpenMatch(combined)
+  const weakOpen = alpineSlopesOpenMatch(combined) && !seasonOpen && !widgetOpen
+
+  return {
+    slopesOpen: resolveSlopeOpenCollision({
+      clearOpen: widgetOpen || seasonOpen,
+      weakOpen,
+      dayClosed: opts.dayClosed,
+      closed: alpineSlopesClosedMatch(combined),
+      presale: hasPresaleSignal(combined),
+    }),
   }
-  if (opts.dayClosed || alpineSlopesClosedMatch(combined) || /предпродаж/i.test(combined)) {
-    return { slopesOpen: false }
-  }
-  return { slopesOpen: false }
 }
 
 /**
@@ -226,7 +295,10 @@ export function detectKrasnoeSlopeStatus(pack, csv = {}) {
   }
 
   return {
-    slopesOpen: Boolean(alpineOpen) && !alpineClosed,
+    slopesOpen: resolveSlopeOpenCollision({
+      clearOpen: Boolean(alpineOpen) && !alpineClosed,
+      closed: alpineClosed,
+    }),
     note: airbagNote,
   }
 }
@@ -237,20 +309,25 @@ export function detectKrasnoeSlopeStatus(pack, csv = {}) {
  */
 export function detectZoldolSlopeStatus(hoursHtml) {
   const text = cleanText(loadHtml(hoursHtml || '<body></body>')('body').text())
-  if (/Горнолыжные склоны закрыты/i.test(text) || alpineSlopesClosedMatch(text)) {
-    return { slopesOpen: false }
+  const closed =
+    /Горнолыжные склоны закрыты/i.test(text) || alpineSlopesClosedMatch(text)
+  return {
+    slopesOpen: resolveSlopeOpenCollision({
+      clearOpen: alpineSlopesOpenMatch(text) && !closed,
+      weakOpen: alpineSlopesOpenMatch(text),
+      closed,
+    }),
   }
-  if (alpineSlopesOpenMatch(text)) return { slopesOpen: true }
-  return { slopesOpen: false }
 }
 
 /**
- * Lazurnye home / news.
+ * Lazurnye: trust fresh important ids; home page only for closed banner.
+ * Do not invent open from home alpine phrases (stale footer / old news).
  * @param {string} homeHtml
  * @param {object[]} [importantItems]
  */
 export function detectLazurnyeSlopeStatus(homeHtml, importantItems = []) {
-  if (importantItems.some((i) => i?.id === 'lazurnye-season-open')) {
+  if (hasFreshImportantOpen(importantItems, 'lazurnye-season-open')) {
     return { slopesOpen: true }
   }
   if (importantItems.some((i) => i?.id === 'lazurnye-season-closed')) {
@@ -260,7 +337,7 @@ export function detectLazurnyeSlopeStatus(homeHtml, importantItems = []) {
   if (alpineSlopesClosedMatch(text) || /Сезон\s*20\d{2}\s*закрыт/i.test(text)) {
     return { slopesOpen: false }
   }
-  if (alpineSlopesOpenMatch(text)) return { slopesOpen: true }
+  // No fresh open id and no closed banner → fail-soft closed (never invent open).
   return { slopesOpen: false }
 }
 
@@ -272,7 +349,7 @@ export function detectLazurnyeSlopeStatus(homeHtml, importantItems = []) {
  * @param {string} [_newsHtml] unused; kept for call-site compatibility
  */
 export function detectTuutariSlopeStatus(importantItems = [], _newsHtml = '') {
-  if (importantItems.some((i) => i?.id === 'tuutari-season-open')) {
+  if (hasFreshImportantOpen(importantItems, 'tuutari-season-open')) {
     return { slopesOpen: true }
   }
   // Prep / unknown / stale archive → closed (fail-soft).
@@ -280,32 +357,59 @@ export function detectTuutariSlopeStatus(importantItems = [], _newsHtml = '') {
 }
 
 /**
- * Puhtolova from important / news.
+ * Puhtolova from fresh important only (same archive risk as Tuutari).
  * @param {object[]} importantItems
- * @param {string} [newsHtml]
+ * @param {string} [_newsHtml] unused; kept for call-site compatibility
  */
-export function detectPuhtolovaSlopeStatus(importantItems = [], newsHtml = '') {
-  if (importantItems.some((i) => i?.id === 'puhtolova-season-open')) {
+export function detectPuhtolovaSlopeStatus(importantItems = [], _newsHtml = '') {
+  if (hasFreshImportantOpen(importantItems, 'puhtolova-season-open')) {
     return { slopesOpen: true }
   }
-  const text = cleanText(loadHtml(newsHtml || '<body></body>')('body').text())
-  if (alpineSlopesOpenMatch(text)) return { slopesOpen: true }
   return { slopesOpen: false }
 }
 
 /**
+ * Snezhny: do not scan the news archive for alpine-open phrases.
+ * Only a fresh hours-notice page may claim open; otherwise fail-soft closed.
+ * @param {{ newsHtml?: string, hoursNoticeHtml?: string }} pages
+ */
+export function detectSnezhnySlopeStatus(pages = {}) {
+  // News listing is a multi-year archive — ignore for slopesOpen.
+  const noticeText = cleanText(
+    loadHtml(pages.hoursNoticeHtml || '<body></body>')('body').text(),
+  )
+  if (!noticeText) return { slopesOpen: false }
+  return {
+    slopesOpen: resolveSlopeOpenCollision({
+      clearOpen: alpineSlopesOpenMatch(noticeText),
+      closed: alpineSlopesClosedMatch(noticeText),
+      presale: hasPresaleSignal(noticeText),
+    }),
+  }
+}
+
+/**
  * Generic fail-soft: open only on positive alpine match; else closed.
+ * Prefer resort-specific detectors when a page may embed a news archive.
  * @param {string} htmlOrText
- * @param {{ asText?: boolean }} [opts]
+ * @param {{ asText?: boolean, allowWeakOpen?: boolean }} [opts]
  */
 export function detectGenericSlopeStatus(htmlOrText, opts = {}) {
   const text = opts.asText
     ? cleanText(htmlOrText)
     : cleanText(loadHtml(htmlOrText || '<body></body>')('body').text())
-  if (alpineSlopesOpenMatch(text) && !alpineSlopesClosedMatch(text)) {
-    return { slopesOpen: true }
+  const closed = alpineSlopesClosedMatch(text)
+  const open = alpineSlopesOpenMatch(text)
+  return {
+    slopesOpen: resolveSlopeOpenCollision({
+      // Generic pages rarely have a widget — treat season-open copy as clear
+      // when there is no closed signal; still fail-soft when both/neither.
+      clearOpen: open && !closed,
+      weakOpen: opts.allowWeakOpen === true && open,
+      closed,
+      presale: hasPresaleSignal(text),
+    }),
   }
-  return { slopesOpen: false }
 }
 
 /**

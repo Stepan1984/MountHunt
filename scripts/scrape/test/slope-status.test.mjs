@@ -6,11 +6,65 @@ import {
   appendHoursExtraNote,
   detectDropParkSlopeStatus,
   detectKrasnoeSlopeStatus,
+  detectLazurnyeSlopeStatus,
   detectOkhtaSlopeStatus,
+  detectPuhtolovaSlopeStatus,
+  detectSnezhnySlopeStatus,
   detectTuutariSlopeStatus,
   detectZoldolSlopeStatus,
+  hasFreshImportantOpen,
+  hasPresaleSignal,
+  resolveSlopeOpenCollision,
 } from '../lib/slope-status.mjs'
 import { hoursSnapshot } from '../lib/parse.mjs'
+import { detectPutilovoSlopeStatus } from '../resorts/putilovo-park.mjs'
+
+describe('slope-status collision policy', () => {
+  it('clear open wins over predprodazh; weak open does not', () => {
+    assert.equal(
+      resolveSlopeOpenCollision({ clearOpen: true, presale: true }),
+      true,
+    )
+    assert.equal(
+      resolveSlopeOpenCollision({ weakOpen: true, presale: true }),
+      false,
+    )
+    assert.equal(resolveSlopeOpenCollision({ presale: true }), false)
+  })
+
+  it('explicit closed beats weak open; clear open still needs no closed', () => {
+    assert.equal(
+      resolveSlopeOpenCollision({ weakOpen: true, closed: true }),
+      false,
+    )
+    assert.equal(
+      resolveSlopeOpenCollision({ clearOpen: true, closed: true }),
+      false,
+    )
+    assert.equal(
+      resolveSlopeOpenCollision({ clearOpen: true, dayClosed: true }),
+      false,
+    )
+  })
+
+  it('weak open alone → open; empty signals → closed (fail-soft)', () => {
+    assert.equal(resolveSlopeOpenCollision({ weakOpen: true }), true)
+    assert.equal(resolveSlopeOpenCollision({}), false)
+  })
+
+  it('hasPresaleSignal / hasFreshImportantOpen helpers', () => {
+    assert.equal(hasPresaleSignal('Открыта предпродажа ски-пассов'), true)
+    assert.equal(hasPresaleSignal('Сезон открыт'), false)
+    assert.equal(
+      hasFreshImportantOpen([{ id: 'tuutari-season-open' }], 'tuutari-season-open'),
+      true,
+    )
+    assert.equal(
+      hasFreshImportantOpen([{ id: 'tuutari-season-prep' }], 'tuutari-season-open'),
+      false,
+    )
+  })
+})
 
 describe('slope-status detectors', () => {
   it('matches alpine open / closed phrases', () => {
@@ -45,6 +99,15 @@ describe('slope-status detectors', () => {
     )
   })
 
+  it('Okhta weak alpine + предпродажа without clear open → slopesOpen false', () => {
+    // Generic «склоны открыты» alone is weak — must not beat leftover predprodazh.
+    const trails = `<html><body>
+      <p>Склоны открыты</p>
+      <p>Открыта предпродажа сезонных ски-пассов</p>
+    </body></html>`
+    assert.equal(detectOkhtaSlopeStatus({ trailsHtml: trails }).slopesOpen, false)
+  })
+
   it('Okhta day-closed / no open → slopesOpen false', () => {
     const trails = '<html><body><p>Открыта предпродажа сезонных ски-пассов</p></body></html>'
     assert.equal(
@@ -59,6 +122,59 @@ describe('slope-status detectors', () => {
     assert.equal(detectTuutariSlopeStatus([], stale).slopesOpen, false)
     assert.equal(
       detectTuutariSlopeStatus([{ id: 'tuutari-season-open' }], stale).slopesOpen,
+      true,
+    )
+  })
+
+  it('Puhtolova ignores stale news-archive alpine phrases', () => {
+    const stale =
+      '<html><body><p>15.11.2024 Открытие центрального склона. Склоны открыты!</p></body></html>'
+    assert.equal(detectPuhtolovaSlopeStatus([], stale).slopesOpen, false)
+    assert.equal(
+      detectPuhtolovaSlopeStatus([{ id: 'puhtolova-season-open' }], stale).slopesOpen,
+      true,
+    )
+  })
+
+  it('Lazurnye opens only via fresh important; home alpine alone stays closed', () => {
+    const home =
+      '<html><body><p>Горнолыжный сезон открыт! Старый футер 2023</p></body></html>'
+    assert.equal(detectLazurnyeSlopeStatus(home, []).slopesOpen, false)
+    assert.equal(
+      detectLazurnyeSlopeStatus(home, [{ id: 'lazurnye-season-open' }]).slopesOpen,
+      true,
+    )
+    const closedHome =
+      '<html><body><p>Сезон 2026 закрыт!</p><p>Горнолыжный сезон открыт в архиве</p></body></html>'
+    assert.equal(detectLazurnyeSlopeStatus(closedHome, []).slopesOpen, false)
+  })
+
+  it('Snezhny ignores news-archive open; hours notice may open', () => {
+    const archive =
+      '<html><body><p>10.03.2024 Горнолыжный сезон открыт. Склоны открыты</p></body></html>'
+    assert.equal(
+      detectSnezhnySlopeStatus({ newsHtml: archive, hoursNoticeHtml: '' }).slopesOpen,
+      false,
+    )
+    const notice =
+      '<html><body><p>Горнолыжный сезон открыт. Режим работы склонов</p></body></html>'
+    assert.equal(
+      detectSnezhnySlopeStatus({ newsHtml: archive, hoursNoticeHtml: notice }).slopesOpen,
+      true,
+    )
+  })
+
+  it('Putilovo ignores Wayback site HTML for open', () => {
+    const archiveOpen =
+      '<html><body><p>Горнолыжный сезон открыт. Сноупарк работает</p></body></html>'
+    // Stale Wayback snapshot must not invent open when live site is unreachable.
+    assert.equal(
+      detectPutilovoSlopeStatus(archiveOpen, '', { siteIsArchive: true }).slopesOpen,
+      false,
+    )
+    // Same copy from a live (non-archive) fetch may still open.
+    assert.equal(
+      detectPutilovoSlopeStatus(archiveOpen, '', { siteIsArchive: false }).slopesOpen,
       true,
     )
   })
