@@ -442,7 +442,7 @@ export function parseOkhtaDayTariffGroups(html) {
   const groups = []
   if (liftRows.length) {
     groups.push({
-      category: 'Ски-пасс (подъёмники)',
+      category: 'Ски-пасс',
       columns: [colWeekday, colWeekend],
       rows: liftRows,
     })
