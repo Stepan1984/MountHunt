@@ -17,6 +17,7 @@ import { parseVkCommunityHtml } from '../lib/vk.mjs'
 
 const root = dirname(fileURLToPath(import.meta.url))
 const tgFixture = join(root, 'fixtures/ohtapark-tg.html')
+const dropTgFixture = join(root, 'fixtures/dropsnowpark-tg.html')
 const vkFixture = join(root, 'fixtures/ohtapark-vk.html')
 
 describe('channel-news', () => {
@@ -35,6 +36,31 @@ describe('channel-news', () => {
     assert.equal(resortChannelPostRelevant('Горнолыжный сезон открыт! Склон ждёт гостей.'), true)
     assert.equal(resortChannelPostRelevant('График работы курорта с 16 по 22 ноября'), true)
     assert.equal(resortChannelPostRelevant('Доброе утро! Зимняя сказка и спа.'), false)
+    assert.equal(
+      resortChannelPostRelevant(
+        'Важно о работе Джиб Палас. По техническим причинам Джиб Палас в четверг и пятницу не работает.',
+      ),
+      true,
+      'Drop Park Jib Palace closure must count as news',
+    )
+    assert.equal(resortChannelPostRelevant('Красота в Drop ⛩️'), false)
+  })
+
+  it('parses Drop Park TG: keeps Jib ops, skips video notes and pins', () => {
+    const html = readFileSync(dropTgFixture, 'utf8')
+    const items = detectChannelNewsFromTelegram(html, {
+      resortId: 'drop-park',
+      resortName: 'Drop Park',
+      idPrefix: 'drop',
+    })
+    const ids = items.map((i) => i.id)
+    assert.ok(ids.includes('drop-tg-875'), `Jib closed missing: ${ids}`)
+    assert.ok(ids.includes('drop-tg-876'), `opening Q&A missing: ${ids}`)
+    assert.ok(ids.includes('drop-tg-885'), `schedule post missing: ${ids}`)
+    assert.ok(!ids.includes('drop-tg-866'), 'round video note must not become news')
+    assert.ok(!ids.includes('drop-tg-867'), 'pinned service copy must not become news')
+    assert.ok(!ids.includes('drop-tg-877'), 'subscriber milestone fluff skipped')
+    assert.equal(items.find((i) => i.id === 'drop-tg-875')?.severity, 'warn')
   })
 
   it('parses Telegram fixture into Important cards', () => {

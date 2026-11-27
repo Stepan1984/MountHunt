@@ -141,8 +141,9 @@ export function channelManagedPrefixes() {
 }
 
 /**
- * Shared include filter (schedule / season / slopes / lifts / contests).
- * Mirrors Krasnoe TG relevance without resort-specific promo rules.
+ * Shared include filter (schedule / season / slopes / lifts / contests /
+ * snowpark brushes / Jib Palace ops). Mirrors Krasnoe TG relevance without
+ * resort-specific promo rules.
  * @param {string} text
  */
 export function resortChannelPostRelevant(text) {
@@ -166,14 +167,37 @@ export function resortChannelPostRelevant(text) {
     /подъ[её]мник\w*.{0,40}(?:закрыт|открыт|не\s+работает|работает)|(?:закрыт|открыт|не\s+работает)\w*.{0,40}подъ[её]мник|канат\w*.{0,30}(?:открыт|закрыт|работает)/i.test(
       t,
     )
+  // Drop Park / snowpark: Jib Palace & brushes ops (alpine filter misses these).
+  const jibOrBrushes = /джиб\s*палас|jib\s*palace|щ[её]точн\w*\s+спот|щ[её]тки/i.test(t)
+  const snowparkOps =
+    jibOrBrushes &&
+    /(?:не\s+работает|открыт|закрыт|работает|график|режим|техническ|жд[её]м\s+вас|временн\w+\s+график)/i.test(
+      t,
+    )
+  const spotClosed =
+    /(?:спот|парк)\s+не\s+работает|не\s+работает\s+(?:спот|парк)|техническ\w*\s+день/i.test(t) &&
+    (jibOrBrushes || /сноупарк|snow\s*park|drop\b/i.test(t))
 
-  if (!(giveaway || competition || schedule || seasonSlope || lift)) return false
+  if (!(giveaway || competition || schedule || seasonSlope || lift || snowparkOps || spotClosed)) {
+    return false
+  }
 
   const promoOnly =
     /успей\s+забронировать|бронирован\w+\s+коттедж|ищем\s+партн|pet-friendly|новогодн\w+\s+банкет|скидка\s*-?\s*\d+\s*%|тариф\s+«|спа-комплекс|ohtakai/i.test(
       t,
     )
-  if (promoOnly && !(giveaway || competition || schedule || lift || /склон|сезон\s+открыт|открываемс/i.test(t))) {
+  if (
+    promoOnly &&
+    !(
+      giveaway ||
+      competition ||
+      schedule ||
+      lift ||
+      snowparkOps ||
+      spotClosed ||
+      /склон|сезон\s+открыт|открываемс/i.test(t)
+    )
+  ) {
     return false
   }
 
@@ -186,7 +210,9 @@ export function resortChannelPostRelevant(text) {
  */
 function channelSeverity(text) {
   if (
-    /график\s+работ|режим\s+работ|закрыт|не\s+работает|межсезонь|сезон\s+закончен/i.test(text) &&
+    /график\s+работ|режим\s+работ|закрыт|не\s+работает|межсезонь|сезон\s+закончен|техническ\w*\s+день/i.test(
+      text,
+    ) &&
     !/розыгрыш|соревнован|открытие\s+сезон|сезон\s+открыт|открываемс|стартует\s+(?:\S+\s+){0,2}сезон/i.test(
       text,
     )
