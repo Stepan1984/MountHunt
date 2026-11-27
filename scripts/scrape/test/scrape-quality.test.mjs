@@ -18,6 +18,7 @@ import {
   supplementIgoraSkiPassFromSnapshot,
 } from '../resorts/igora.mjs'
 import { parseDropParkPriceList } from '../resorts/drop-park.mjs'
+import { parsePuhtolovaPriceGroups } from '../resorts/puhtolova-gora.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 
@@ -321,17 +322,66 @@ describe('closed-season card honesty signals', () => {
     assert.match(kras, /slopesOpen:\s*slopeStatus\.slopesOpen/)
   })
 
-  it('committed data keeps Puhtolova empty / Severny unavailable / Snezhny partial hours', () => {
+  it('committed data keeps Severny unavailable / Snezhny partial hours', () => {
     const prices = JSON.parse(readFileSync(join(root, 'public/data/prices.json'), 'utf8'))
     const hours = JSON.parse(readFileSync(join(root, 'public/data/hours.json'), 'utf8'))
-    const puh = prices.find((p) => p.resortId === 'puhtolova-gora')
     const sev = prices.find((p) => p.resortId === 'severny-sklon')
     const sne = hours.find((h) => h.resortId === 'snezhny')
-    assert.equal(puh?.status, 'partial')
-    assert.equal((puh?.items || []).length, 0)
     assert.equal(sev?.status, 'unavailable')
     assert.equal((sev?.items || []).length, 0)
     assert.equal(sne?.status, 'partial')
+  })
+
+  it('Puhtolova snapshot yields named tables with full nested tariffs', () => {
+    const html = readFileSync(
+      join(root, 'data/snapshots/puhtolova-gora/ceny-na-podyomniki.html'),
+      'utf8',
+    )
+    const { groups } = parsePuhtolovaPriceGroups(html)
+    assert.equal(groups.length, 4)
+
+    const main = groups.find((g) => /основные склоны/i.test(g.category))
+    assert.ok(main, 'expected main slopes group')
+    assert.ok(!/^Подъёмники$/i.test(main.category))
+    assert.ok(!/^Тарифы\s+\d+/i.test(main.category))
+    assert.ok(Array.isArray(main.columnGroups) && main.columnGroups.length === 2)
+    assert.equal(main.columns.length, 4)
+    assert.ok(main.columns.every((c) => /детск|взросл/i.test(c)))
+    assert.ok(main.rows.length >= 8)
+    const oneRide = main.rows.find((r) => /1 подъем/i.test(r.name || ''))
+    assert.ok(oneRide)
+    assert.deepEqual(
+      oneRide.prices.map((p) => p.price),
+      [100, 160, 130, 220],
+    )
+    assert.ok(main.rows.every((r) => !r.duration))
+    assert.ok(!main.rows.some((r) => /^Ски-пасс$/i.test(r.name || '')))
+
+    const training = groups.find((g) => /учебн/i.test(g.category))
+    assert.ok(training)
+    assert.ok(training.rows.some((r) => /Один подъём/i.test(r.name || '')))
+    assert.equal(training.rows.find((r) => /Один подъём/i.test(r.name || ''))?.prices?.[0]?.price, 40)
+    assert.ok(training.rows.some((r) => /Дети до 6/i.test(r.name || '')))
+
+    const tubing = groups.find((g) => /ватруш/i.test(g.category))
+    assert.ok(tubing)
+    assert.deepEqual(
+      tubing.rows[0]?.prices?.map((p) => p.price),
+      [100, 160],
+    )
+
+    const rental = groups.find((g) => /^Прокат$/i.test(g.category))
+    assert.ok(rental)
+    assert.ok(Array.isArray(rental.columnGroups) && rental.columnGroups.length === 2)
+    assert.equal(rental.columns.length, 8)
+    const skis = rental.rows.find((r) => /Горные лыжи/i.test(r.name || ''))
+    assert.ok(skis)
+    assert.equal(skis.prices.length, 8)
+    assert.equal(skis.prices[0]?.price, 520)
+    assert.equal(skis.prices[4]?.price, 660)
+    assert.ok(rental.rows.some((r) => /Палки/i.test(r.name || '')))
+    assert.ok(rental.rows.some((r) => /Шлем/i.test(r.name || '')))
+    assert.ok(rental.rows.some((r) => /Камера хранения/i.test(r.name || '')))
   })
 
   it('Severny price note has no contacts/address; contacts live on resort', () => {
@@ -358,7 +408,7 @@ describe('resort page block semantics', () => {
   it('ResortPage keeps shared order and address only under Локация', () => {
     const src = readFileSync(join(root, 'src/pages/ResortPage.tsx'), 'utf8')
     assert.match(src, /hours → prices if active/)
-    assert.match(src, /features → contacts → location/)
+    assert.match(src, /features → location → links → contacts \(last\)/)
     assert.match(src, /resort-contacts-title/)
     assert.match(src, /resort-location-title/)
     // Header: title only — no brand kicker or district line.
