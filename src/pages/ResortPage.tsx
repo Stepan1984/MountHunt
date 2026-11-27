@@ -26,7 +26,7 @@ const PRICE_PREVIEW = 8
 /**
  * Shared resort-detail section order:
  * header → site / news → webcam → [hours → prices if active] →
- * features → contacts → location → links
+ * features → location → links → contacts (last)
  * Hours / prices sections are omitted for дикие / неясные / закрытые (status !== active).
  * Address lives only under «Локация» (Yandex link); phone/email only under «Контакты».
  * Features (щётки, подушка…) are in-resort sections — never separate catalog entries.
@@ -358,28 +358,6 @@ export function ResortPage({ data }: { data: SiteData }) {
           )
         })}
 
-        {hasContacts && (
-          <section aria-labelledby="resort-contacts-title">
-            <div className="detail-section__head">
-              <h2 id="resort-contacts-title">Контакты</h2>
-            </div>
-            <ul className="contact-list">
-              {phone && telHref && (
-                <li>
-                  <span className="contact-list__label">Телефон</span>
-                  <a href={telHref}>{phone}</a>
-                </li>
-              )}
-              {email && (
-                <li>
-                  <span className="contact-list__label">Почта</span>
-                  <a href={`mailto:${email}`}>{email}</a>
-                </li>
-              )}
-            </ul>
-          </section>
-        )}
-
         <section className="detail-grid__wide" aria-labelledby="resort-location-title">
           <div className="detail-section__head">
             <h2 id="resort-location-title">Локация</h2>
@@ -424,6 +402,32 @@ export function ResortPage({ data }: { data: SiteData }) {
                   <ExternalLink href={url}>{linkLabelForUrl(url, 'Сообщество')}</ExternalLink>
                 </li>
               ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Last visitor section: resort phone/email only (never mixed into prices). */}
+        {hasContacts && (
+          <section
+            className="detail-grid__wide"
+            aria-labelledby="resort-contacts-title"
+          >
+            <div className="detail-section__head">
+              <h2 id="resort-contacts-title">Контакты</h2>
+            </div>
+            <ul className="contact-list">
+              {phone && telHref && (
+                <li>
+                  <span className="contact-list__label">Телефон</span>
+                  <a href={telHref}>{phone}</a>
+                </li>
+              )}
+              {email && (
+                <li>
+                  <span className="contact-list__label">Почта</span>
+                  <a href={`mailto:${email}`}>{email}</a>
+                </li>
+              )}
             </ul>
           </section>
         )}
