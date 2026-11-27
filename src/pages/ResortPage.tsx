@@ -168,7 +168,7 @@ export function ResortPage({ data }: { data: SiteData }) {
               )}
             </div>
             {hoursSummary && (
-              <p className="detail-lead">
+              <p className="detail-lead resort-card__hours">
                 <LinkedText text={hoursSummary} />
               </p>
             )}

@@ -45,7 +45,11 @@ function stripSlopeStatusFromCardHours(text) {
   )
   t = t.replace(/^\s*ближайший\s+график\s*\([^)]*\)\s*:\s*/i, '')
   t = t.replace(new RegExp(`закрыт(?:ы|а|о)?\\s+до\\s+сезон${CY}`, 'gi'), '')
-  return t.replace(/\s+/g, ' ').replace(/^[,;.\s]+|[,;.\s]+$/g, '').trim()
+  return t
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/ ?\n ?/g, '\n')
+    .replace(/^[,;.\s]+|[,;.\s]+$/g, '')
+    .trim()
 }
 
 function hasRealCardHoursTimes(text) {
@@ -129,6 +133,12 @@ describe('card hours UI helpers', () => {
     assert.equal(
       normalizeCardHoursSummary('будни 12:00–18:00; выходные 10:00–18:00'),
       'пн–пт: 12:00–18:00\nсб–вс: 10:00–18:00',
+    )
+    assert.equal(
+      normalizeCardHoursSummary(
+        'Подъемник кресельный №10: закрыт\nПодъемник с крыши гостиницы: закрыт\nКресельный подъемник №1: закрыт\nЛенточный подъемник № 6: закрыт',
+      ),
+      'Подъемник кресельный №10: закрыт\nПодъемник с крыши гостиницы: закрыт\nКресельный подъемник №1: закрыт\nЛенточный подъемник № 6: закрыт',
     )
   })
 
@@ -219,10 +229,12 @@ describe('card hours UI helpers', () => {
 
   it('ResortCard wires cardHoursText + resort-card__hours + pre-line', () => {
     const cardSrc = readFileSync(join(root, 'src/components/ResortCard.tsx'), 'utf8')
+    const pageSrc = readFileSync(join(root, 'src/pages/ResortPage.tsx'), 'utf8')
     const dataSrc = readFileSync(join(root, 'src/lib/data.ts'), 'utf8')
     const cssSrc = readFileSync(join(root, 'src/index.css'), 'utf8')
     assert.match(cardSrc, /cardHoursText/)
     assert.match(cardSrc, /resort-card__hours/)
+    assert.match(pageSrc, /detail-lead resort-card__hours/)
     assert.match(dataSrc, /stripSlopeStatusFromCardHours/)
     assert.match(dataSrc, /formatCardHoursFromPeriods/)
     assert.match(dataSrc, /formatDayIndices/)

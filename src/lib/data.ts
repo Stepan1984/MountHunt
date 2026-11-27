@@ -459,7 +459,9 @@ export function stripSlopeStatusFromCardHours(text: string): string {
   t = t.replace(new RegExp(`закрыт(?:ы|а|о)?\\s+до\\s+сезон${CY}`, 'gi'), '')
 
   return t
-    .replace(/\s+/g, ' ')
+    // Keep `\n` so normalize can turn lift/day lines into `;` then back to `\n`.
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/ ?\n ?/g, '\n')
     .replace(/^[,;.\s]+|[,;.\s]+$/g, '')
     .trim()
 }
@@ -585,7 +587,9 @@ export function stripUtochnyayteDisclaimers(text: string): string {
   return t
     .replace(/\s*…\s*$/g, '')
     .replace(/\.\s*\./g, '.')
-    .replace(/\s+/g, ' ')
+    // Keep intentional `\n` (card/detail schedule & lift lines); collapse other runs.
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/ ?\n ?/g, '\n')
     .replace(/\s+([.,;:!?])/g, '$1')
     .replace(/^[,;.\s]+/, '')
     .trim()
@@ -657,7 +661,9 @@ export function localizePublicText(text: string): string {
       .replace(/\s*\(CSV[^)]*\)/gi, '')
       .replace(/\s*;?\s*без\s+JS\s+недоступен/gi, '')
       .replace(/\bsnow-park\b/gi, 'сноупарка')
-      .replace(/\s+/g, ' ')
+      // Keep intentional `\n` (Krasnoe lift lines, card schedules); collapse other runs.
+      .replace(/[^\S\n]+/g, ' ')
+      .replace(/ ?\n ?/g, '\n')
       .trim(),
   )
 }
