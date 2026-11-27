@@ -39,9 +39,10 @@ function displayCategory(category: string): string {
 /**
  * Igora rental duration bands: break before «каждые» so
  * «После 1 часа каждые 30 минут» / «После 4 часов каждые 30 минут» stack like the site.
- * Other nested headers stay single-line.
+ * Used for nested columnGroups (снаряжение) and flat columns (одежда и аксессуары).
+ * Other headers stay single-line.
  */
-function formatColumnGroupLabel(label: string) {
+function formatDurationBandLabel(label: string) {
   const m = /^(После\s+\d+\s+час(?:а|ов))\s+(каждые\s+30\s+минут)$/iu.exec(label.trim())
   if (!m) return label
   return (
@@ -51,6 +52,10 @@ function formatColumnGroupLabel(label: string) {
       {m[2]}
     </>
   )
+}
+
+function isDurationBandWrap(label: string): boolean {
+  return /^(После\s+\d+\s+час(?:а|ов))\s+(каждые\s+30\s+минут)$/iu.test(label.trim())
 }
 
 type Props = {
@@ -98,9 +103,13 @@ export function SkipassTables({
                             key={cg.label}
                             scope="colgroup"
                             colSpan={cg.span}
-                            className="mh-table__num mh-table__colgroup"
+                            className={
+                              isDurationBandWrap(cg.label)
+                                ? 'mh-table__num mh-table__colgroup mh-table__band-wrap'
+                                : 'mh-table__num mh-table__colgroup'
+                            }
                           >
-                            {formatColumnGroupLabel(cg.label)}
+                            {formatDurationBandLabel(cg.label)}
                           </th>
                         ))}
                       </tr>
@@ -147,8 +156,16 @@ export function SkipassTables({
                           </th>
                         ) : (
                           group.columns.map((col) => (
-                            <th key={col} scope="col" className="mh-table__num">
-                              {col}
+                            <th
+                              key={col}
+                              scope="col"
+                              className={
+                                isDurationBandWrap(col)
+                                  ? 'mh-table__num mh-table__band-wrap'
+                                  : 'mh-table__num'
+                              }
+                            >
+                              {formatDurationBandLabel(col)}
                             </th>
                           ))
                         )}
