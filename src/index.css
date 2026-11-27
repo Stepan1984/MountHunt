@@ -385,22 +385,9 @@ main {
   outline-offset: 2px;
 }
 
-.explore__layout {
-  display: grid;
-  gap: 1.25rem;
-}
-
-@media (min-width: 960px) {
-  .explore__layout {
-    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-    align-items: start;
-    gap: 1.5rem;
-  }
-
-  .explore__map {
-    position: sticky;
-    top: 4.5rem;
-  }
+/* Active section: same composition as secondary — full-width map, then card grid. */
+.explore__map {
+  margin: 0 0 1.25rem;
 }
 
 .map-shell {
@@ -561,8 +548,11 @@ main {
   grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
 }
 
-.resort-grid--stack {
-  grid-template-columns: 1fr;
+/* Desktop: 3 across for active + closed/wild (shared .resort-grid). */
+@media (min-width: 960px) {
+  .resort-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .resort-card {
@@ -1385,10 +1375,6 @@ main {
 
   .map-canvas--detail {
     height: 200px;
-  }
-
-  .explore__map {
-    position: static;
   }
 
   .leaflet-control-attribution {
