@@ -483,6 +483,45 @@ describe('skipass groups', () => {
     assert.ok(lessons?.rows?.every((r) => /человек|тренер/i.test(r.name || '')))
   })
 
+  it('Igora snapshot parses rental, tubing, and ski-service tables', () => {
+    const html = readFileSync(join(root, 'data/snapshots/igora/price.html'), 'utf8')
+    const { groups, items } = parseIgoraPriceTables(html)
+
+    const rental = groups.find((g) => /^Прокат снаряжения$/i.test(g.category))
+    assert.ok(rental, 'expected rental equipment group')
+    assert.deepEqual(rental.columns, ['Будни', 'Выходные/праздники'])
+    const kit = rental.rows.find((r) => /^Горнолыжный комплект$/i.test(r.name || '') && /1 час/i.test(r.duration || ''))
+    assert.ok(kit)
+    assert.equal(kit.prices[0]?.price, 1200)
+    assert.equal(kit.prices[1]?.price, 1500)
+    // Tubing is its own family, not left inside rental.
+    assert.ok(!rental.rows.some((r) => /ватрушк|тюбинг/i.test(r.name || '')))
+
+    const tubing = groups.find((g) => /^Тюбинг$/i.test(g.category))
+    assert.ok(tubing, 'expected tubing group')
+    const tubeHour = tubing.rows.find((r) => /1 час/i.test(r.duration || ''))
+    assert.equal(tubeHour?.prices[0]?.price, 700)
+    assert.equal(tubeHour?.prices[1]?.price, 900)
+
+    const clothes = groups.find((g) => /одежд|аксессуар/i.test(g.category))
+    assert.ok(clothes, 'expected clothing/accessories rental group')
+    assert.ok(clothes.columns.some((c) => /1 час/i.test(c)))
+    const jacket = clothes.rows.find((r) => /Куртка горнолыжная/i.test(r.name || ''))
+    assert.equal(jacket?.prices[0]?.price, 480)
+    assert.equal(jacket?.prices[4]?.price, 960)
+
+    const service = groups.find((g) => /ски-сервис|ремонт/i.test(g.category))
+    assert.ok(service, 'expected ski-service / repair group')
+    assert.deepEqual(service.columns, ['Цена'])
+    assert.ok(service.rows.length >= 15)
+    const slash = service.rows.find((r) => /консервац/i.test(r.name || ''))
+    assert.equal(slash?.prices[0]?.price, 550)
+    assert.match(slash?.prices[0]?.note || '', /сноуборд 700/)
+
+    assert.ok(items.some((i) => /Горнолыжный комплект · 1 час · будни \(Прокат/i.test(i.title || '')))
+    assert.ok(items.some((i) => /Ватрушки \(тюбинг\) · 1 час · будни \(Тюбинг\)/i.test(i.title || '')))
+  })
+
   it('Drop Park snapshot yields site sections (ски-пасс / инструктор / сезон)', () => {
     const html = readFileSync(join(root, 'data/snapshots/drop-park/snow-park.html'), 'utf8')
     const { groups, hours } = parseDropParkPriceList(html)
