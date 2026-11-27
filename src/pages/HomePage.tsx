@@ -20,25 +20,18 @@ export function HomePage({ data }: { data: SiteData }) {
         <div className="section__head">
           <h2 id="explore-title">Действующие курорты</h2>
         </div>
-
-        <div className="explore__layout">
-          <div className="explore__map" id="map">
-            <ResortMap resorts={data.resorts} embedded />
-          </div>
-
-          <div className="explore__list" id="resorts">
-            <div className="resort-grid resort-grid--stack">
-              {active.map((resort) => (
-                <ResortCard
-                  key={resort.id}
-                  resort={resort}
-                  hours={data.hours}
-                  important={data.important}
-                  compact
-                />
-              ))}
-            </div>
-          </div>
+        <div className="explore__map" id="map">
+          <ResortMap resorts={data.resorts} embedded />
+        </div>
+        <div className="resort-grid" id="resorts">
+          {active.map((resort) => (
+            <ResortCard
+              key={resort.id}
+              resort={resort}
+              hours={data.hours}
+              important={data.important}
+            />
+          ))}
         </div>
       </section>
 

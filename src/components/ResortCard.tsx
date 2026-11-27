@@ -7,14 +7,12 @@ type Props = {
   resort: Resort
   hours: HoursSnapshot[]
   important?: ImportantItem[]
-  compact?: boolean
 }
 
 export function ResortCard({
   resort,
   hours,
   important = [],
-  compact = false,
 }: Props) {
   const inactive = resort.status !== 'active'
   const h = hoursFor(resort.id, hours)
@@ -30,7 +28,7 @@ export function ResortCard({
   const hoursText = !inactive ? cardHoursText(h) : null
 
   return (
-    <article className={`resort-card resort-card--${resort.status}${compact ? ' resort-card--compact' : ''}${closed ? ' resort-card--slopes-closed' : ''}`}>
+    <article className={`resort-card resort-card--${resort.status}${closed ? ' resort-card--slopes-closed' : ''}`}>
       <Link to={`/resort/${resort.id}`} className="resort-card__hit" aria-label={`${resort.name} — подробнее`}>
         <span className="visually-hidden">{resort.name}</span>
       </Link>
