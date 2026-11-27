@@ -123,6 +123,20 @@ export function formatDayIndices(indices) {
 }
 
 /**
+ * Drop trailing dots on weekday abbrs («пн., вт.» → «пн, вт»).
+ * Keep in sync with src/lib/data.ts `stripWeekdayAbbrDots`.
+ * @param {string} days
+ */
+export function stripWeekdayAbbrDots(days) {
+  // No `\b` — JS word boundaries are ASCII-only and miss Cyrillic abbrs.
+  return String(days || '')
+    .replace(/(пн|вт|ср|чт|пт|сб|вс)\./gi, '$1')
+    .replace(/\s*,\s*/g, ', ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
  * @param {{ open: string, close: string }} slot
  */
 function hoursValue(slot) {

@@ -1,6 +1,9 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
 import { detectPuhtolovaImportant } from '../lib/important.mjs'
-import { formatCardHoursFromPeriods } from '../lib/card-hours-format.mjs'
+import {
+  formatCardHoursFromPeriods,
+  stripWeekdayAbbrDots,
+} from '../lib/card-hours-format.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -115,7 +118,11 @@ export async function scrapePuhtolovaGora() {
     })
 
     // Prefer winter schedule rows (ср/чт/пт, сб/вс, пн/вт)
-    const trimmed = periods.length > 6 ? periods.slice(0, 3) : periods
+    const trimmed = (periods.length > 6 ? periods.slice(0, 3) : periods).map((p) => ({
+      ...p,
+      // «пн., вт.» → «пн, вт» (keep commas, drop abbr dots)
+      days: stripWeekdayAbbrDots(p.days),
+    }))
     const summary =
       formatCardHoursFromPeriods(trimmed) || 'Часто пн–вт выходной'
 

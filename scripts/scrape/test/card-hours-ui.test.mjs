@@ -12,6 +12,7 @@ import {
   formatCardHoursFromPeriods,
   groupHoursPeriods,
   reformatCardHoursSummaryText,
+  stripWeekdayAbbrDots,
 } from '../lib/card-hours-format.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
@@ -228,6 +229,22 @@ describe('card hours UI helpers', () => {
     assert.equal(formatCardHoursFromPeriods(z.periods), z.summary)
   })
 
+  it('strips weekday abbr dots and keeps commas (Puhtolova)', () => {
+    assert.equal(stripWeekdayAbbrDots('пн., вт.'), 'пн, вт')
+    assert.equal(stripWeekdayAbbrDots('ср., чт., пт.'), 'ср, чт, пт')
+    assert.equal(stripWeekdayAbbrDots('сб., вс.'), 'сб, вс')
+    assert.equal(stripWeekdayAbbrDots('пн–вт'), 'пн–вт')
+    const hours = JSON.parse(readFileSync(join(root, 'public/data/hours.json'), 'utf8'))
+    const p = hours.find((h) => h.resortId === 'puhtolova-gora')
+    assert.ok(p)
+    assert.deepEqual(
+      p.periods.map((row) => row.days),
+      ['ср, чт, пт', 'сб, вс', 'пн, вт'],
+    )
+    assert.doesNotMatch(p.periods.map((row) => row.days).join(' '), /\bпн\.|\bвт\.|\bср\./)
+    assert.equal(formatCardHoursFromPeriods(p.periods), p.summary)
+  })
+
   it('active committed hours have no status-leak on the card line', () => {
     const hours = JSON.parse(readFileSync(join(root, 'public/data/hours.json'), 'utf8'))
     const resorts = JSON.parse(readFileSync(join(root, 'public/data/resorts.json'), 'utf8'))
@@ -258,11 +275,13 @@ describe('card hours UI helpers', () => {
     assert.match(cardSrc, /resort-card__hours-note/)
     assert.match(pageSrc, /detail-lead resort-card__hours/)
     assert.match(pageSrc, /detail-hours-note/)
-    assert.match(pageSrc, /groupHoursPeriods/)
+    assert.match(pageSrc, /formatHoursTablePeriods/)
     assert.match(pageSrc, /hoursPeriodDisplayValue/)
     assert.match(cssSrc, /resort-card__hours-note/)
     assert.match(dataSrc, /stripSlopeStatusFromCardHours/)
     assert.match(dataSrc, /formatCardHoursFromPeriods/)
+    assert.match(dataSrc, /stripWeekdayAbbrDots/)
+    assert.match(dataSrc, /formatHoursTablePeriods/)
     assert.match(dataSrc, /groupHoursPeriods/)
     assert.match(dataSrc, /formatDayIndices/)
     assert.match(cssSrc, /\.resort-card__hours[\s\S]*white-space:\s*pre-line/)
