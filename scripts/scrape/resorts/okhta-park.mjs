@@ -1,5 +1,6 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
 import { detectOkhtaImportant } from '../lib/important.mjs'
+import { formatCardHoursFromPeriods } from '../lib/card-hours-format.mjs'
 import {
   cleanText,
   hoursSnapshot,
@@ -306,10 +307,12 @@ function parseTrailHours(html) {
   if (hit) {
     periods.push({ days: 'пн–пт', open: hit[1], close: hit[2] })
     periods.push({ days: 'сб–вс', open: hit[3], close: hit[4] })
-    summary = `пн–пт: ${hit[1]}–${hit[2]}; сб–вс: ${hit[3]}–${hit[4]}`
+    summary =
+      formatCardHoursFromPeriods(periods) ||
+      `пн–пт: ${hit[1]}–${hit[2]};\nсб–вс: ${hit[3]}–${hit[4]}`
   } else if (/11:00\s*[-–—]\s*21:00/.test(text) || /с 11:00 до 21:00/.test(text)) {
     periods.push({ days: 'ежедневно', open: '11:00', close: '21:00' })
-    summary = 'ежедневно: 11:00–21:00'
+    summary = formatCardHoursFromPeriods(periods) || 'ежедневно: 11:00–21:00'
   }
 
   const dayClosed =

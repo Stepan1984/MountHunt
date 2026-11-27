@@ -1,4 +1,5 @@
 import { fetchUrl } from '../lib/http.mjs'
+import { formatCardHoursFromPeriods } from '../lib/card-hours-format.mjs'
 import {
   cleanText,
   hoursSnapshot,
@@ -45,9 +46,7 @@ export async function scrapeSevernySklon() {
     if (fri) periods.push({ days: 'пт', open: fri[1], close: fri[2] })
     if (weekend) periods.push({ days: 'сб–вс', open: weekend[1], close: weekend[2] })
     if (periods.length) {
-      summary = periods
-        .map((p) => `${p.days}: ${p.open}–${p.close}`)
-        .join('; ')
+      summary = formatCardHoursFromPeriods(periods) || summary
     } else if (restChunk) {
       summary = `Склон: часы не найдены. ${cleanText(restChunk).slice(0, 180)}`
     }

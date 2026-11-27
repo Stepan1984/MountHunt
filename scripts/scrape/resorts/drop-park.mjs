@@ -1,5 +1,6 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
 import { detectDropParkImportant } from '../lib/important.mjs'
+import { formatCardHoursFromPeriods } from '../lib/card-hours-format.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -383,7 +384,7 @@ export function parseDropParkPriceList(html) {
   let summary = 'Нет данных о часах'
   let hoursStatus = 'partial'
   if (periods.length) {
-    summary = periods.map((p) => `${p.days.replace(/\s*\(.*\)/, '')}: ${p.open}–${p.close}`).join('; ')
+    summary = formatCardHoursFromPeriods(periods) || summary
     hoursStatus = 'partial'
   }
 

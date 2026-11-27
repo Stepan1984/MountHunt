@@ -1,56 +1,20 @@
 /**
- * Card hours display: no slope status badge duplicates; unified schedule line.
- * Mirrors src/lib/data.ts card-hours helpers (Cyrillic-safe; no Vite import).
+ * Card hours display: no slope status badge duplicates; unified schedule lines.
+ * Formatting helpers live in scripts/scrape/lib/card-hours-format.mjs
+ * (keep in sync with src/lib/data.ts).
  */
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
+import {
+  formatCardHoursFromPeriods,
+  reformatCardHoursSummaryText,
+} from '../lib/card-hours-format.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 const CY = '[а-яёa-z]*'
-
-function normalizeCardDaysLabel(raw) {
-  let days = raw
-    .trim()
-    .replace(/\s*\([^)]*полный[^)]*\)/gi, '')
-    .replace(/\s*\([^)]*по\s+прайсу[^)]*\)/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-  if (!days) return ''
-  const WEEKDAY_ABBR = new Set(['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'])
-  const parts = days.split(/\s*,\s*/).map((p) => p.replace(/\.$/, '').trim().toLowerCase())
-  if (parts.length >= 2 && parts.every((p) => WEEKDAY_ABBR.has(p))) {
-    return `${parts[0]}–${parts[parts.length - 1]}`
-  }
-  return days.replace(/\s*[-−—]\s*/g, '–').replace(/\s+/g, ' ').trim()
-}
-
-function normalizeCardTime(raw) {
-  const s = (raw || '').trim().replace(/\./g, ':')
-  if (!s) return ''
-  const m = s.match(/^(\d{1,2}):(\d{2})$/)
-  if (!m) return s
-  return `${Number(m[1])}:${m[2]}`
-}
-
-function formatCardHoursFromPeriods(periods) {
-  if (!periods?.length) return null
-  const seen = new Set()
-  const parts = []
-  for (const p of periods) {
-    const days = normalizeCardDaysLabel(p.days || '')
-    if (!days) continue
-    const key = days.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
-    const open = normalizeCardTime(p.open)
-    const close = normalizeCardTime(p.close)
-    parts.push(open && close ? `${days}: ${open}–${close}` : `${days}: выходной`)
-  }
-  return parts.length ? parts.join('; ') : null
-}
 
 function stripSlopeStatusFromCardHours(text) {
   let t = text.trim()
@@ -126,7 +90,7 @@ function normalizeCardHoursSummary(text) {
     .replace(/…\s*$/g, '')
     .trim()
   if (!t || isBlankHoursScheduleLabel(t)) return ''
-  return t
+  return reformatCardHoursSummaryText(t)
 }
 
 function cardHoursText(hours) {
@@ -147,11 +111,11 @@ describe('card hours UI helpers', () => {
       normalizeCardHoursSummary(
         'Горнолыжные склоны закрыты на летний период. Ближайший график (прочее): Понедельник: закрыто; Вторник: закрыто; Среда: 12:00–22:00',
       ),
-      'Понедельник: закрыто; Вторник: закрыто; Среда: 12:00–22:00',
+      'пн–вт: выходной;\nср: 12:00–22:00',
     )
     assert.equal(
       normalizeCardHoursSummary('Сезон закрыт. пн: выходной; вт–пт: 11:00–22:00'),
-      'пн: выходной; вт–пт: 11:00–22:00',
+      'пн: выходной;\nвт–пт: 11:00–22:00',
     )
     assert.equal(
       normalizeCardHoursSummary('На 25.11.2026: склоны/подъёмники закрыты до сезона'),
@@ -163,7 +127,7 @@ describe('card hours UI helpers', () => {
     )
     assert.equal(
       normalizeCardHoursSummary('будни 12:00–18:00; выходные 10:00–18:00'),
-      'будни: 12:00–18:00; выходные: 10:00–18:00',
+      'пн–пт: 12:00–18:00;\nсб–вс: 10:00–18:00',
     )
   })
 
@@ -197,14 +161,39 @@ describe('card hours UI helpers', () => {
     )
   })
 
-  it('formats periods into a unified card line', () => {
+  it('formats periods: abbr, Mon-first, grouping, line breaks after ;', () => {
     assert.equal(
       formatCardHoursFromPeriods([
         { days: 'ср., чт., пт.', open: '15:00', close: '21:00' },
         { days: 'сб., вс.', open: '10:00', close: '21:00' },
         { days: 'пн., вт.', open: '', close: '' },
       ]),
-      'ср–пт: 15:00–21:00; сб–вс: 10:00–21:00; пн–вт: выходной',
+      'пн–вт: выходной;\nср–пт: 15:00–21:00;\nсб–вс: 10:00–21:00',
+    )
+    assert.equal(
+      formatCardHoursFromPeriods([
+        { days: 'Понедельник', open: '', close: '' },
+        { days: 'Вторник', open: '', close: '' },
+        { days: 'Среда', open: '12:00', close: '22:00' },
+        { days: 'Четверг', open: '12:00', close: '22:00' },
+        { days: 'Пятница', open: '12:00', close: '23:00' },
+        { days: 'Суббота', open: '11:00', close: '23:00' },
+      ]),
+      'пн–вт: выходной;\nср–чт: 12:00–22:00;\nпт: 12:00–23:00;\nсб: 11:00–23:00',
+    )
+    assert.equal(
+      formatCardHoursFromPeriods([
+        { days: 'будни', open: '12:00', close: '18:00' },
+        { days: 'выходные', open: '10:00', close: '18:00' },
+      ]),
+      'пн–пт: 12:00–18:00;\nсб–вс: 10:00–18:00',
+    )
+    assert.equal(
+      formatCardHoursFromPeriods([
+        { days: 'пн–пт', open: '11:00', close: '22:30' },
+        { days: 'сб–вс', open: '9:00', close: '22:30' },
+      ]),
+      'пн–пт: 11:00–22:30;\nсб–вс: 9:00–22:30',
     )
   })
 
@@ -219,16 +208,23 @@ describe('card hours UI helpers', () => {
       assert.ok(line.length > 0, h.resortId)
       // Never a bare date-only «График на …» with empty schedule.
       assert.doesNotMatch(line, /^(?:график\s+)?на\s+\d{1,2}\.\d{1,2}/i, h.resortId)
+      // Multi-segment schedules use a line break after each `;`.
+      if (line.includes(';')) {
+        assert.match(line, /;\n/, h.resortId)
+        assert.doesNotMatch(line, /; [^\n]/, h.resortId)
+      }
     }
   })
 
-  it('ResortCard wires cardHoursText + resort-card__hours', () => {
+  it('ResortCard wires cardHoursText + resort-card__hours + pre-line', () => {
     const cardSrc = readFileSync(join(root, 'src/components/ResortCard.tsx'), 'utf8')
     const dataSrc = readFileSync(join(root, 'src/lib/data.ts'), 'utf8')
+    const cssSrc = readFileSync(join(root, 'src/index.css'), 'utf8')
     assert.match(cardSrc, /cardHoursText/)
     assert.match(cardSrc, /resort-card__hours/)
     assert.match(dataSrc, /stripSlopeStatusFromCardHours/)
     assert.match(dataSrc, /formatCardHoursFromPeriods/)
-    assert.match(dataSrc, /\[а-яёa-z\]\*/)
+    assert.match(dataSrc, /formatDayIndices/)
+    assert.match(cssSrc, /\.resort-card__hours[\s\S]*white-space:\s*pre-line/)
   })
 })
