@@ -545,6 +545,10 @@ function parseSkiPassMatrix(rows, kind, category) {
 
 /**
  * Parse instructor lesson table (weekday/weekend × duration slots) or pack table.
+ * Source layout (igora.ru/price/):
+ *   row0: Кол-во… | Будние дни | Выходные/Праздничные дни
+ *   row1: 1 час | 1,5 часа | 2 часа | 1 час | 1,5 часа | 2 часа
+ *   data: one tariff name × 6 prices
  * @param {string[][]} rows
  * @param {string} h3
  * @param {string} category
@@ -580,45 +584,66 @@ function parseInstructorMatrix(rows, h3, category) {
     }
   }
 
-  // Lesson grid: Будние дни (3 slots) + Выходные (3 slots).
-  const slots = ['1 час', '1,5 часа', '2 часа']
-  /** @type {Map<string, { name: string, duration: string, weekday?: object, weekend?: object }>} */
+  // Nested headers from the live/snapshot table — never invent day/duration labels.
+  const dayHeaders = top.slice(1).map((c) => cleanText(c)).filter(Boolean)
+  const slotRow = rows[1] || []
+  const slotCells = slotRow.map((c) => cleanText(c)).filter(Boolean)
+  const slotsFromHeader =
+    slotCells.length >= 3 && slotCells.every((c) => /час/i.test(c)) ? slotCells : null
+  const columns = slotsFromHeader || ['1 час', '1,5 часа', '2 часа', '1 час', '1,5 часа', '2 часа']
+  const half = Math.max(1, Math.floor(columns.length / 2))
+  /** @type {{ label: string, span: number }[]} */
+  const columnGroups =
+    dayHeaders.length >= 2
+      ? [
+          { label: dayHeaders[0], span: half },
+          { label: dayHeaders[1], span: columns.length - half },
+        ]
+      : [
+          { label: 'Будние дни', span: half },
+          { label: 'Выходные/Праздничные дни', span: columns.length - half },
+        ]
+
+  const dataStart = slotsFromHeader ? 2 : 1
+  /** @type {Map<string, { name: string, prices: object[] }>} */
   const matrix = new Map()
   const isOnline = /онлайн|online/i.test(h3)
 
-  for (const row of rows) {
+  for (const row of rows.slice(dataStart)) {
     const label = row[0]
     if (!label) continue
     if (/кассе|^online$|кол-во|наименование|продолжит|будн|выходн/i.test(label)) continue
     if (!/человек|профи|тренер/i.test(label)) continue
-    const cells = row.slice(1)
-    if (cells.length < 3) continue
+    // Keep site group-size wording; only clarify jargon «с профи» → «с тренером».
     const name = clarifyInstructorLabel(label)
-    for (let i = 0; i < cells.length; i++) {
-      const price = parsePrice(cells[i])
-      if (price == null) continue
-      const duration = slots[i % 3] || `кол.${i + 1}`
-      const day = i < 3 ? 'weekday' : 'weekend'
-      const key = `${name}|${duration}`
-      const entry = matrix.get(key) || { name, duration }
-      entry[day] = { price, rawText: cells[i] }
-      matrix.set(key, entry)
-    }
+    const cells = row.slice(1)
+    if (cells.length < columns.length) continue
+    const prices = columns.map((_, i) => {
+      const raw = cells[i]
+      const price = parsePrice(raw)
+      return price != null ? { price, rawText: raw } : { price: null }
+    })
+    if (!prices.some((p) => p.price != null)) continue
+    matrix.set(name, { name, prices })
   }
 
   if (!matrix.size) return null
   return {
     kind: 'instructor',
     category,
-    columns: ['Будни', 'Выходные/праздники'],
-    rows: [...matrix.values()].map((r) => ({
-      name: r.name,
-      duration: r.duration,
-      prices: [r.weekday || { price: null }, r.weekend || { price: null }],
-    })),
+    columns,
+    columnGroups,
+    rows: [...matrix.values()],
     online: isOnline,
     priority: 3,
   }
+}
+
+function isInstructorLessonDraft(d) {
+  if (d?.kind !== 'instructor') return false
+  if (Array.isArray(d.columnGroups) && d.columnGroups.length === 2) return true
+  // Legacy shape: Будни | Выходные as leaf columns + duration on each row.
+  return Array.isArray(d.columns) && d.columns.length === 2 && /будни/i.test(d.columns[0] || '')
 }
 
 /**
@@ -631,7 +656,7 @@ function collapseInstructorDrafts(drafts) {
   /** @type {object[]} */
   const lesson = []
   for (const d of drafts) {
-    if (d.kind === 'instructor' && d.columns?.length === 2 && /Будни/i.test(d.columns[0])) {
+    if (isInstructorLessonDraft(d)) {
       lesson.push(d)
     } else {
       out.push(d)
@@ -648,10 +673,13 @@ function collapseInstructorDrafts(drafts) {
     /** @type {Map<string, object>} */
     const cashByKey = new Map()
     for (const row of cash.rows || []) {
-      cashByKey.set(`${row.name}|${row.duration}`, row)
+      // Nested matrix: one row per tariff name; legacy: name|duration.
+      const key = row.duration ? `${row.name}|${row.duration}` : row.name
+      cashByKey.set(key, row)
     }
     primary.rows = (primary.rows || []).map((row) => {
-      const cashRow = cashByKey.get(`${row.name}|${row.duration}`)
+      const key = row.duration ? `${row.name}|${row.duration}` : row.name
+      const cashRow = cashByKey.get(key)
       if (!cashRow) return row
       const prices = (row.prices || []).map((cell, i) => {
         const cashCell = cashRow.prices?.[i]
@@ -667,6 +695,7 @@ function collapseInstructorDrafts(drafts) {
     kind: 'instructor',
     category: 'Занятия с инструктором',
     columns: primary.columns,
+    ...(primary.columnGroups ? { columnGroups: primary.columnGroups } : {}),
     rows: primary.rows,
     priority: 3,
   })
@@ -699,11 +728,37 @@ function itemsFromIgoraGroups(groups) {
                     ? 8
                     : 4
     const columns = g.columns?.length ? g.columns : ['Цена']
+    const columnGroups = Array.isArray(g.columnGroups) ? g.columnGroups : null
     for (const row of g.rows || []) {
       for (let i = 0; i < columns.length; i++) {
         const cell = row.prices?.[i]
         if (!cell || cell.price == null) continue
         const col = cleanText(columns[i] || '')
+        // Nested instructor matrix: leaf cols are durations under day groups.
+        if (kind === 'instructor' && columnGroups?.length === 2) {
+          let offset = 0
+          let dayLabel = ''
+          for (const cg of columnGroups) {
+            if (i >= offset && i < offset + cg.span) {
+              dayLabel = /выходн/i.test(cg.label || '') ? 'выходные/праздники' : 'будни'
+              break
+            }
+            offset += cg.span
+          }
+          const duration = col || row.duration || ''
+          const suffix = /online|онлайн/i.test(g.note || '') ? 'инструктор online' : 'инструктор'
+          const onlineTag = cell.note && /в кассе/i.test(cell.note) ? 'инструктор online' : suffix
+          items.push({
+            title: `${row.name} · ${duration} · ${dayLabel} (${onlineTag})`,
+            price: cell.price,
+            unit: 'час',
+            note: cell.note,
+            rawText: cell.rawText,
+            priority,
+          })
+          continue
+        }
+        // Legacy instructor shape: Будни | Выходные + duration on the row.
         if (kind === 'instructor' && columns.length === 2) {
           const day = /выходн/i.test(col) ? 'выходные/праздники' : 'будни'
           const suffix = /online|онлайн/i.test(g.note || '') ? 'инструктор online' : 'инструктор'
@@ -973,10 +1028,11 @@ export function parseIgoraPriceTables(html) {
   const collapsed = collapseInstructorDrafts(drafts)
   const groups = collapsed
     .sort((a, b) => a.priority - b.priority)
-    .map(({ category, columns, rows, note }) => ({
+    .map(({ category, columns, rows, note, columnGroups }) => ({
       category,
       columns,
       rows,
+      ...(columnGroups ? { columnGroups } : {}),
       ...(note ? { note } : {}),
     }))
     .filter((g) => g.rows?.length)
@@ -1028,8 +1084,9 @@ export function clarifyIgoraParsed(parsed) {
 
 /** @param {object} g */
 function isInstructorLessonGroup(g) {
+  if (igoraGroupKind(g.category) !== 'instructor') return false
+  if (Array.isArray(g.columnGroups) && g.columnGroups.length === 2) return true
   return (
-    igoraGroupKind(g.category) === 'instructor' &&
     Array.isArray(g.columns) &&
     g.columns.length === 2 &&
     /будни/i.test(g.columns[0] || '')

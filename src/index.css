@@ -1045,6 +1045,20 @@ main {
   white-space: nowrap;
 }
 
+/* Nested skipass headers (e.g. Igora instructor: day band × duration slots). */
+.mh-table thead th.mh-table__colgroup {
+  text-align: center !important;
+  border-bottom: 1px solid var(--line);
+  letter-spacing: 0.03em;
+}
+
+.mh-table thead tr:nth-child(2) th {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
 .mh-table tbody th {
   font-weight: 500;
   color: var(--graphite);
