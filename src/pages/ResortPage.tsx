@@ -158,7 +158,7 @@ export function ResortPage({ data }: { data: SiteData }) {
       <div className="detail-grid">
         {/* Active only — same rule as ResortCard: no empty / stub hours·prices for secondary. */}
         {!inactive && (
-          <section aria-labelledby="resort-hours-title">
+          <section className="detail-grid__wide" aria-labelledby="resort-hours-title">
             <div className="detail-section__head">
               <h2 id="resort-hours-title">Часы работы</h2>
               {hoursLink && (
