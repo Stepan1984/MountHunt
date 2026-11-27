@@ -571,6 +571,77 @@ describe('skipass groups', () => {
     assert.match(lift.note || '', /проживающ/i)
   })
 
+  it('Okhta ski-service parser reads alpine (Горные лыжи / сноуборд) service tariffs, not rental', async () => {
+    const {
+      extractOkhtaSkiServiceAlpineImageUrl,
+      parseOkhtaSkiServiceAlpineGroups,
+    } = await import('../resorts/okhta-park.mjs')
+    const html = `<html><body>
+      <section class="service_price_additional" id="service_price_additional">
+        <div class="service_price_additional_group">
+          <div class="service_price_additional_element">
+            <a href="/upload/iblock/aa/СКИ СЕРВИС горные.jpg" class="service_price_additional_wrap">
+              <img src="/upload/iblock/aa/СКИ СЕРВИС горные.jpg" alt="price_additional">
+            </a>
+          </div>
+          <div class="service_price_additional_element">
+            <a href="/upload/iblock/bb/СКИ СЕРВИС БЕГ ЛЫЖИ .jpg" class="service_price_additional_wrap">
+              <img src="/upload/iblock/bb/СКИ СЕРВИС БЕГ ЛЫЖИ .jpg" alt="price_additional">
+            </a>
+          </div>
+        </div>
+      </section>
+    </body></html>`
+    const img = extractOkhtaSkiServiceAlpineImageUrl(
+      html,
+      'https://www.ohtapark.ru/services/others/ski-servis/',
+    )
+    assert.match(decodeURIComponent(img || ''), /горн/i)
+    assert.ok(!/бег/i.test(decodeURIComponent(img || '')))
+
+    const ocr = `SKI сервис
+Горные лыжи/Сноуборд
+Ручная заточка кантов
+Ваточка кантов со стороны скользящей поверхности иудаление 2000 руб.
+Ручная заточка боковой поверхности канта 2000 руб
+Механическая заточка боковой поверхности канта 1500 руб.
+Обработка базовым парафином
+очистка скользящей поверхности 1200 руб.
+Консервация 1000 руб.
+Расконсервация 800 руб.
+Обработка базовым парафином+ доп. й 1400 руб.
+парафин СН без фтористый
+Очистка скользящей поверхности, 1600 руб. низко фтористый
+доп. парафина по погоде 1800 руб. высоко фтористый
+Структура штайншлифт
+шлифовка на ленте 2200 руб.
+Стандартный восстановительный комплекс
+нанесение базового парафина 4000 руб.
+Полный восстановительный комплекс
+структуры Штайншлифт 6000 руб.
+Установка и регуливка креплений 600 руб.
+Дополнительные работы и прочие услуги Индивидуальный расчет`
+    const groups = parseOkhtaSkiServiceAlpineGroups(ocr)
+    assert.equal(groups.length, 1)
+    assert.match(groups[0].category, /ски-сервис.*горные\s*лыжи\s*\/\s*сноуборд/i)
+    assert.match(groups[0].note || '', /не прокат/i)
+    const byName = Object.fromEntries(groups[0].rows.map((r) => [r.name, r.prices[0]?.price]))
+    assert.equal(byName['Ручная заточка кантов'], 2000)
+    assert.equal(byName['Ручная заточка боковой поверхности канта'], 2000)
+    assert.equal(byName['Механическая заточка боковой поверхности канта'], 1500)
+    assert.equal(byName['Обработка базовым парафином'], 1200)
+    assert.equal(byName['Консервация'], 1000)
+    assert.equal(byName['Расконсервация'], 800)
+    assert.equal(byName['Обработка базовым парафином + доп. · CH без фтора'], 1400)
+    assert.equal(byName['Обработка базовым парафином + доп. · LF низкофтористый'], 1600)
+    assert.equal(byName['Обработка базовым парафином + доп. · HF высокофтористый'], 1800)
+    assert.equal(byName['Структура штайншлифт'], 2200)
+    assert.equal(byName['Стандартный восстановительный комплекс'], 4000)
+    assert.equal(byName['Полный восстановительный комплекс'], 6000)
+    assert.equal(byName['Установка и регулировка креплений'], 600)
+    assert.ok(!groups[0].rows.some((r) => /прокат|аренд/i.test(r.name)))
+  })
+
   it('committed prices keep groups for split resorts including drop-park', () => {
     const prices = JSON.parse(readFileSync(join(root, 'public/data/prices.json'), 'utf8'))
     const needGroups = [
@@ -591,6 +662,10 @@ describe('skipass groups', () => {
     assert.ok(
       okhta?.groups?.some((g) => /подъёмники|Ски-пасс/i.test(g.category)),
       'okhta-park should keep day lift tariffs, not only seasonal presale',
+    )
+    assert.ok(
+      okhta?.groups?.some((g) => /ски-сервис.*горные\s*лыжи/i.test(g.category)),
+      'okhta-park should include ski-service alpine tariffs',
     )
     assert.match(String(okhta?.sourceUrl || ''), /gornolyzhnye-trassy/)
     const drop = prices.find((p) => p.resortId === 'drop-park')

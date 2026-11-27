@@ -1,3 +1,7 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { spawnSync } from 'node:child_process'
 import { fetchUrl, sleep } from '../lib/http.mjs'
 import { detectOkhtaImportant } from '../lib/important.mjs'
 import { formatCardHoursFromPeriods } from '../lib/card-hours-format.mjs'
@@ -15,9 +19,196 @@ export const OKHTA_TRAILS_URL =
 export const OKHTA_WINTER_URL = 'https://winter.ohtapark.ru/'
 export const OKHTA_LENTA_URL = 'https://www.ohtapark.ru/lenta/'
 export const OKHTA_HOME_URL = 'https://www.ohtapark.ru/'
+/** Official ski-service page (заточка / парафин) — not rental/prokat. */
+export const OKHTA_SKI_SERVICE_URL = 'https://www.ohtapark.ru/services/others/ski-servis/'
 const TRAILS_URL = OKHTA_TRAILS_URL
 const WINTER_URL = OKHTA_WINTER_URL
 const WEBCAM_URL = 'https://www.ohtapark.ru/webcam/'
+const SKI_SERVICE_URL = OKHTA_SKI_SERVICE_URL
+
+function which(bin) {
+  const r = spawnSync('which', [bin], { encoding: 'utf8' })
+  return r.status === 0 ? r.stdout.trim() : null
+}
+
+/**
+ * Alpine (горные лыжи / сноуборд) tariff poster on the ski-service page.
+ * Беговые лыжи image is intentionally ignored.
+ * @param {string} html
+ * @param {string} [baseUrl]
+ * @returns {string | null}
+ */
+export function extractOkhtaSkiServiceAlpineImageUrl(html, baseUrl = SKI_SERVICE_URL) {
+  const $ = loadHtml(html)
+  /** @type {string | null} */
+  let alpine = null
+  /** @type {string | null} */
+  let fallback = null
+  $('.service_price_additional a[href], .service_price_additional img[src]').each((_, el) => {
+    const raw = $(el).attr('href') || $(el).attr('src') || ''
+    if (!/\.(jpe?g|png|webp)(?:$|\?)/i.test(raw)) return
+    let abs
+    try {
+      abs = new URL(raw, baseUrl).href
+    } catch {
+      return
+    }
+    const label = decodeURIComponent(abs)
+    if (/бег/i.test(label)) return
+    if (/горн/i.test(label)) {
+      alpine = abs
+      return false
+    }
+    if (!fallback) fallback = abs
+  })
+  return alpine || fallback
+}
+
+/**
+ * OCR a ski-service tariff JPEG/PNG (optional tesseract).
+ * @param {Buffer} imgBuf
+ * @returns {string}
+ */
+export function ocrOkhtaSkiServiceImage(imgBuf) {
+  const tesseract = which('tesseract')
+  if (!tesseract || !imgBuf?.length) return ''
+  const dir = mkdtempSync(join(tmpdir(), 'okhta-ski-'))
+  try {
+    const imgPath = join(dir, 'tariff.jpg')
+    writeFileSync(imgPath, imgBuf)
+    const ocr = spawnSync(tesseract, [imgPath, 'stdout', '-l', 'rus+eng'], {
+      encoding: 'utf8',
+      maxBuffer: 10 * 1024 * 1024,
+    })
+    if (ocr.status !== 0 || !ocr.stdout) return ''
+    return ocr.stdout
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+}
+
+/**
+ * @param {string} slice
+ * @returns {number | null}
+ */
+function firstRubPrice(slice) {
+  const m = String(slice || '').match(/(\d{3,5})\s*руб/i)
+  return m ? parsePrice(m[1]) : null
+}
+
+/**
+ * Ski-service tariffs for Горные лыжи / сноуборд from OCR (or fixture) text.
+ * Not rental/prokat — заточка, парафин, восстановительные комплексы.
+ * @param {string} text
+ * @returns {{ category: string, columns: string[], rows: object[], note?: string }[]}
+ */
+export function parseOkhtaSkiServiceAlpineGroups(text) {
+  const compact = cleanText(String(text || '')).replace(/\s+/g, ' ')
+  if (!compact || !/ски\s*сервис|горн(ые|ых)?\s*лыж|сноуборд/i.test(compact)) {
+    // Still allow pure service-name OCR without the poster header.
+    if (!/заточк|парафин|восстановительн/i.test(compact)) return []
+  }
+
+  /** @type {{ key: string, name: string, re: RegExp }[]} */
+  const services = [
+    {
+      key: 'handEdge',
+      name: 'Ручная заточка кантов',
+      re: /Ручная\s+заточка\s+кантов(?!\s+боковой)/i,
+    },
+    {
+      key: 'handSide',
+      name: 'Ручная заточка боковой поверхности канта',
+      re: /Ручная\s+заточка\s+боковой\s+поверхности\s+канта/i,
+    },
+    {
+      key: 'mechSide',
+      name: 'Механическая заточка боковой поверхности канта',
+      re: /Механическая\s+заточка\s+боковой\s+поверхности\s+канта/i,
+    },
+    {
+      key: 'baseWax',
+      name: 'Обработка базовым парафином',
+      re: /Обработка\s+базовым\s+парафином(?!\s*\+)/i,
+    },
+    { key: 'conserve', name: 'Консервация', re: /Консервация/i },
+    { key: 'deconserve', name: 'Расконсервация', re: /Расконсервация/i },
+    {
+      key: 'extraWax',
+      name: 'EXTRA_WAX',
+      re: /Обработка\s+базовым\s+парафином\s*\+\s*доп/i,
+    },
+    {
+      key: 'structure',
+      name: 'Структура штайншлифт',
+      re: /Структура\s+штайншлифт/i,
+    },
+    {
+      key: 'stdComplex',
+      name: 'Стандартный восстановительный комплекс',
+      re: /Стандартный\s+восстановительный\s+комплекс/i,
+    },
+    {
+      key: 'fullComplex',
+      name: 'Полный восстановительный комплекс',
+      re: /Полный\s+восстановительный\s+комплекс/i,
+    },
+    {
+      key: 'bindings',
+      name: 'Установка и регулировка креплений',
+      re: /Установка\s+и\s+регули[а-яё]*\s+креплений/i,
+    },
+  ]
+
+  /** @type {{ key: string, name: string, index: number }[]} */
+  const hits = []
+  for (const s of services) {
+    const m = s.re.exec(compact)
+    if (m) hits.push({ key: s.key, name: s.name, index: m.index })
+  }
+  hits.sort((a, b) => a.index - b.index)
+
+  /** @type {{ name: string, prices: object[] }[]} */
+  const rows = []
+  const push = (name, price, rawText) => {
+    if (price == null || price < 100 || price > 20000) return
+    if (rows.some((r) => r.name === name)) return
+    rows.push({
+      name,
+      prices: [{ price, rawText: rawText || `${price} руб.` }],
+    })
+  }
+
+  for (let i = 0; i < hits.length; i++) {
+    const hit = hits[i]
+    const end = hits[i + 1]?.index ?? compact.length
+    const slice = compact.slice(hit.index, end)
+
+    if (hit.key === 'extraWax') {
+      const prices = [...slice.matchAll(/(\d{3,5})\s*руб/gi)].map((m) => parsePrice(m[1]))
+      const ch = prices[0] ?? null
+      const lf = prices[1] ?? null
+      const hf = prices[2] ?? null
+      push('Обработка базовым парафином + доп. · CH без фтора', ch)
+      push('Обработка базовым парафином + доп. · LF низкофтористый', lf)
+      push('Обработка базовым парафином + доп. · HF высокофтористый', hf)
+      continue
+    }
+
+    const price = firstRubPrice(slice)
+    push(hit.name, price, slice.match(/(\d{3,5}\s*руб\.?)/i)?.[1])
+  }
+
+  if (!rows.length) return []
+  return [
+    {
+      category: 'Ски-сервис · Горные лыжи / сноуборд',
+      columns: ['Цена'],
+      rows,
+      note: 'Услуги ски-сервиса (не прокат) — прайс на странице СКИ сервис',
+    },
+  ]
+}
 
 /**
  * Seasonal skipasses from the Tilda winter landing (often still online during season).
@@ -350,6 +541,25 @@ function extractHlsRefs(html) {
 /**
  * @returns {Promise<object>}
  */
+/**
+ * Fetch ski-service alpine tariff groups (Горные лыжи / сноуборд) via page → image → OCR.
+ * Soft-fails to [] when page/image/OCR unavailable — never blocks lift/season scrape.
+ * @returns {Promise<object[]>}
+ */
+async function scrapeOkhtaSkiServiceAlpineGroups() {
+  try {
+    const skiHtml = await fetchUrl(SKI_SERVICE_URL)
+    const imgUrl = extractOkhtaSkiServiceAlpineImageUrl(skiHtml, SKI_SERVICE_URL)
+    if (!imgUrl) return []
+    await sleep()
+    const imgBuf = await fetchUrl(imgUrl, { as: 'buffer' })
+    const ocrText = ocrOkhtaSkiServiceImage(imgBuf)
+    return parseOkhtaSkiServiceAlpineGroups(ocrText)
+  } catch {
+    return []
+  }
+}
+
 export async function scrapeOkhtaPark() {
   const resortId = 'okhta-park'
   try {
@@ -375,10 +585,12 @@ export async function scrapeOkhtaPark() {
     } catch {
       camHtml = ''
     }
+    await sleep()
+    const skiServiceGroups = await scrapeOkhtaSkiServiceAlpineGroups()
 
     const dayGroups = parseOkhtaDayTariffGroups(trailsHtml)
     const seasonalGroups = winterHtml ? parseOkhtaSeasonalGroups(winterHtml) : []
-    const groups = [...dayGroups, ...seasonalGroups]
+    const groups = [...dayGroups, ...seasonalGroups, ...skiServiceGroups]
     const trailHours = parseTrailHours(trailsHtml)
     const hls = camHtml ? extractHlsRefs(camHtml) : []
     const guestNote = dayGroups.find((g) => g.note)?.note
@@ -389,6 +601,9 @@ export async function scrapeOkhtaPark() {
     }
     if (trailHours.preSale && !dayGroups.length) notes.push('Открыта предпродажа сезонных ски-пассов')
     if (guestNote) notes.push(guestNote)
+    if (skiServiceGroups.length) {
+      notes.push('Ски-сервис (горные лыжи / сноуборд) — услуги, не прокат')
+    }
 
     const important = detectOkhtaImportant(
       { trailsHtml, lentaHtml },
