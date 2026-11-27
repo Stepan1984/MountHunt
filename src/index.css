@@ -1070,7 +1070,10 @@ main {
   text-align: center !important;
   border-bottom: 1px solid var(--line);
   letter-spacing: 0.03em;
-  /* Allow intentional <br> wraps (Igora rental «После … / каждые 30 минут»). */
+}
+
+/* Intentional <br> wraps (Igora rental «После … / каждые 30 минут»). */
+.mh-table thead th.mh-table__band-wrap {
   white-space: normal;
   line-height: 1.25;
 }
