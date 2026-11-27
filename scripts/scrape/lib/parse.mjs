@@ -184,6 +184,9 @@ export function hoursSnapshot(partial) {
   if (partial.slopesOpen === true || partial.slopesOpen === false) {
     snap.slopesOpen = partial.slopesOpen
   }
+  // Short card caption (e.g. «из новости») — omit when empty.
+  const note = typeof partial.hoursNote === 'string' ? partial.hoursNote.trim() : ''
+  if (note) snap.hoursNote = note
   return snap
 }
 

@@ -15,6 +15,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DELAY_MS, sleep } from './scrape/lib/http.mjs'
 import { mergeImportantFromDailyScrape } from './scrape/lib/important.mjs'
+import { enrichHoursFromImportant } from './scrape/lib/news-hours.mjs'
 import { mergeSnapshot, nowIso } from './scrape/lib/parse.mjs'
 import { scrapeTuutari } from './scrape/resorts/tuutari-park.mjs'
 import { scrapeZolotayaDolina } from './scrape/resorts/zolotaya-dolina.mjs'
@@ -410,8 +411,10 @@ async function main() {
   const prices = resorts.map((r) =>
     r.booking_url ? blankPrice(r.id, resorts) : pricesById.get(r.id) || blankPrice(r.id, resorts),
   )
-  const hours = resorts.map((r) => hoursById.get(r.id) || blankHours(r.id, resorts))
+  const hoursFromScrape = resorts.map((r) => hoursById.get(r.id) || blankHours(r.id, resorts))
   const important = mergeImportantFromDailyScrape(prevImportant, importantAdds, results)
+  // News clocks win over site stubs when a fresh schedule post is in «Важное».
+  const hours = enrichHoursFromImportant(hoursFromScrape, important)
 
   const success = results.filter(
     (r) => (r.prices && r.prices !== 'failed') || (r.hours && r.hours !== 'failed'),

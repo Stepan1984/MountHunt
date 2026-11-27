@@ -285,6 +285,7 @@ describe('important workflow wiring', () => {
     assert.match(wf, /cron:\s*'0 \* \* \* \*'/)
     assert.match(wf, /npm run scrape:important/)
     assert.match(wf, /important\.json/)
+    assert.match(wf, /hours\.json/)
     assert.doesNotMatch(wf, /playwright|tesseract|IGORA_/i)
   })
 })

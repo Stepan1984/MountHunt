@@ -69,6 +69,11 @@ export type HoursSnapshot = {
    * (щётки / подушка are not alpine — stay in summary, not this flag).
    */
   slopesOpen?: boolean
+  /**
+   * Very short muted line under card «Часы» (e.g. «из новости»
+   * when schedule was taken from a resort news post).
+   */
+  hoursNote?: string
 }
 
 export type PriceItem = {
