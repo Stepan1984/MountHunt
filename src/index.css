@@ -712,6 +712,11 @@ main {
   overflow-x: clip;
 }
 
+/* Resort detail working column matches home `.section` (1120px), not prose pages. */
+.page-narrow.resort-detail {
+  width: min(1120px, calc(100% - 2rem));
+}
+
 .crumb {
   color: var(--muted);
   font-size: 0.9rem;
