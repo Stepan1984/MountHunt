@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { cardHoursText, hoursFor, slopesBadgeLabel } from '../lib/data'
+import { seasonOpenBadgeLabel } from '../lib/season-open-badge'
 import type { HoursSnapshot, ImportantItem, Resort } from '../types'
 
 type Props = {
@@ -21,6 +22,8 @@ export function ResortCard({
   // Fail-soft: open only when scrape/important positively says so.
   const badge = !inactive ? slopesBadgeLabel(resort.id, h, important) : null
   const closed = badge === 'Склоны закрыты'
+  // Future season start from scraped news (hide once the date has passed, MSK).
+  const seasonBadge = !inactive ? seasonOpenBadgeLabel(resort.id, important) : null
 
   // Active only: unified schedule line (no slope status prose — badges cover that).
   // Дикие / неясные / закрытые — omit facts entirely.
@@ -35,13 +38,18 @@ export function ResortCard({
         <h3>
           <Link to={`/resort/${resort.id}`}>{resort.name}</Link>
         </h3>
-        {!inactive && badge ? (
+        {!inactive && (badge || seasonBadge) ? (
           <div className="resort-card__badges">
-            {closed ? (
-              <span className="badge badge--warn">{badge}</span>
-            ) : (
-              <span className="badge badge--open">{badge}</span>
-            )}
+            {badge ? (
+              closed ? (
+                <span className="badge badge--warn">{badge}</span>
+              ) : (
+                <span className="badge badge--open">{badge}</span>
+              )
+            ) : null}
+            {seasonBadge ? (
+              <span className="badge badge--season">{seasonBadge}</span>
+            ) : null}
           </div>
         ) : null}
       </div>

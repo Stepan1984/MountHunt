@@ -686,6 +686,12 @@ main {
   background: rgba(166, 107, 43, 0.14);
 }
 
+/* Upcoming season start from news (future / today only). */
+.badge--season {
+  color: var(--ice);
+  background: rgba(63, 122, 146, 0.12);
+}
+
 .page-narrow {
   width: min(760px, calc(100% - 2rem));
   max-width: 100%;
