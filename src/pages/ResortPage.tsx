@@ -413,7 +413,7 @@ export function ResortPage({ data }: { data: SiteData }) {
         </section>
 
         {communityLinks.length > 0 && (
-          <section aria-labelledby="resort-links-title">
+          <section className="detail-grid__wide" aria-labelledby="resort-links-title">
             <h2 id="resort-links-title">Ссылки</h2>
             <ul className="link-list">
               {communityLinks.map((url) => (
