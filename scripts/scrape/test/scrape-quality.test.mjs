@@ -500,19 +500,44 @@ describe('skipass groups', () => {
 
     const rental = groups.find((g) => /^Прокат снаряжения$/i.test(g.category))
     assert.ok(rental, 'expected rental equipment group')
-    assert.deepEqual(rental.columns, ['Будни', 'Выходные/праздники'])
-    const kit = rental.rows.find((r) => /^Горнолыжный комплект$/i.test(r.name || '') && /1 час/i.test(r.duration || ''))
+    // Nested site headers: duration bands × Будни/Сб-Вс (same UI as instructor).
+    assert.ok(Array.isArray(rental.columnGroups) && rental.columnGroups.length === 4)
+    assert.deepEqual(
+      rental.columnGroups.map((g) => g.label),
+      [
+        '1 час',
+        'После 1 часа каждые 30 минут',
+        '4 часа',
+        'После 4 часов каждые 30 минут',
+      ],
+    )
+    assert.ok(rental.columnGroups.every((g) => g.span === 2))
+    assert.deepEqual(rental.columns, [
+      'Будни, Пн-Пт',
+      'Сб-Вс, Праздники',
+      'Будни, Пн-Пт',
+      'Сб-Вс, Праздники',
+      'Будни, Пн-Пт',
+      'Сб-Вс, Праздники',
+      'Будни, Пн-Пт',
+      'Сб-Вс, Праздники',
+    ])
+    const kit = rental.rows.find((r) => /^Горнолыжный комплект$/i.test(r.name || ''))
     assert.ok(kit)
+    assert.ok(!kit.duration, 'nested rental rows are name-only (duration is a header band)')
+    assert.equal(kit.prices.length, 8)
     assert.equal(kit.prices[0]?.price, 1200)
     assert.equal(kit.prices[1]?.price, 1500)
+    assert.equal(kit.prices[2]?.price, 600)
+    assert.equal(kit.prices[6]?.price, 600)
     // Tubing is its own family, not left inside rental.
     assert.ok(!rental.rows.some((r) => /ватрушк|тюбинг/i.test(r.name || '')))
 
     const tubing = groups.find((g) => /^Тюбинг$/i.test(g.category))
     assert.ok(tubing, 'expected tubing group')
-    const tubeHour = tubing.rows.find((r) => /1 час/i.test(r.duration || ''))
-    assert.equal(tubeHour?.prices[0]?.price, 700)
-    assert.equal(tubeHour?.prices[1]?.price, 900)
+    assert.ok(Array.isArray(tubing.columnGroups) && tubing.columnGroups.length === 4)
+    assert.equal(tubing.rows[0]?.prices?.[0]?.price, 700)
+    assert.equal(tubing.rows[0]?.prices?.[1]?.price, 900)
 
     const clothes = groups.find((g) => /одежд|аксессуар/i.test(g.category))
     assert.ok(clothes, 'expected clothing/accessories rental group')
@@ -530,7 +555,9 @@ describe('skipass groups', () => {
     assert.match(slash?.prices[0]?.note || '', /сноуборд 700/)
 
     assert.ok(items.some((i) => /Горнолыжный комплект · 1 час · будни \(Прокат/i.test(i.title || '')))
-    assert.ok(items.some((i) => /Ватрушки \(тюбинг\) · 1 час · будни \(Тюбинг\)/i.test(i.title || '')))
+    assert.ok(
+      items.some((i) => /Ватрушки \(тюбинг\) · 1 час · будни \(Тюбинг\)/i.test(i.title || '')),
+    )
   })
 
   it('Drop Park snapshot yields site sections (ски-пасс / инструктор / сезон)', () => {
