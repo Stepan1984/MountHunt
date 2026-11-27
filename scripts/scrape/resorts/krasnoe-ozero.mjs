@@ -221,10 +221,123 @@ const KRASNOE_PASS_SLOTS = [
   { duration: '15 проходов', key: '15 проходов' },
 ]
 
+/** Card-price / pass-retention footnotes that belong in the top БСК table only. */
+const KRASNOE_BSK_PRICE_RE =
+  /стоимость\s+бск\s*[-–—:]?\s*(\d[\d\s]*)\s*(?:руб\.?|₽)?/i
+const KRASNOE_PASS_RETENTION_RE =
+  /проходы\s+сохраняются(?:\s+до\s+конца\s+сезона(?:\s+[\d/.]+)?)?/i
+
+/**
+ * Pull БСК card price from a CSV «Уточнение» footnote.
+ * @param {string | undefined} note
+ * @returns {number | null}
+ */
+export function extractKrasnoeBskPrice(note) {
+  const m = String(note || '').match(KRASNOE_BSK_PRICE_RE)
+  return m ? parsePrice(m[1]) : null
+}
+
+/**
+ * Pull pass-retention caption (e.g. «проходы сохраняются до конца сезона 26/27»).
+ * @param {string | undefined} note
+ * @returns {string | undefined}
+ */
+export function extractKrasnoePassRetention(note) {
+  const m = String(note || '').match(KRASNOE_PASS_RETENTION_RE)
+  return m ? cleanText(m[0]) : undefined
+}
+
+/**
+ * Drop БСК card-price and pass-retention captions from a footnote.
+ * Shared so tariff tables do not repeat «Стоимость БСК…» / «проходы сохраняются…».
+ * @param {string | null | undefined} note
+ * @returns {string | undefined}
+ */
+export function stripKrasnoeBskCaptions(note) {
+  if (!note?.trim()) return undefined
+  let t = String(note)
+  t = t.replace(new RegExp(KRASNOE_BSK_PRICE_RE.source, 'gi'), '')
+  t = t.replace(new RegExp(KRASNOE_PASS_RETENTION_RE.source, 'gi'), '')
+  t = t
+    .replace(/\s*,\s*,+/g, ',')
+    .replace(/^[\s,;.\-–—]+|[\s,;.\-–—]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return t || undefined
+}
+
+/**
+ * Ensure a single top «Стоимость БСК» table and strip card/retention captions
+ * from every other group (row + group notes). Idempotent for enrich / re-scrape.
+ * @param {object[]} groups
+ * @returns {object[]}
+ */
+export function ensureKrasnoeBskTopTable(groups) {
+  if (!Array.isArray(groups) || !groups.length) return groups || []
+
+  let bskPrice = null
+  /** @type {string | undefined} */
+  let retention
+
+  const rest = []
+  for (const group of groups) {
+    if (/^стоимость\s+бск$/i.test(cleanText(group.category || ''))) {
+      for (const row of group.rows || []) {
+        const cell = row.prices?.find((p) => p?.price != null)
+        if (cell?.price != null && bskPrice == null) bskPrice = cell.price
+        const rowNote = row.note || group.note
+        if (bskPrice == null) bskPrice = extractKrasnoeBskPrice(rowNote)
+        retention = retention || extractKrasnoePassRetention(rowNote)
+        // Already-normalized БСК table keeps the retention caption as row.note.
+        if (!retention && row.note && !KRASNOE_BSK_PRICE_RE.test(row.note)) {
+          retention = cleanText(row.note) || undefined
+        }
+      }
+      continue
+    }
+
+    const nextRows = (group.rows || []).map((row) => {
+      bskPrice = bskPrice ?? extractKrasnoeBskPrice(row.note)
+      retention = retention || extractKrasnoePassRetention(row.note)
+      const note = stripKrasnoeBskCaptions(row.note)
+      const next = { ...row }
+      if (note) next.note = note
+      else delete next.note
+      return next
+    })
+    bskPrice = bskPrice ?? extractKrasnoeBskPrice(group.note)
+    retention = retention || extractKrasnoePassRetention(group.note)
+    const groupNote = stripKrasnoeBskCaptions(group.note)
+    const nextGroup = { ...group, rows: nextRows }
+    if (groupNote) nextGroup.note = groupNote
+    else delete nextGroup.note
+    rest.push(nextGroup)
+  }
+
+  if (bskPrice == null) return rest
+
+  const bskRow = {
+    name: 'Ски-пасс',
+    prices: [{ price: bskPrice, rawText: String(bskPrice) }],
+  }
+  if (retention) bskRow.note = retention
+
+  return [
+    {
+      category: 'Стоимость БСК',
+      columns: ['Цена'],
+      rows: [bskRow],
+    },
+    ...rest,
+  ]
+}
+
 /**
  * Build skipass groups from CSV rows (site widget structure).
  * Official sheet publishes 1–6 hour weekday/weekend cells and pass packs —
  * not only the 1-hour columns.
+ * БСК card price + pass-retention caption live in one top table; other
+ * tariff tables keep no БСК / «проходы сохраняются» captions under names.
  * @param {Record<string, string>[]} rows
  */
 export function parseKrasnoeSkipassGroups(rows) {
@@ -238,6 +351,7 @@ export function parseKrasnoeSkipassGroups(rows) {
     if (pageKey !== 'ski-pass' || show !== 'yes') continue
     const name = cleanText(row['Название'] || '')
     if (!name) continue
+    // Footnotes stay on the CSV row for БСК extraction; not copied onto tariffs.
     const note = cleanText(row['Уточнение'] || '') || undefined
 
     /** @type {{ name: string, duration?: string, prices: object[], note?: string }[]} */
@@ -255,7 +369,8 @@ export function parseKrasnoeSkipassGroups(rows) {
           { price: weekday, rawText: String(wdRaw) },
           { price: weekend, rawText: String(weRaw) },
         ],
-        note,
+        // Keep raw footnote briefly so ensureKrasnoeBskTopTable can harvest БСК / retention.
+        ...(note ? { note } : {}),
       })
     }
     if (hourRows.length) {
@@ -268,7 +383,6 @@ export function parseKrasnoeSkipassGroups(rows) {
         category: hourName,
         columns: [...dayColumns],
         rows: hourRows,
-        note: undefined,
       })
     }
 
@@ -282,7 +396,7 @@ export function parseKrasnoeSkipassGroups(rows) {
         name: 'Ски-пасс',
         duration: slot.duration,
         prices: [{ price, rawText: String(raw) }],
-        note,
+        ...(note ? { note } : {}),
       })
     }
     if (passRows.length) {
@@ -295,12 +409,12 @@ export function parseKrasnoeSkipassGroups(rows) {
         category: passName,
         columns: ['Цена'],
         rows: passRows,
-        note: note || 'Проходы сохраняются до конца сезона',
+        ...(note ? { note } : {}),
       })
     }
   }
 
-  return groups
+  return ensureKrasnoeBskTopTable(groups)
 }
 
 /**

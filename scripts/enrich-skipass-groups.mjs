@@ -12,6 +12,10 @@ import {
   mergeIgoraPriceTables,
   parseIgoraPriceTables,
 } from './scrape/resorts/igora.mjs'
+import {
+  ensureKrasnoeBskTopTable,
+  stripKrasnoeBskCaptions,
+} from './scrape/resorts/krasnoe-ozero.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const pricesPath = join(root, 'public/data/prices.json')
@@ -237,31 +241,43 @@ function enrichSnezhny(snap) {
 }
 
 function enrichKrasnoe(snap) {
-  /** @type {Map<string, { weekday?: object, weekend?: object, note?: string }>} */
+  // Prefer structured scrape groups; only lift БСК into a top table + strip captions.
+  if (Array.isArray(snap.groups) && snap.groups.some((g) => g?.rows?.length)) {
+    setGroups(snap, ensureKrasnoeBskTopTable(snap.groups))
+    for (const it of snap.items || []) {
+      const note = stripKrasnoeBskCaptions(it.note)
+      if (note) it.note = note
+      else delete it.note
+    }
+    return
+  }
+
+  /** @type {Map<string, { weekday?: object, weekend?: object }>} */
   const byName = new Map()
   for (const it of snap.items || []) {
     const m = it.title.match(/^(.+?)\s+\((1 ч будни|1 ч выходные|1 ч)\)$/i)
     if (!m) continue
-    const row = byName.get(m[1]) || { note: it.note }
+    const row = byName.get(m[1]) || {}
     const cell = { price: it.price, rawText: it.rawText }
     if (/выходн/i.test(m[2])) row.weekend = cell
     else row.weekday = cell
     byName.set(m[1], row)
   }
   if (!byName.size) return
-  setGroups(snap, [
-    {
-      category: 'Ски-пасс (часы)',
-      columns: ['1 ч будни', '1 ч выходные'],
-      rows: [...byName.entries()].map(([name, r]) => ({
-        name,
-        duration: '1 час',
-        prices: [r.weekday || { price: null }, r.weekend || { price: null }],
-        note: r.note,
-      })),
-      note: undefined,
-    },
-  ])
+  setGroups(
+    snap,
+    ensureKrasnoeBskTopTable([
+      {
+        category: 'Ски-пасс (часы)',
+        columns: ['1 ч будни', '1 ч выходные'],
+        rows: [...byName.entries()].map(([name, r]) => ({
+          name,
+          duration: '1 час',
+          prices: [r.weekday || { price: null }, r.weekend || { price: null }],
+        })),
+      },
+    ]),
+  )
 }
 
 function enrichOkhta(snap) {

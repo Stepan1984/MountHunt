@@ -449,12 +449,19 @@ describe('skipass groups', () => {
     const csv = [
       'Название,Показывать,Ключ страницы,Уточнение,1 час будни,2 часа будни,3 часа будни,4 часа будни,5 часов будни,6 часов будни,1 час выходные,2 часа выходные,3 часа выходные,4 часа выходные,5 часов выходные,6 часов выходные,1 проход,7 проходов,15 проходов',
       'Взрослый (часы),yes,ski-pass,Стоимость БСК - 300 руб.,1500,2000,2500,2900,3200,3500,1900,2800,3500,3900,4300,4600,,,',
-      'Взрослый (проходы),yes,ski-pass,"Стоимость БСК - 300 руб., проходы сохраняются",,,,,,,,,,,,,300,2000,3500',
+      'Взрослый (проходы),yes,ski-pass,"Стоимость БСК - 300 руб., проходы сохраняются до конца сезона 26/27",,,,,,,,,,,,,300,2000,3500',
       '"Дети (до 12 лет), пенсионеры (часы)",yes,ski-pass,,1200,1500,1800,2100,2300,2500,1500,2000,2500,2900,3200,3500,,,',
       '"Дети (до 12 лет), пенсионеры (проходы)",yes,ski-pass,,,,,,,,,,,,,,300,1500,2500',
     ].join('\n')
     const { rows } = parseCsv(csv)
     const groups = parseKrasnoeSkipassGroups(rows)
+    // Top table: БСК card price once; retention caption under «Ски-пасс».
+    const bsk = groups[0]
+    assert.match(bsk?.category || '', /^Стоимость БСК$/i)
+    assert.equal(bsk.rows?.length, 1)
+    assert.equal(bsk.rows[0].name, 'Ски-пасс')
+    assert.equal(bsk.rows[0].prices[0].price, 300)
+    assert.match(bsk.rows[0].note || '', /проходы сохраняются до конца сезона 26\/27/i)
     const adultHours = groups.find((g) => /Взрослый \(часы\)/i.test(g.category))
     const adultPass = groups.find((g) => /Взрослый \(проходы\)/i.test(g.category))
     assert.equal(adultHours?.rows?.length, 6)
@@ -465,6 +472,13 @@ describe('skipass groups', () => {
     assert.equal(adultPass.rows[2].prices[0].price, 3500)
     assert.ok(groups.some((g) => /Дети.*\(часы\)/i.test(g.category) && g.rows.length === 6))
     assert.ok(groups.some((g) => /Дети.*\(проходы\)/i.test(g.category) && g.rows.length === 3))
+    // No БСК / retention captions under other tariff names (or group notes).
+    for (const g of groups.slice(1)) {
+      assert.equal(g.note, undefined)
+      for (const row of g.rows || []) {
+        assert.ok(!row.note || !/бск|проходы\s+сохраняются/i.test(row.note))
+      }
+    }
   })
 
   it('Igora snapshot yields structured groups with site categories', () => {
