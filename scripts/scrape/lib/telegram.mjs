@@ -29,6 +29,17 @@ export function parseTelegramChannelHtml(html) {
     if (seen.has(id)) return
     seen.add(id)
 
+    const classes = String($(el).attr('class') || '')
+    // Video notes («кружочки»): skip even if a caption appears later — preference.
+    if (
+      /roundvideo/i.test(classes) ||
+      $(el).find('.tgme_widget_message_roundvideo, .tgme_widget_message_roundvideo_player').length
+    ) {
+      return
+    }
+    // Channel service rows («pinned a video/photo») are not news.
+    if (/service_message/i.test(classes)) return
+
     const textEl = $(el).find('.tgme_widget_message_text').first()
     // Keep <br> as newlines for title/body split — do not run cleanText on the whole blob
     // (it collapses whitespace and would glue the first line to the rest).
@@ -41,6 +52,8 @@ export function parseTelegramChannelHtml(html) {
       .filter(Boolean)
       .join('\n')
     if (!text || text.length < 8) return
+    // Service-copy sometimes lands in a normal bubble without service_message class.
+    if (/^[A-Za-z0-9_]+\s+pinned a (?:video|photo|message)\b/i.test(text)) return
 
     const dt =
       $(el).find('time[datetime]').first().attr('datetime') ||
