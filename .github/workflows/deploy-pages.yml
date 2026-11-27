@@ -42,9 +42,6 @@ jobs:
           # Custom domain mounthunt.ru → site root (not /MountHunt/)
           VITE_BASE: /
 
-      - name: SPA fallback for GitHub Pages
-        run: cp dist/index.html dist/404.html
-
       # Unique per attempt: artifacts belong to the run, not the attempt, so a
       # re-run would otherwise leave two artifacts both named github-pages.
       - name: Upload Pages artifact

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 export function ContactsPage() {
   return (
     <section className="section page-narrow about-page" aria-labelledby="contacts-title">
@@ -19,6 +21,11 @@ export function ContactsPage() {
           <a href="mailto:stpvng@ya.ru">stpvng@ya.ru</a>
         </li>
       </ul>
+
+      <p className="muted contacts-page__privacy">
+        Вопросы об обработке персональных данных — по тем же контактам. Текст политики:{' '}
+        <Link to="/privacy">Политика конфиденциальности</Link>.
+      </p>
     </section>
   )
 }

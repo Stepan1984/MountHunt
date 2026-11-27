@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { LinkedText } from './LinkedText'
 import { formatImportantDate, publicImportantBody } from '../lib/data'
+import { newsSourceLabel } from '../lib/links'
 import type { ImportantItem } from '../types'
 
 type Props = {
@@ -10,13 +11,15 @@ type Props = {
 
 /**
  * Shared Important / news card: blue MountHunt resort link in the title,
- * no official-site footer duplicate.
+ * visible source link to TG/VK/original when sourceUrl is present.
  */
 export function ImportantItemCard({ item, resortName }: Props) {
   const titleStartsWithResort = Boolean(
     resortName && item.resortId && item.title.startsWith(resortName),
   )
   const body = publicImportantBody(item.body)
+  const sourceUrl = item.sourceUrl?.trim() || ''
+  const sourceKind = sourceUrl ? newsSourceLabel(sourceUrl) : ''
 
   return (
     <li className="important__item">
@@ -40,6 +43,13 @@ export function ImportantItemCard({ item, resortName }: Props) {
           <LinkedText text={body} />
         </p>
       )}
+      {sourceUrl ? (
+        <p className="important__source">
+          <a href={sourceUrl} rel="noopener noreferrer" target="_blank">
+            {sourceKind === 'Источник' ? 'Источник' : `Источник · ${sourceKind}`}
+          </a>
+        </p>
+      ) : null}
     </li>
   )
 }

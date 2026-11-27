@@ -8,6 +8,7 @@ import { ContactsPage } from './pages/ContactsPage'
 import { HomePage } from './pages/HomePage'
 import { NewsPage } from './pages/NewsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { PrivacyPage } from './pages/PrivacyPage'
 import { ResortPage } from './pages/ResortPage'
 
 const routerBasename = (() => {
@@ -44,6 +45,7 @@ export default function App() {
               <Route path="/resort/:id" element={<ResortPage data={state.data} />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contacts" element={<ContactsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           )}

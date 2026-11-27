@@ -19,6 +19,13 @@ export function Footer() {
           <Link to="/about">О проекте</Link>
           {' · '}
           <Link to="/contacts">Контакты</Link>
+          {' · '}
+          <Link to="/privacy">Политика конфиденциальности</Link>
+        </p>
+        <p className="muted site-footer__note">
+          Внешние сайты курортов и соцсети живут по своим правилам; MountHunt за них не отвечает.
+          Шрифты, карта и встроенные камеры могут загружаться со сторонних серверов — подробности в
+          политике.
         </p>
       </div>
     </footer>
