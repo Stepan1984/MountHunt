@@ -1,7 +1,7 @@
 {
   "updatedAt": "2026-11-26T17:28:15Z",
   "source": "scrape-wave1+wave2+wave3",
-  "note": "Волны 1–3: tuutari-park, zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park, igora, severny-sklon, putilovo-park; failed: нет · Важное 2026-11-26T17:35:56Z",
+  "note": "Волны 1–3: tuutari-park, zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park, igora, severny-sklon, putilovo-park; failed: нет · Важное 2026-11-27T01:34:28Z",
   "resortsScraped": [
     {
       "id": "tuutari-park",
@@ -124,6 +124,6 @@
       "clearImportantPrefixes": true
     }
   ],
-  "importantScrapedAt": "2026-11-26T17:35:56Z",
-  "importantNote": "Важное: ok 9, fail 0"
+  "importantScrapedAt": "2026-11-27T01:34:28Z",
+  "importantNote": "Важное: ok 8, fail 1"
 }
