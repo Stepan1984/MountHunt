@@ -1,5 +1,6 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
 import { detectPuhtolovaImportant } from '../lib/important.mjs'
+import { formatCardHoursFromPeriods } from '../lib/card-hours-format.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -94,7 +95,6 @@ export async function scrapePuhtolovaGora() {
 
     const $h = loadHtml(hoursHtml)
     const periods = []
-    let summaryParts = []
     $h('table').each((ti, table) => {
       const rows = tableRows($h, $h(table))
       // Schedule table usually has day names
@@ -108,21 +108,16 @@ export async function scrapePuhtolovaGora() {
         const oc = hours.match(/(\d{1,2}:\d{2})\s*[-–—]\s*(\d{1,2}:\d{2})/)
         if (oc) {
           periods.push({ days: cleanText(days), open: oc[1], close: oc[2] })
-          summaryParts.push(`${cleanText(days)}: ${oc[1]}–${oc[2]}`)
         } else if (/выходн/i.test(hours) || /выходн/i.test(days)) {
           periods.push({ days: cleanText(days), open: '', close: '' })
-          summaryParts.push(`${cleanText(days)}: выходной`)
         }
       }
     })
 
     // Prefer winter schedule rows (ср/чт/пт, сб/вс, пн/вт)
-    if (summaryParts.length > 6) {
-      summaryParts = summaryParts.slice(0, 3)
-    }
-    const summary = summaryParts.length
-      ? summaryParts.join('; ')
-      : 'Часто пн–вт выходной'
+    const trimmed = periods.length > 6 ? periods.slice(0, 3) : periods
+    const summary =
+      formatCardHoursFromPeriods(trimmed) || 'Часто пн–вт выходной'
 
     const embeds = extractIframeSrcs(loadHtml(camHtml), WEBCAM_URL)
     const important = newsHtml ? detectPuhtolovaImportant(newsHtml, NEWS_URL) : []
@@ -143,8 +138,8 @@ export async function scrapePuhtolovaGora() {
         resortId,
         sourceUrl: HOURS_URL,
         summary,
-        periods: periods.slice(0, 12),
-        status: periods.length ? 'ok' : 'partial',
+        periods: trimmed.slice(0, 12),
+        status: trimmed.length ? 'ok' : 'partial',
         slopesOpen: slopeStatus.slopesOpen,
       }),
       webcamUrl: WEBCAM_URL,

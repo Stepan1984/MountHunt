@@ -1,5 +1,6 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
 import { detectLazurnyeImportantFromPages } from '../lib/important.mjs'
+import { formatCardHoursFromPeriods } from '../lib/card-hours-format.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -98,9 +99,24 @@ export async function scrapeLazurnyeOzera() {
       periods.push({ days: 'пн', open: '', close: '' })
       periods.push({ days: 'вт–пт', open: openWd, close: closeWd })
       periods.push({ days: 'сб–вс', open: openWe, close: closeWe })
-      summary = `пн: выходной; вт–пт: ${openWd}–${closeWd}; сб–вс: ${openWe}–${closeWe}`
+      summary =
+        formatCardHoursFromPeriods(periods) ||
+        `пн: выходной;\nвт–пт: ${openWd}–${closeWd};\nсб–вс: ${openWe}–${closeWe}`
     } else if (hoursMatch) {
-      summary = `пн: выходной; вт–пт: ${norm(hoursMatch[1])}–${norm(hoursMatch[2])}; сб–вс: ${norm(hoursMatch[3])}–${norm(hoursMatch[4])}`
+      periods.push({ days: 'пн', open: '', close: '' })
+      periods.push({
+        days: 'вт–пт',
+        open: norm(hoursMatch[1]),
+        close: norm(hoursMatch[2]),
+      })
+      periods.push({
+        days: 'сб–вс',
+        open: norm(hoursMatch[3]),
+        close: norm(hoursMatch[4]),
+      })
+      summary =
+        formatCardHoursFromPeriods(periods) ||
+        `пн: выходной;\nвт–пт: ${norm(hoursMatch[1])}–${norm(hoursMatch[2])};\nсб–вс: ${norm(hoursMatch[3])}–${norm(hoursMatch[4])}`
     }
     const slopeStatus = detectLazurnyeSlopeStatus(homeHtml, important)
 

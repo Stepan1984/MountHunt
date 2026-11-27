@@ -166,27 +166,23 @@ export function hoursLeadText(
   return lead
 }
 
-const WEEKDAY_ABBR = new Set(['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'])
+const WEEKDAY_NAMES = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'] as const
 
-/** «ср., чт., пт.» / «пн, вт» → «ср–пт» / «пн–вт»; keep other labels. */
-function normalizeCardDaysLabel(raw: string): string {
-  let days = raw
-    .trim()
-    .replace(/\s*\([^)]*полный[^)]*\)/gi, '')
-    .replace(/\s*\([^)]*по\s+прайсу[^)]*\)/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-  if (!days) return ''
-
-  const parts = days.split(/\s*,\s*/).map((p) => p.replace(/\.$/, '').trim().toLowerCase())
-  if (parts.length >= 2 && parts.every((p) => WEEKDAY_ABBR.has(p))) {
-    return `${parts[0]}–${parts[parts.length - 1]}`
-  }
-
-  return days
-    .replace(/\s*[-−—]\s*/g, '–')
-    .replace(/\s+/g, ' ')
-    .trim()
+const DAY_INDEX: Record<string, number> = {
+  пн: 0,
+  вт: 1,
+  ср: 2,
+  чт: 3,
+  пт: 4,
+  сб: 5,
+  вс: 6,
+  понедельник: 0,
+  вторник: 1,
+  среда: 2,
+  четверг: 3,
+  пятница: 4,
+  суббота: 5,
+  воскресенье: 6,
 }
 
 function normalizeCardTime(raw: string | null | undefined): string {
@@ -197,29 +193,229 @@ function normalizeCardTime(raw: string | null | undefined): string {
   return `${Number(m[1])}:${m[2]}`
 }
 
+function formatDayIndices(indices: number[]): string {
+  if (!indices.length) return ''
+  const sorted = [...new Set(indices)].sort((a, b) => a - b)
+  const ranges: string[] = []
+  let start = sorted[0]
+  let prev = sorted[0]
+  for (let i = 1; i <= sorted.length; i++) {
+    const d = sorted[i]
+    if (d === prev + 1) {
+      prev = d
+      continue
+    }
+    ranges.push(
+      start === prev
+        ? WEEKDAY_NAMES[start]
+        : `${WEEKDAY_NAMES[start]}–${WEEKDAY_NAMES[prev]}`,
+    )
+    start = prev = d
+  }
+  return ranges.join(', ')
+}
+
+type ParsedCardDays = {
+  indices: number[] | null
+  label: string
+  note: string
+  holidayExtra: string
+}
+
+/** Parse day labels into weekday indices (Mon=0) when possible. */
+function parseCardDaysLabel(raw: string): ParsedCardDays {
+  let days = raw
+    .trim()
+    .replace(/\s*\([^)]*полный[^)]*\)/gi, '')
+    .replace(/\s*\([^)]*по\s+прайсу[^)]*\)/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  let note = ''
+  const noteMatch = days.match(/^(.*?)\s*(\([^)]*\))\s*$/)
+  if (noteMatch) {
+    days = noteMatch[1].trim()
+    note = noteMatch[2].trim()
+  }
+
+  const lower = days.toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim()
+  const holidayExtra = ''
+
+  if (!lower) return { indices: null, label: '', note, holidayExtra }
+
+  if (/^будни$|^будние(?:\s+дни)?$/.test(lower)) {
+    return { indices: [0, 1, 2, 3, 4], label: 'пн–пт', note, holidayExtra }
+  }
+  if (/^выходные и праздники$/.test(lower)) {
+    return {
+      indices: [5, 6],
+      label: 'сб–вс',
+      note,
+      holidayExtra: ' и праздники',
+    }
+  }
+  if (/^выходные$|^выходные дни$/.test(lower)) {
+    return { indices: [5, 6], label: 'сб–вс', note, holidayExtra }
+  }
+  if (/^ежедневно$/.test(lower)) {
+    return { indices: null, label: 'ежедневно', note, holidayExtra }
+  }
+
+  const range = lower.match(/^([а-яё]+)\s*[–\-−—]\s*([а-яё]+)$/)
+  if (range && DAY_INDEX[range[1]] != null && DAY_INDEX[range[2]] != null) {
+    const a = DAY_INDEX[range[1]]
+    const b = DAY_INDEX[range[2]]
+    if (a <= b) {
+      const indices: number[] = []
+      for (let i = a; i <= b; i++) indices.push(i)
+      return { indices, label: formatDayIndices(indices), note, holidayExtra }
+    }
+  }
+
+  const parts = lower.split(/\s*,\s*/).map((p) => p.trim()).filter(Boolean)
+  if (parts.length >= 1 && parts.every((p) => DAY_INDEX[p] != null)) {
+    const indices = [...new Set(parts.map((p) => DAY_INDEX[p]))].sort((a, b) => a - b)
+    return { indices, label: formatDayIndices(indices), note, holidayExtra }
+  }
+
+  return {
+    indices: null,
+    label: days.replace(/\s*[-−—]\s*/g, '–').replace(/\s+/g, ' ').trim(),
+    note,
+    holidayExtra,
+  }
+}
+
+function cardHoursSlotValue(open: string, close: string): string {
+  return open && close ? `${open}–${close}` : 'выходной'
+}
+
 /**
- * Canonical card schedule line from structured periods:
- * «пн–пт: 11:00–22:00; сб–вс: 9:00–22:30».
+ * Canonical card schedule from structured periods:
+ * «пн–пт: 11:00–22:00;\nсб–вс: 9:00–22:30»
+ * (line break after `;`, Mon-first, abbr + consecutive grouping).
  */
 export function formatCardHoursFromPeriods(periods: HoursPeriod[] | undefined): string | null {
   if (!periods?.length) return null
-  const seen = new Set<string>()
-  const parts: string[] = []
+
+  type DaySlot = {
+    open: string
+    close: string
+    note: string
+    holidayExtra: string
+  }
+  const daySlots: (DaySlot | null)[] = Array.from({ length: 7 }, () => null)
+  const extras: { label: string; open: string; close: string }[] = []
+
   for (const p of periods) {
-    const days = normalizeCardDaysLabel(p.days || '')
-    if (!days) continue
-    const key = days.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
+    const parsed = parseCardDaysLabel(p.days || '')
+    if (!parsed.label && !parsed.indices) continue
     const open = normalizeCardTime(p.open)
     const close = normalizeCardTime(p.close)
-    if (open && close) {
-      parts.push(`${days}: ${open}–${close}`)
+
+    if (parsed.indices) {
+      for (const idx of parsed.indices) {
+        if (daySlots[idx]) continue
+        daySlots[idx] = {
+          open,
+          close,
+          note: parsed.note,
+          holidayExtra: parsed.holidayExtra,
+        }
+      }
     } else {
-      parts.push(`${days}: выходной`)
+      const label = parsed.note ? `${parsed.label} ${parsed.note}` : parsed.label
+      extras.push({ label, open, close })
     }
   }
-  return parts.length ? parts.join('; ') : null
+
+  const parts: string[] = []
+  let i = 0
+  while (i < 7) {
+    const slot = daySlots[i]
+    if (!slot) {
+      i++
+      continue
+    }
+    let j = i
+    const slotVal = cardHoursSlotValue(slot.open, slot.close)
+    while (
+      j + 1 < 7 &&
+      daySlots[j + 1] &&
+      cardHoursSlotValue(daySlots[j + 1]!.open, daySlots[j + 1]!.close) === slotVal
+    ) {
+      j++
+    }
+    const indices: number[] = []
+    for (let k = i; k <= j; k++) indices.push(k)
+    const notes = new Set<string>()
+    let holidayExtra = ''
+    for (let k = i; k <= j; k++) {
+      const s = daySlots[k]!
+      if (s.note) notes.add(s.note)
+      if (s.holidayExtra) holidayExtra = s.holidayExtra
+    }
+    const note = notes.size === 1 ? [...notes][0] : ''
+    let days = formatDayIndices(indices) + holidayExtra
+    if (note) days = `${days} ${note}`
+    parts.push(`${days}: ${slotVal}`)
+    i = j + 1
+  }
+
+  for (const ex of extras) {
+    parts.push(
+      ex.open && ex.close
+        ? `${ex.label}: ${ex.open}–${ex.close}`
+        : `${ex.label}: выходной`,
+    )
+  }
+
+  return parts.length ? parts.join(';\n') : null
+}
+
+/** Reformat weekday schedule segments; leave opaque labels, join with `;\n`. */
+function reformatCardHoursSummaryText(text: string): string {
+  const segments = text
+    .split(/\s*;\s*/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+  if (!segments.length) return ''
+
+  const periods: HoursPeriod[] = []
+  const opaque: string[] = []
+
+  for (const seg of segments) {
+    const m = seg.match(/^(.+?):\s*(.+)$/)
+    if (!m) {
+      opaque.push(seg)
+      continue
+    }
+    const days = m[1].trim()
+    let rest = m[2].trim()
+    rest = rest.replace(
+      /^(\d{1,2}:\d{2}\s*[–\-−—]\s*\d{1,2}:\d{2}).*$/,
+      '$1',
+    )
+    const oc = rest.match(/^(\d{1,2}:\d{2})\s*[–\-−—]\s*(\d{1,2}:\d{2})$/)
+    const parsed = parseCardDaysLabel(days)
+    if (parsed.indices || /^ежедневно$/i.test(parsed.label)) {
+      if (oc) {
+        periods.push({ days, open: oc[1], close: oc[2] })
+      } else if (/выходн|закрыт/i.test(rest)) {
+        periods.push({ days, open: '', close: '' })
+      } else {
+        opaque.push(seg)
+      }
+    } else {
+      opaque.push(oc ? `${days}: ${oc[1]}–${oc[2]}` : `${days}: ${rest}`)
+    }
+  }
+
+  const formatted = formatCardHoursFromPeriods(periods)
+  const parts: string[] = []
+  if (formatted) parts.push(...formatted.split(/;\n/))
+  parts.push(...opaque)
+  return parts.map((p) => p.trim()).filter(Boolean).join(';\n')
 }
 
 /** Cyrillic-safe letter run (JS `\w` is ASCII-only without the unicode flag). */
@@ -331,7 +527,7 @@ export function normalizeCardHoursSummary(text: string): string {
     .trim()
 
   if (!t || isBlankHoursScheduleLabel(t)) return ''
-  return t
+  return reformatCardHoursSummaryText(t)
 }
 
 /**

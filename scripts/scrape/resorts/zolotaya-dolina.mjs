@@ -1,5 +1,6 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
 import { detectZoldolImportant } from '../lib/important.mjs'
+import { formatCardHoursFromPeriods } from '../lib/card-hours-format.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -89,22 +90,22 @@ export async function scrapeZolotayaDolina() {
     )]
     const firstWeek = dayLines.slice(0, 7)
     if (firstWeek.length) {
-      const bits = []
+      const seenDays = new Set()
       for (const m of firstWeek) {
         const days = m[1]
+        const dayKey = days.toLowerCase()
+        if (seenDays.has(dayKey)) continue
+        seenDays.add(dayKey)
         const val = cleanText(m[2])
         const openClose = val.match(/(\d{1,2}:\d{2})\s*[-–—]\s*(\d{1,2}:\d{2})/)
         if (openClose) {
           periods.push({ days, open: openClose[1], close: openClose[2] })
-          bits.push(`${days}: ${openClose[1]}–${openClose[2]}`)
         } else if (/закрыт/i.test(val)) {
           periods.push({ days, open: '', close: '' })
-          bits.push(`${days}: выходной`)
         }
       }
-      if (bits.length) {
-        summary = bits.join('; ')
-      }
+      const formatted = formatCardHoursFromPeriods(periods)
+      if (formatted) summary = formatted
     }
 
     const embeds = extractIframeSrcs(loadHtml(camHtml), WEBCAM_URL).filter((u) =>

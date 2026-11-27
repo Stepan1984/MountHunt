@@ -496,7 +496,7 @@ describe('skipass groups', () => {
     assert.deepEqual(ski.columns, ['Будни', 'Выходные и праздники'])
     assert.ok(ski.rows.some((r) => /^Дневной$/i.test(r.name) && r.prices[0]?.price === 1700))
     assert.ok(ski.rows.some((r) => /^Полный$/i.test(r.name) && r.prices[1]?.price === 2500))
-    assert.match(hours.summary, /будни.*11:00|выходные.*10:00/i)
+    assert.match(hours.summary, /пн–пт:\s*11:00|сб–вс.*10:00/i)
     assert.equal(hours.status, 'partial')
   })
 

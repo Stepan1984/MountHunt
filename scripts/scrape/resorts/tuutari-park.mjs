@@ -1,5 +1,6 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
 import { detectTuutariImportant } from '../lib/important.mjs'
+import { formatCardHoursFromPeriods } from '../lib/card-hours-format.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -130,7 +131,6 @@ export async function scrapeTuutari() {
     const slice = idx >= 0 ? body.slice(idx, idx + 280) : body
     const wd = slice.match(/Будние дни с\s*(\d{1,2})[-.:](\d{2})\s*до\s*(\d{1,2})[-.:](\d{2})/i)
     const we = slice.match(/Выходные дни с\s*(\d{1,2})[-.:](\d{2})\s*до\s*(\d{1,2})[-.:](\d{2})/i)
-    const fmt = (m) => `${m[1].padStart(2, '0')}:${m[2]}–${m[3].padStart(2, '0')}:${m[4]}`
     if (wd) {
       periods.push({ days: 'будни', open: `${wd[1].padStart(2, '0')}:${wd[2]}`, close: `${wd[3].padStart(2, '0')}:${wd[4]}` })
     }
@@ -141,11 +141,20 @@ export async function scrapeTuutari() {
         close: `${we[3].padStart(2, '0')}:${we[4]}`,
       })
     }
-    if (wd && we) {
-      summary = `будни: ${fmt(wd)}; выходные: ${fmt(we)}`
-    } else if (weekday && weekend) {
-      summary = `будни: ${fmt(weekday)}; выходные: ${fmt(weekend)}`
+    if (!periods.length && weekday && weekend) {
+      periods.push({
+        days: 'будни',
+        open: `${weekday[1].padStart(2, '0')}:${weekday[2]}`,
+        close: `${weekday[3].padStart(2, '0')}:${weekday[4]}`,
+      })
+      periods.push({
+        days: 'выходные',
+        open: `${weekend[1].padStart(2, '0')}:${weekend[2]}`,
+        close: `${weekend[3].padStart(2, '0')}:${weekend[4]}`,
+      })
     }
+    const formatted = formatCardHoursFromPeriods(periods)
+    if (formatted) summary = formatted
 
     const $c = loadHtml(camHtml)
     const embeds = extractIframeSrcs($c, WEBCAM_URL)
