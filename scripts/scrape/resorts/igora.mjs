@@ -255,8 +255,48 @@ function parseSlashPriceCell(raw) {
 }
 
 /**
- * Weekday/weekend rental matrix: duration bands × будни/выходные.
- * Tubing (ватрушки) is split into its own group.
+ * Normalize site duration-band labels to the visitor wording from the
+ * official rental matrix (1 час / после 1ч 30 мин / 4 часа / после 4ч 30 мин).
+ * @param {string} raw
+ * @param {number} index
+ * @param {string[]} allDurations
+ */
+function clarifyRentalDurationLabel(raw, index, allDurations) {
+  const t = cleanText(raw)
+  if (!t) return t
+  if (/после\s*1\s*часа.*30|30.*после\s*1\s*часа|каждые\s*30\s*минут\s*после\s*1/i.test(t)) {
+    return 'После 1 часа каждые 30 минут'
+  }
+  if (/после\s*4\s*час.*30|30.*после\s*4\s*час|каждые\s*30\s*минут\s*после\s*4/i.test(t)) {
+    return 'После 4 часов каждые 30 минут'
+  }
+  if (/^1\s*час$/i.test(t)) return '1 час'
+  if (/^4\s*часа(\s*\(\s*1\s*день\s*\))?$/i.test(t)) return '4 часа'
+  // Short snapshot label «каждые 30 минут»: after a 4-hour band → after-4h, else after-1h.
+  if (/^каждые\s*30\s*минут$/i.test(t)) {
+    const prev = allDurations.slice(0, index).join(' ')
+    if (/4\s*час/i.test(prev)) return 'После 4 часов каждые 30 минут'
+    return 'После 1 часа каждые 30 минут'
+  }
+  return softenCategoryTitle(t)
+}
+
+/**
+ * Leaf day labels under each duration band (exact site wording).
+ * @param {string} raw
+ */
+function clarifyRentalDayLabel(raw) {
+  const t = cleanText(raw)
+  if (!t) return t
+  if (/будни|пн/i.test(t) && !/сб|вс|выходн|праздн/i.test(t)) return 'Будни, Пн-Пт'
+  if (/сб|вс|праздн|выходн/i.test(t)) return 'Сб-Вс, Праздники'
+  return t
+}
+
+/**
+ * Weekday/weekend rental matrix with nested headers like the site / instructor UI:
+ * top = duration bands (colspan 2), leaf = Будни, Пн-Пт | Сб-Вс, Праздники.
+ * Tubing (ватрушки) is split into its own group with the same header shape.
  * @param {string[][]} rows
  * @returns {{ rental: object | null, tubing: object | null }}
  */
@@ -267,48 +307,62 @@ function parseRentalWeekdayMatrix(rows) {
     return { rental: null, tubing: null }
   }
   // tableRows drops rowspan «Наименование» on the day row — durations are top.slice(1).
-  const durations = top.slice(1).filter(Boolean)
-  if (durations.length < 1 || dayRow.length < durations.length * 2) {
+  const rawDurations = top.slice(1).filter(Boolean)
+  if (rawDurations.length < 1 || dayRow.length < rawDurations.length * 2) {
     return { rental: null, tubing: null }
   }
+  const durations = rawDurations.map((d, i) => clarifyRentalDurationLabel(d, i, rawDurations))
+  /** @type {{ label: string, span: number }[]} */
+  const columnGroups = durations.map((label) => ({ label, span: 2 }))
+  /** @type {string[]} */
+  const columns = []
+  for (let d = 0; d < durations.length; d++) {
+    const wd = clarifyRentalDayLabel(dayRow[d * 2] || 'Будни, Пн-Пт')
+    const we = clarifyRentalDayLabel(dayRow[d * 2 + 1] || 'Сб-Вс, Праздники')
+    columns.push(wd, we)
+  }
 
-  /** @type {object[]} */
-  const rentalRows = []
-  /** @type {object[]} */
-  const tubingRows = []
+  /** @type {Map<string, { name: string, prices: object[] }>} */
+  const rentalByName = new Map()
+  /** @type {Map<string, { name: string, prices: object[] }>} */
+  const tubingByName = new Map()
 
   for (const row of rows.slice(2)) {
     const name = cleanText(row[0] || '')
     if (!name || /наименован/i.test(name)) continue
     const cells = row.slice(1)
-    if (cells.length < 2) continue
+    if (cells.length < durations.length * 2) continue
     const isTubing = /ватрушк|тюбинг/i.test(name)
-    const target = isTubing ? tubingRows : rentalRows
     const displayName = isTubing
       ? softenCategoryTitle(name.replace(/\*+\s*$/g, '').trim()) || 'Ватрушки (тюбинг)'
       : name.replace(/\*+\s*$/g, '').trim()
-
+    /** @type {object[]} */
+    const prices = []
     for (let d = 0; d < durations.length; d++) {
-      const wd = parsePrice(cells[d * 2])
-      const we = parsePrice(cells[d * 2 + 1])
-      if (wd == null && we == null) continue
-      target.push({
-        name: displayName,
-        duration: durations[d],
-        prices: [
-          wd != null ? { price: wd, rawText: cells[d * 2] } : { price: null },
-          we != null ? { price: we, rawText: cells[d * 2 + 1] } : { price: null },
-        ],
-      })
+      const wdRaw = cells[d * 2]
+      const weRaw = cells[d * 2 + 1]
+      const wd = parsePrice(wdRaw)
+      const we = parsePrice(weRaw)
+      prices.push(
+        wd != null ? { price: wd, rawText: wdRaw } : { price: null },
+        we != null ? { price: we, rawText: weRaw } : { price: null },
+      )
     }
+    if (!prices.some((p) => p.price != null)) continue
+    const target = isTubing ? tubingByName : rentalByName
+    target.set(displayName, { name: displayName, prices })
   }
+
+  const rentalRows = [...rentalByName.values()]
+  const tubingRows = [...tubingByName.values()]
 
   return {
     rental: rentalRows.length
       ? {
           kind: 'rental',
           category: 'Прокат снаряжения',
-          columns: ['Будни', 'Выходные/праздники'],
+          columns,
+          columnGroups,
           rows: rentalRows,
           priority: 5,
         }
@@ -317,7 +371,8 @@ function parseRentalWeekdayMatrix(rows) {
       ? {
           kind: 'tubing',
           category: 'Тюбинг',
-          columns: ['Будни', 'Выходные/праздники'],
+          columns,
+          columnGroups,
           rows: tubingRows,
           priority: 7,
         }
@@ -774,12 +829,35 @@ function itemsFromIgoraGroups(groups) {
           })
           continue
         }
+        // Nested rental/tubing: duration bands above leaf day columns.
+        if ((kind === 'rental' || kind === 'tubing') && columnGroups?.length) {
+          let offset = 0
+          let band = ''
+          for (const cg of columnGroups) {
+            if (i >= offset && i < offset + cg.span) {
+              band = cg.label || ''
+              break
+            }
+            offset += cg.span
+          }
+          const day = /сб|вс|выходн|праздн/i.test(col) ? 'выходные/праздники' : 'будни'
+          items.push({
+            title: `${row.name} · ${band} · ${day} (${g.category})`,
+            price: cell.price,
+            unit: 'аренда',
+            note: cell.note,
+            rawText: cell.rawText,
+            priority,
+          })
+          continue
+        }
+        // Legacy rental shape: Будни | Выходные + duration on the row.
         if (
           (kind === 'rental' || kind === 'tubing') &&
           columns.length === 2 &&
           /будни/i.test(columns[0] || '')
         ) {
-          const day = /выходн/i.test(col) ? 'выходные/праздники' : 'будни'
+          const day = /выходн|сб|вс|праздн/i.test(col) ? 'выходные/праздники' : 'будни'
           items.push({
             title: `${row.name} · ${row.duration} · ${day} (${g.category})`,
             price: cell.price,
@@ -1153,10 +1231,17 @@ export function mergeIgoraPriceTables(primary, fallback) {
   }
 
   // Rental / tubing / ski-service after ski-pass + instructor (site FAQ order).
+  // Prefer nested duration×day headers (columnGroups) over legacy flat Будни/Выходные rows.
   for (const kind of /** @type {const} */ (['rental', 'rental_extra', 'tubing', 'service'])) {
     const fromP = (p.groups || []).filter((g) => igoraGroupKind(g.category) === kind)
     const fromF = (f.groups || []).filter((g) => igoraGroupKind(g.category) === kind)
-    if (fromP.length) groups.push(...fromP)
+    const nestedP = fromP.filter((g) => Array.isArray(g.columnGroups) && g.columnGroups.length)
+    const nestedF = fromF.filter((g) => Array.isArray(g.columnGroups) && g.columnGroups.length)
+    if (nestedP.length) groups.push(...nestedP)
+    else if (nestedF.length) {
+      groups.push(...nestedF)
+      filled.push(kind)
+    } else if (fromP.length) groups.push(...fromP)
     else if (fromF.length) {
       groups.push(...fromF)
       filled.push(kind)
