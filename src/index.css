@@ -336,6 +336,55 @@ main {
   margin-bottom: 0.45rem;
 }
 
+.news-page__filter {
+  margin: 0 0 1.25rem;
+}
+
+.news-page__filter-label {
+  margin: 0 0 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.news-page__filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.news-page__filter-tab {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--graphite);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 500;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.news-page__filter-tab:hover {
+  border-color: rgba(47, 90, 74, 0.35);
+  color: var(--pine);
+}
+
+.news-page__filter-tab.is-active {
+  border-color: var(--pine-mid);
+  background: rgba(47, 90, 74, 0.1);
+  color: var(--pine);
+}
+
+.news-page__filter-tab:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
 .explore__layout {
   display: grid;
   gap: 1.25rem;
@@ -1303,6 +1352,16 @@ main {
 
   .news-page__head {
     margin-bottom: 1.15rem;
+  }
+
+  .news-page__filter {
+    margin-bottom: 1rem;
+  }
+
+  .news-page__filter-tab {
+    min-height: 2.5rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.82rem;
   }
 
   .important__list,
