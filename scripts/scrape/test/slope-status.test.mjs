@@ -7,6 +7,7 @@ import {
   detectDropParkSlopeStatus,
   detectKrasnoeSlopeStatus,
   detectOkhtaSlopeStatus,
+  detectTuutariSlopeStatus,
   detectZoldolSlopeStatus,
 } from '../lib/slope-status.mjs'
 import { hoursSnapshot } from '../lib/parse.mjs'
@@ -29,11 +30,36 @@ describe('slope-status detectors', () => {
     )
   })
 
+  it('Okhta trails widget Открыто / «будут работать» → slopesOpen true over предпродажа', () => {
+    const trails = `<html><body>
+      <p class="service_widget_cost_caption">Горнолыжные трассы</p>
+      <div class="service_widget_status service_widget_status--open"><p>Открыто</p></div>
+      <p>Уважаемые гости С 28 ноября будут работать первый и второй склоны</p>
+      <p>Открыта предпродажа сезонных ски-пассов</p>
+    </body></html>`
+    const lenta =
+      '<html><body><p>подготовка к завтрашнему открытию второго горнолыжного склона. Ждем вас уже завтра на склоне</p><p>Открыли предпродажу</p></body></html>'
+    assert.equal(
+      detectOkhtaSlopeStatus({ trailsHtml: trails, lentaHtml: lenta }).slopesOpen,
+      true,
+    )
+  })
+
   it('Okhta day-closed / no open → slopesOpen false', () => {
     const trails = '<html><body><p>Открыта предпродажа сезонных ски-пассов</p></body></html>'
     assert.equal(
       detectOkhtaSlopeStatus({ trailsHtml: trails }, { dayClosed: true }).slopesOpen,
       false,
+    )
+  })
+
+  it('Tuutari ignores stale news-archive alpine phrases', () => {
+    const stale =
+      '<html><body><p>01.12.2025 Открытие сезона 03 декабря 2021 Для вас открыты детский-учебный и центральный склоны.</p></body></html>'
+    assert.equal(detectTuutariSlopeStatus([], stale).slopesOpen, false)
+    assert.equal(
+      detectTuutariSlopeStatus([{ id: 'tuutari-season-open' }], stale).slopesOpen,
+      true,
     )
   })
 

@@ -120,7 +120,14 @@ export function okhtaSeasonOpenMatch(text) {
     /будет\s+открыт\s+первый\s+склон/i.test(t) ||
     /открываем\s+(?:горнолыжный\s+)?склон/i.test(t) ||
     /стартует\s+сезон/i.test(t) ||
-    /сезон\s+20\d{2}\s*[–\-—]\s*20\d{2}\s+стартует/i.test(t)
+    /сезон\s+20\d{2}\s*[–\-—]\s*20\d{2}\s+стартует/i.test(t) ||
+    // Official trails service widget: «Горнолыжные трассы» + status «Открыто».
+    /горнолыжные\s+трассы\s+открыто/i.test(t) ||
+    // Guest notice / lenta: slopes already running or expanding (1→2).
+    /будут\s+работать\s+первый(?:\s+и\s+второй)?\s+склон/i.test(t) ||
+    /работа(?:ет|ют)\s+первый(?:\s+и\s+второй)?\s+склон/i.test(t) ||
+    /учебный\s+склон\s+уже\s+работает/i.test(t) ||
+    /открыти[юя]\s+(?:второго\s+)?(?:горнолыжного\s+)?склон/i.test(t)
   )
 }
 

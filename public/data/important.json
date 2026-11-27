@@ -76,13 +76,14 @@
     "publishedAt": "2026-11-13T09:00:31Z"
   },
   {
-    "id": "okhta-presale",
+    "id": "okhta-season-open",
     "resortId": "okhta-park",
-    "title": "Охта-Парк: предпродажа ски-пассов",
-    "body": "На сайте курорта открыта предпродажа сезонных ски-пассов.",
+    "title": "Охта-Парк: горнолыжный сезон открыт",
+    "body": "На официальных страницах курорта объявлено открытие склонов.",
     "severity": "info",
-    "updatedAt": "2026-11-27T02:01:53Z",
-    "sourceUrl": "https://winter.ohtapark.ru/"
+    "updatedAt": "2026-11-27T10:05:02Z",
+    "sourceUrl": "https://www.ohtapark.ru/lenta/",
+    "publishedAt": "2026-11-28T00:00:00Z"
   },
   {
     "id": "putilovo-off-season",
