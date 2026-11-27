@@ -6,13 +6,11 @@ import { ResortMap } from '../components/ResortMap'
 import { SkipassTables } from '../components/SkipassTables'
 import { WebcamSection } from '../components/WebcamPlayer'
 import {
-  formatImportantDate,
   formatUpdatedAt,
   hoursFor,
   hoursLeadText,
   localizePublicText,
   pricesFor,
-  publicImportantBody,
   publicPriceNote,
   resortAddressQuery,
   resortPhotoUrl,
@@ -28,12 +26,13 @@ const PRICE_PREVIEW = 8
 
 /**
  * Shared resort-detail section order:
- * header → [photo] → site → webcam → important → [hours → prices if active] →
+ * header → [photo] → site / news → webcam → [hours → prices if active] →
  * features → contacts → location → links
  * Hours / prices sections are omitted for дикие / неясные / закрытые (status !== active).
  * Photo: at most one licensed hero; omitted when no verified image of this place.
  * Address lives only under «Локация» (Yandex link); phone/email only under «Контакты».
  * Features (щётки, подушка…) are in-resort sections — never separate catalog entries.
+ * News live on /news?resort=<id> — no inline «Важное» block on detail pages.
  */
 export function ResortPage({ data }: { data: SiteData }) {
   const { id } = useParams()
@@ -65,7 +64,6 @@ export function ResortPage({ data }: { data: SiteData }) {
   const inactive = resort.status !== 'active'
   const hours = hoursFor(resort.id, data.hours)
   const prices = inactive ? undefined : pricesFor(resort.id, data.prices)
-  const important = data.important.filter((i) => i.resortId === resort.id)
   const hasCoords = resort.lat != null && resort.lon != null
   // Booking outbound link replaces the tariff table (no scraped prices).
   const bookingUrl = !inactive ? resort.booking_url || undefined : undefined
@@ -155,14 +153,20 @@ export function ResortPage({ data }: { data: SiteData }) {
         </figure>
       )}
 
-      {/* Top CTA: only the official site — hours / tariffs / cam live in their sections. */}
-      {resort.website && (
-        <div className="resort-detail__actions" role="group" aria-label="Сайт курорта">
+      {/* Top CTAs: official site + filtered news feed. Hours / tariffs / cam live below. */}
+      <div className="resort-detail__actions" role="group" aria-label="Ссылки курорта">
+        {resort.website ? (
           <ExternalLink className="btn btn--primary" href={resort.website}>
             Сайт курорта
           </ExternalLink>
-        </div>
-      )}
+        ) : null}
+        <Link
+          className={`btn ${resort.website ? 'btn--ghost' : 'btn--primary'}`}
+          to={`/news?resort=${encodeURIComponent(resort.id)}`}
+        >
+          Новости курорта
+        </Link>
+      </div>
 
       {webcamLink && (
         <WebcamSection
@@ -171,37 +175,6 @@ export function ResortPage({ data }: { data: SiteData }) {
           externalUrl={webcamLink}
           streams={webcamStreams}
         />
-      )}
-
-      {important.length > 0 && (
-        <section className="resort-detail__important" aria-labelledby="resort-important-title">
-          <h2 id="resort-important-title">Важное</h2>
-          <ul className="important__list important__list--detail">
-            {important.map((item) => {
-              const body = publicImportantBody(item.body)
-              return (
-              <li key={item.id} className="important__item">
-                {item.publishedAt ? (
-                  <div className="important__meta">
-                    <time dateTime={item.publishedAt}>{formatImportantDate(item.publishedAt)}</time>
-                  </div>
-                ) : null}
-                <h3>{item.title}</h3>
-                {body && (
-                  <p>
-                    <LinkedText text={body} />
-                  </p>
-                )}
-                {item.sourceUrl && (
-                  <ExternalLink href={item.sourceUrl}>
-                    {linkLabelForUrl(item.sourceUrl, 'Источник')}
-                  </ExternalLink>
-                )}
-              </li>
-              )
-            })}
-          </ul>
-        </section>
       )}
 
       <div className="detail-grid">

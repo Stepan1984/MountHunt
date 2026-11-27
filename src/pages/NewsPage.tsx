@@ -1,25 +1,31 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ImportantItemCard } from '../components/ImportantItemCard'
 import { allImportantNews } from '../lib/data'
 import type { SiteData } from '../types'
 
 const ALL_RESORTS = 'all'
+const RESORT_PARAM = 'resort'
 
 export function NewsPage({ data }: { data: SiteData }) {
+  const [searchParams, setSearchParams] = useSearchParams()
   const nameById = useMemo(() => new Map(data.resorts.map((r) => [r.id, r.name])), [data.resorts])
   const items = useMemo(() => allImportantNews(data.important), [data.important])
-  const [resortFilter, setResortFilter] = useState(ALL_RESORTS)
+
+  const resortParam = searchParams.get(RESORT_PARAM)
+  const resortFilter =
+    resortParam && nameById.has(resortParam) ? resortParam : ALL_RESORTS
 
   const resortOptions = useMemo(() => {
     const ids = new Set<string>()
     for (const item of items) {
       if (item.resortId) ids.add(item.resortId)
     }
+    if (resortFilter !== ALL_RESORTS) ids.add(resortFilter)
     return [...ids]
       .map((id) => ({ id, name: nameById.get(id) ?? id }))
       .sort((a, b) => a.name.localeCompare(b.name, 'ru'))
-  }, [items, nameById])
+  }, [items, nameById, resortFilter])
 
   const filtered =
     resortFilter === ALL_RESORTS
@@ -27,6 +33,14 @@ export function NewsPage({ data }: { data: SiteData }) {
       : items.filter((item) => item.resortId === resortFilter)
 
   const showFilter = resortOptions.length > 0
+
+  function selectResort(id: string) {
+    if (id === ALL_RESORTS) {
+      setSearchParams({}, { replace: true })
+      return
+    }
+    setSearchParams({ [RESORT_PARAM]: id }, { replace: true })
+  }
 
   return (
     <section className="section news-page" aria-labelledby="news-title">
@@ -54,7 +68,7 @@ export function NewsPage({ data }: { data: SiteData }) {
               role="radio"
               aria-checked={resortFilter === ALL_RESORTS}
               className={`news-page__filter-tab${resortFilter === ALL_RESORTS ? ' is-active' : ''}`}
-              onClick={() => setResortFilter(ALL_RESORTS)}
+              onClick={() => selectResort(ALL_RESORTS)}
             >
               Все
             </button>
@@ -65,7 +79,7 @@ export function NewsPage({ data }: { data: SiteData }) {
                 role="radio"
                 aria-checked={resortFilter === resort.id}
                 className={`news-page__filter-tab${resortFilter === resort.id ? ' is-active' : ''}`}
-                onClick={() => setResortFilter(resort.id)}
+                onClick={() => selectResort(resort.id)}
               >
                 {resort.name}
               </button>
