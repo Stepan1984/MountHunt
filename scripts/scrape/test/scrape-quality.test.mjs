@@ -615,8 +615,8 @@ describe('skipass groups', () => {
       </div>
     </div></body></html>`
     const groups = parseOkhtaDayTariffGroups(html)
-    assert.ok(groups.some((g) => /Ски-пасс \(подъёмники\)/i.test(g.category)))
-    const lift = groups.find((g) => /подъёмники/i.test(g.category))
+    assert.ok(groups.some((g) => g.category === 'Ски-пасс'))
+    const lift = groups.find((g) => g.category === 'Ски-пасс')
     assert.deepEqual(lift.columns, ['Пн–чт', 'Пт–вс и праздники'])
     assert.ok(lift.rows.some((r) => r.name === 'Взрослый' && r.duration === '2 часа' && r.prices[0]?.price === 800 && r.prices[1]?.price === 950))
     assert.ok(lift.rows.some((r) => r.name === 'Детский' && r.duration === '2 часа' && r.prices[0]?.price === 700))
