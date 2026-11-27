@@ -36,7 +36,9 @@
       "https://t.me/OhtaPark",
       "https://vk.com/ohtapark",
       "https://www.instagram.com/ohtapark/"
-    ]
+    ],
+    "phone": "8 (800) 500-53-33",
+    "email": "info@ohtapark.ru"
   },
   {
     "id": "igora",
@@ -64,7 +66,9 @@
     "community_links": [
       "https://vk.com/igora_kurort",
       "https://t.me/igora_kurort"
-    ]
+    ],
+    "phone": "8 (800) 300-99-99",
+    "email": "sales@igora.ru"
   },
   {
     "id": "tuutari-park",
@@ -92,7 +96,9 @@
     ],
     "community_links": [
       "https://vk.com/tyytari_activity"
-    ]
+    ],
+    "phone": "+7 (960) 269-06-66",
+    "email": "info@2-park.ru"
   },
   {
     "id": "krasnoe-ozero",
@@ -171,7 +177,9 @@
     "community_links": [
       "https://vk.com/redlakeclub",
       "https://t.me/redlakeclub"
-    ]
+    ],
+    "phone": "+7 (812) 441-29-42",
+    "email": "admin@krasnoeozero.ru"
   },
   {
     "id": "zolotaya-dolina",
@@ -197,7 +205,9 @@
       "https://vk.com/zoldol_official",
       "https://t.me/zoldoll",
       "https://www.instagram.com/zoldol_official/"
-    ]
+    ],
+    "phone": "+7 (901) 372-23-93",
+    "email": "ski@zoldol.ru"
   },
   {
     "id": "snezhny",
@@ -223,7 +233,9 @@
     "community_links": [
       "https://vk.com/kurort_snegny",
       "https://t.me/kurort_snegny"
-    ]
+    ],
+    "phone": "+7 (812) 320-70-73",
+    "email": "kurort55@mail.ru"
   },
   {
     "id": "severny-sklon",
@@ -272,7 +284,9 @@
     "webcam_embeds": [],
     "community_links": [
       "https://vk.com/club313388"
-    ]
+    ],
+    "phone": "+7 (812) 715-06-00",
+    "email": "info@puhgora.ru"
   },
   {
     "id": "yukki",
@@ -293,7 +307,9 @@
     "sources": [
       "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/",
       "https://stc.lenobl.ru/ru/news/news/"
-    ]
+    ],
+    "phone": "+7 (931) 990-49-79",
+    "email": "skyukki@yandex.ru"
   },
   {
     "id": "lazurnye-ozera",
@@ -318,7 +334,8 @@
     "community_links": [
       "https://vk.com/lazurnyi_spb",
       "https://t.me/lazoorsnow"
-    ]
+    ],
+    "phone": "+7 (921) 963-03-48"
   },
   {
     "id": "drop-park",
@@ -383,7 +400,9 @@
     ],
     "community_links": [
       "https://t.me/dropsnowpark"
-    ]
+    ],
+    "phone": "+7 (981) 787-88-65",
+    "email": "hello@mykorbi.ru"
   },
   {
     "id": "putilovo-park",
