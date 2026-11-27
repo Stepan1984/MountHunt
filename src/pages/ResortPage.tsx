@@ -172,6 +172,9 @@ export function ResortPage({ data }: { data: SiteData }) {
                 <LinkedText text={hoursSummary} />
               </p>
             )}
+            {!inactive && hours?.hoursNote ? (
+              <p className="detail-hours-note">{hours.hoursNote}</p>
+            ) : null}
             {hours?.periods && hours.periods.length > 0 && (
               <DataTable aria-label="Часы работы">
                 <thead>

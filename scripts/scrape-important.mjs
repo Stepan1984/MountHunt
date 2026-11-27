@@ -30,6 +30,7 @@ import {
   importantItem,
   mergeImportantFailSoft,
 } from './scrape/lib/important.mjs'
+import { enrichHoursFromImportant } from './scrape/lib/news-hours.mjs'
 import { nowIso } from './scrape/lib/parse.mjs'
 import {
   KRASNOE_HOURS_CSV_URL,
@@ -77,6 +78,7 @@ async function withChannelNews(resortId, siteItems, siteNewsTexts = []) {
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const outDir = join(root, 'public', 'data')
 const importantPath = join(outDir, 'important.json')
+const hoursPath = join(outDir, 'hours.json')
 const metaPath = join(outDir, 'meta.json')
 
 function parseArgs(argv) {
@@ -357,6 +359,8 @@ async function main() {
   })
 
   const important = mergeImportantFailSoft(prevImportant, results, { chromeNote })
+  const prevHours = readJson(hoursPath, [])
+  const hours = enrichHoursFromImportant(prevHours, important)
   const okCount = results.filter((r) => r.ok).length
   const failCount = results.length - okCount
   const scrapedAt = nowIso()
@@ -380,14 +384,27 @@ async function main() {
 
   if (args.dryRun) {
     console.log('\n[dry-run] файлы не записаны')
-    console.log(JSON.stringify({ results, important, meta }, null, 2))
+    console.log(
+      JSON.stringify(
+        {
+          results,
+          important,
+          hoursNewsSynced: hours.filter((h) => h.hoursNote).map((h) => h.resortId),
+          meta,
+        },
+        null,
+        2,
+      ),
+    )
     return
   }
 
   writeJson(importantPath, important)
+  writeJson(hoursPath, hours)
   writeJson(metaPath, meta)
 
   console.log(`\nЗаписано ${importantPath} · ${important.length} пунктов · ${scrapedAt}`)
+  console.log(`Часы из новостей: обновлено курортов ${hours.filter((h) => h.hoursNote).length}`)
   console.log(
     `Успешно: ${results.filter((r) => r.ok).map((r) => r.resortId).join(', ') || '—'}`,
   )

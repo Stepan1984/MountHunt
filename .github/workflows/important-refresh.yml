@@ -36,14 +36,15 @@ jobs:
         # Fail-soft at script level; still fail the step on orchestration/I/O errors.
         continue-on-error: false
 
-      - name: Commit important.json if changed
+      - name: Commit important + hours if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/data/important.json public/data/meta.json
+          # Hours may update when news carries operating clocks (news→hours sync).
+          git add public/data/important.json public/data/hours.json public/data/meta.json
           if git diff --staged --quiet; then
-            echo "Нет изменений «Важного»"
+            echo "Нет изменений «Важного» / часов из новостей"
           else
-            git commit -m "chore(data): обновление блока Важное (hourly)"
+            git commit -m "chore(data): обновление Важного и часов из новостей (hourly)"
             git push
           fi
