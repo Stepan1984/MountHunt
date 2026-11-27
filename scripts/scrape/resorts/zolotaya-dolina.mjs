@@ -1,6 +1,9 @@
 import { fetchUrl, sleep } from '../lib/http.mjs'
 import { detectZoldolImportant } from '../lib/important.mjs'
-import { formatCardHoursFromPeriods } from '../lib/card-hours-format.mjs'
+import {
+  formatCardHoursFromPeriods,
+  groupHoursPeriods,
+} from '../lib/card-hours-format.mjs'
 import {
   cleanText,
   extractIframeSrcs,
@@ -83,7 +86,8 @@ export async function scrapeZolotayaDolina() {
     const slopeStatus = detectZoldolSlopeStatus(hoursHtml)
     // Slope closed status → slopesOpen / badge; hours.summary stays schedule-only.
     let summary = 'См. график на сайте'
-    const periods = []
+    /** @type {{ days: string, open: string, close: string }[]} */
+    let periods = []
 
     const dayLines = [...text.matchAll(
       /(Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье)\s*;\s*[\d.]+\s*;\s*([^;]+?)(?=(?:Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье)|Бургерная|Велопарк|$)/gi,
@@ -91,6 +95,8 @@ export async function scrapeZolotayaDolina() {
     const firstWeek = dayLines.slice(0, 7)
     if (firstWeek.length) {
       const seenDays = new Set()
+      /** @type {{ days: string, open: string, close: string }[]} */
+      const rawPeriods = []
       for (const m of firstWeek) {
         const days = m[1]
         const dayKey = days.toLowerCase()
@@ -99,13 +105,15 @@ export async function scrapeZolotayaDolina() {
         const val = cleanText(m[2])
         const openClose = val.match(/(\d{1,2}:\d{2})\s*[-–—]\s*(\d{1,2}:\d{2})/)
         if (openClose) {
-          periods.push({ days, open: openClose[1], close: openClose[2] })
+          rawPeriods.push({ days, open: openClose[1], close: openClose[2] })
         } else if (/закрыт/i.test(val)) {
-          periods.push({ days, open: '', close: '' })
+          rawPeriods.push({ days, open: '', close: '' })
         }
       }
-      const formatted = formatCardHoursFromPeriods(periods)
+      const formatted = formatCardHoursFromPeriods(rawPeriods)
       if (formatted) summary = formatted
+      // Persist abbr + merged day rows (same shape as the detail table).
+      periods = groupHoursPeriods(rawPeriods) || rawPeriods
     }
 
     const embeds = extractIframeSrcs(loadHtml(camHtml), WEBCAM_URL).filter((u) =>
