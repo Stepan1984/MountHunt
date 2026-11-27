@@ -101,7 +101,7 @@ export async function scrapeLazurnyeOzera() {
       periods.push({ days: 'сб–вс', open: openWe, close: closeWe })
       summary =
         formatCardHoursFromPeriods(periods) ||
-        `пн: выходной;\nвт–пт: ${openWd}–${closeWd};\nсб–вс: ${openWe}–${closeWe}`
+        `пн: выходной\nвт–пт: ${openWd}–${closeWd}\nсб–вс: ${openWe}–${closeWe}`
     } else if (hoursMatch) {
       periods.push({ days: 'пн', open: '', close: '' })
       periods.push({
@@ -116,7 +116,7 @@ export async function scrapeLazurnyeOzera() {
       })
       summary =
         formatCardHoursFromPeriods(periods) ||
-        `пн: выходной;\nвт–пт: ${norm(hoursMatch[1])}–${norm(hoursMatch[2])};\nсб–вс: ${norm(hoursMatch[3])}–${norm(hoursMatch[4])}`
+        `пн: выходной\nвт–пт: ${norm(hoursMatch[1])}–${norm(hoursMatch[2])}\nсб–вс: ${norm(hoursMatch[3])}–${norm(hoursMatch[4])}`
     }
     const slopeStatus = detectLazurnyeSlopeStatus(homeHtml, important)
 
