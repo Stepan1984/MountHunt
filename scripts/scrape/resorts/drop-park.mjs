@@ -351,11 +351,11 @@ export function parseDropParkPriceList(html) {
   const periods = []
   if (wdFull()) {
     const p = wdFull()
-    periods.push({ days: 'будни (полный по прайсу)', open: p.open, close: p.close })
+    periods.push({ days: 'будни', open: p.open, close: p.close })
   }
   if (weFull()) {
     const p = weFull()
-    periods.push({ days: 'выходные и праздники (полный по прайсу)', open: p.open, close: p.close })
+    periods.push({ days: 'выходные и праздники', open: p.open, close: p.close })
   }
 
   function wdFull() {

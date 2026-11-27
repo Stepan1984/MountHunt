@@ -184,7 +184,7 @@ export function detectDropParkBrushExtras(pageHtml, tgHtml) {
   if (!brushesOpen) return { brushesOpen: false, note: null }
   return {
     brushesOpen: true,
-    note: 'Щётки (Джиб Палас) работают — это не горнолыжные склоны',
+    note: 'Щётки (Джиб Палас) работают',
   }
 }
 
