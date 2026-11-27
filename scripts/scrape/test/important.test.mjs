@@ -312,7 +312,7 @@ describe('catalog source detectors', () => {
     assert.equal(detectPuhtolovaImportant(html, 'https://puhgora.ru/o-kurorte/novosti-i-akcii').length, 0)
   })
 
-  it('detects Drop Park off-season from TG about', () => {
+  it('authored Drop Park open wins over prior-season TG about', () => {
     const tg =
       '<html><body><div class="tgme_page_description">Сезон 2025/26 закончен, всех благодарим</div></body></html>'
     const { items, ok } = detectDropParkImportant(
@@ -322,29 +322,46 @@ describe('catalog source detectors', () => {
     )
     assert.equal(ok, true)
     assert.equal(items.length, 1)
-    assert.equal(items[0].id, 'drop-off-season')
+    assert.equal(items[0].id, 'drop-season-open')
+    assert.match(items[0].body, /27\.11\.2026\s+стартует/)
   })
 
-  it('clears Drop Park off-season when opening announced', () => {
+  it('emits Drop Park season-open when opening announced', () => {
     const page = '<html><body><p>Горнолыжный сезон открыт на сноупарке</p></body></html>'
     const tg = '<html><body><p>Сезон 2025/26 закончен</p></body></html>'
     const { items, ok } = detectDropParkImportant(
       { pageHtml: page, tgHtml: tg },
       'https://drop-park.ru/snow-park',
-      { pageFetched: true, tgFetched: true },
+      { pageUrl: 'https://drop-park.ru/snow-park', pageFetched: true, tgFetched: true },
     )
     assert.equal(ok, true)
-    assert.equal(items.length, 0)
+    assert.equal(items.length, 1)
+    assert.equal(items[0].id, 'drop-season-open')
+    assert.equal(items[0].sourceUrl, 'https://drop-park.ru/snow-park')
   })
 
-  it('does not clear Drop Park off-season when page+TG empty (non-authoritative)', () => {
+  it('returns Drop Park off-season when 2026/27 season finished', () => {
+    const tg =
+      '<html><body><div class="tgme_page_description">Сезон 2026/27 закончен, всех благодарим</div></body></html>'
+    const { items, ok } = detectDropParkImportant(
+      { pageHtml: '<html><body><p>Сезонный абонемент</p></body></html>', tgHtml: tg },
+      'https://t.me/s/dropsnowpark',
+      { tgUrl: 'https://t.me/s/dropsnowpark', pageFetched: true, tgFetched: true },
+    )
+    assert.equal(ok, true)
+    assert.equal(items.length, 1)
+    assert.equal(items[0].id, 'drop-off-season')
+  })
+
+  it('authored Drop Park open persists without page/TG fetch', () => {
     const { items, ok } = detectDropParkImportant(
       { pageHtml: '', tgHtml: '' },
       'https://t.me/s/dropsnowpark',
       { pageFetched: false, tgFetched: false },
     )
-    assert.equal(ok, false)
-    assert.equal(items.length, 0)
+    assert.equal(ok, true)
+    assert.equal(items.length, 1)
+    assert.equal(items[0].id, 'drop-season-open')
     const prev = [
       {
         id: 'drop-off-season',
@@ -354,18 +371,22 @@ describe('catalog source detectors', () => {
         updatedAt: '2026-01-01T00:00:00Z',
       },
     ]
-    const next = mergeImportantFailSoft(prev, [{ resortId: 'drop-park', ok: false, items: [] }])
-    assert.ok(next.find((i) => i.id === 'drop-off-season'))
+    const next = mergeImportantFailSoft(prev, [
+      { resortId: 'drop-park', ok: true, items },
+    ])
+    assert.ok(next.find((i) => i.id === 'drop-season-open'))
+    assert.equal(next.find((i) => i.id === 'drop-off-season'), undefined)
   })
 
-  it('does not clear Drop Park when TG down and page has no season signal', () => {
+  it('authored Drop Park open persists when TG down', () => {
     const { items, ok } = detectDropParkImportant(
       { pageHtml: '<html><body><p>Сезонный абонемент 2026/27</p></body></html>', tgHtml: '' },
       'https://drop-park.ru/snow-park',
-      { pageFetched: true, tgFetched: false },
+      { pageUrl: 'https://drop-park.ru/snow-park', pageFetched: true, tgFetched: false },
     )
-    assert.equal(ok, false)
-    assert.equal(items.length, 0)
+    assert.equal(ok, true)
+    assert.equal(items.length, 1)
+    assert.equal(items[0].id, 'drop-season-open')
     const prev = [
       {
         id: 'drop-off-season',
@@ -375,10 +396,11 @@ describe('catalog source detectors', () => {
         updatedAt: '2026-01-01T00:00:00Z',
       },
     ]
-    const next = mergeImportantFromDailyScrape(prev, [], [
-      { id: 'drop-park', error: null, prices: 'ok', hours: 'partial', importantInconclusive: true },
+    const next = mergeImportantFromDailyScrape(prev, items, [
+      { id: 'drop-park', error: null, prices: 'ok', hours: 'partial' },
     ])
-    assert.ok(next.find((i) => i.id === 'drop-off-season'))
+    assert.ok(next.find((i) => i.id === 'drop-season-open'))
+    assert.equal(next.find((i) => i.id === 'drop-off-season'), undefined)
   })
 
   it('detects Lazurnye open from fresh news over home closed banner', () => {

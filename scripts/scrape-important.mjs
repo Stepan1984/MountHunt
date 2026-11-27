@@ -240,7 +240,7 @@ const CHECKERS = [
           tgFetched,
         },
       )
-      // Fail-soft: empty match without TG must not clear drop-off-season.
+      // Fail-soft only when detector has no authored/live open signal.
       if (!ok) {
         throw new Error(
           !pageFetched && !tgFetched
