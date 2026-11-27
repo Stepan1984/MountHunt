@@ -13,6 +13,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import {
+  detectChannelNewsFromTelegram,
+  fetchResortChannelNews,
+  RESORT_CHANNEL_SOURCES,
+} from './scrape/lib/channel-news.mjs'
 import { DELAY_MS, fetchUrlResult, sleep } from './scrape/lib/http.mjs'
 import {
   detectDropParkImportant,
@@ -47,6 +52,28 @@ import { SNEZHNY_NEWS_URL } from './scrape/resorts/snezhny.mjs'
 import { TUUTARI_NEWS_URL } from './scrape/resorts/tuutari-park.mjs'
 import { ZOLDOL_HOURS_URL } from './scrape/resorts/zolotaya-dolina.mjs'
 
+/** @param {string} resortId */
+function channelSource(resortId) {
+  return RESORT_CHANNEL_SOURCES.find((s) => s.resortId === resortId) || null
+}
+
+/**
+ * Append TG/VK channel cards; fail-soft. Site texts help dedupe against lenta/news.
+ * @param {string} resortId
+ * @param {object[]} siteItems
+ * @param {string[]} [siteNewsTexts]
+ */
+async function withChannelNews(resortId, siteItems, siteNewsTexts = []) {
+  const src = channelSource(resortId)
+  if (!src) return { items: siteItems, clearPrefixes: true }
+  await sleep()
+  const ch = await fetchResortChannelNews(src, { siteNewsTexts })
+  return {
+    items: [...siteItems, ...ch.items],
+    clearPrefixes: ch.clearPrefixes,
+  }
+}
+
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const outDir = join(root, 'public', 'data')
 const importantPath = join(outDir, 'important.json')
@@ -69,13 +96,14 @@ function writeJson(path, data) {
   writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`)
 }
 
-/** @type {{ id: string, run: () => Promise<object[]> }[]} */
+/** @type {{ id: string, run: () => Promise<object[] | { items: object[], clearPrefixes?: boolean }> }[]} */
 const CHECKERS = [
   {
     id: 'zolotaya-dolina',
     async run() {
       const { body, lastModified } = await fetchUrlResult(ZOLDOL_HOURS_URL)
-      return detectZoldolImportant(body, ZOLDOL_HOURS_URL, { lastModified })
+      const site = detectZoldolImportant(body, ZOLDOL_HOURS_URL, { lastModified })
+      return withChannelNews('zolotaya-dolina', site)
     },
   },
   {
@@ -89,7 +117,7 @@ const CHECKERS = [
       } catch {
         newsBody = ''
       }
-      return detectLazurnyeImportantFromPages(
+      const site = detectLazurnyeImportantFromPages(
         { homeHtml: home.body, newsHtml: newsBody },
         LAZURNYE_HOME_URL,
         {
@@ -98,6 +126,8 @@ const CHECKERS = [
           newsUrl: LAZURNYE_NEWS_URL,
         },
       )
+      const siteTexts = site.map((i) => `${i.title || ''} ${i.body || ''}`)
+      return withChannelNews('lazurnye-ozera', site, siteTexts)
     },
   },
   {
@@ -117,7 +147,17 @@ const CHECKERS = [
         tgItems = []
         tgFetched = false
       }
-      return { items: [...csvItems, ...tgItems], clearPrefixes: tgFetched }
+      const siteTexts = [...csvItems, ...tgItems].map((i) => `${i.title || ''} ${i.body || ''}`)
+      // Specialized TG already ran; channel helper adds VK only (skipTelegram).
+      const packed = await withChannelNews(
+        'krasnoe-ozero',
+        [...csvItems, ...tgItems],
+        siteTexts,
+      )
+      return {
+        items: packed.items,
+        clearPrefixes: tgFetched && packed.clearPrefixes,
+      }
     },
   },
   {
@@ -134,7 +174,7 @@ const CHECKERS = [
       } catch {
         // Fail-soft: trails page alone still carries opening banners.
       }
-      return detectOkhtaImportant(
+      const site = detectOkhtaImportant(
         { trailsHtml: trails.body, lentaHtml: lentaBody },
         OKHTA_TRAILS_URL,
         {
@@ -144,20 +184,26 @@ const CHECKERS = [
           winterUrl: OKHTA_WINTER_URL,
         },
       )
+      const siteTexts = site.map((i) => `${i.title || ''} ${i.body || ''}`)
+      return withChannelNews('okhta-park', site, siteTexts)
     },
   },
   {
     id: 'tuutari-park',
     async run() {
       const { body, lastModified } = await fetchUrlResult(TUUTARI_NEWS_URL)
-      return detectTuutariImportant(body, TUUTARI_NEWS_URL, { lastModified })
+      const site = detectTuutariImportant(body, TUUTARI_NEWS_URL, { lastModified })
+      const siteTexts = site.map((i) => `${i.title || ''} ${i.body || ''}`)
+      return withChannelNews('tuutari-park', site, siteTexts)
     },
   },
   {
     id: 'snezhny',
     async run() {
       const { body, lastModified } = await fetchUrlResult(SNEZHNY_NEWS_URL)
-      return detectSnezhnyImportant(body, SNEZHNY_NEWS_URL, { lastModified })
+      const site = detectSnezhnyImportant(body, SNEZHNY_NEWS_URL, { lastModified })
+      const siteTexts = site.map((i) => `${i.title || ''} ${i.body || ''}`)
+      return withChannelNews('snezhny', site, siteTexts)
     },
   },
   {
@@ -202,14 +248,29 @@ const CHECKERS = [
             : 'Drop Park: TG unavailable; keeping previous Important',
         )
       }
-      return items
+      const dropSrc = channelSource('drop-park')
+      const channelItems =
+        tgFetched && dropSrc
+          ? detectChannelNewsFromTelegram(tgBody, {
+              resortId: dropSrc.resortId,
+              resortName: dropSrc.name,
+              idPrefix: dropSrc.idPrefix,
+              siteNewsTexts: items.map((i) => `${i.title || ''} ${i.body || ''}`),
+            })
+          : []
+      return {
+        items: [...items, ...channelItems],
+        clearPrefixes: tgFetched,
+      }
     },
   },
   {
     id: 'puhtolova-gora',
     async run() {
       const { body, lastModified } = await fetchUrlResult(PUHT_NEWS_URL)
-      return detectPuhtolovaImportant(body, PUHT_NEWS_URL, { lastModified })
+      const site = detectPuhtolovaImportant(body, PUHT_NEWS_URL, { lastModified })
+      const siteTexts = site.map((i) => `${i.title || ''} ${i.body || ''}`)
+      return withChannelNews('puhtolova-gora', site, siteTexts)
     },
   },
   {
@@ -220,6 +281,33 @@ const CHECKERS = [
         throw new Error(`Putilovo: TG preview unavailable (${PUTILOVO_TG_URL})`)
       }
       return { items: tg.items, clearPrefixes: true }
+    },
+  },
+  {
+    id: 'igora',
+    async run() {
+      const src = channelSource('igora')
+      if (!src) return []
+      const ch = await fetchResortChannelNews(src)
+      return { items: ch.items, clearPrefixes: ch.clearPrefixes }
+    },
+  },
+  {
+    id: 'severny-sklon',
+    async run() {
+      const src = channelSource('severny-sklon')
+      if (!src) return []
+      const ch = await fetchResortChannelNews(src)
+      return { items: ch.items, clearPrefixes: ch.clearPrefixes }
+    },
+  },
+  {
+    id: 'yukki',
+    async run() {
+      const src = channelSource('yukki')
+      if (!src) return []
+      const ch = await fetchResortChannelNews(src)
+      return { items: ch.items, clearPrefixes: ch.clearPrefixes }
     },
   },
 ]
