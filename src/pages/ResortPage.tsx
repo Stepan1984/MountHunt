@@ -139,7 +139,7 @@ export function ResortPage({ data }: { data: SiteData }) {
           </ExternalLink>
         ) : null}
         <Link
-          className={`btn ${resort.website ? 'btn--ghost' : 'btn--primary'}`}
+          className="btn btn--primary"
           to={`/news?resort=${encodeURIComponent(resort.id)}`}
         >
           Новости курорта
