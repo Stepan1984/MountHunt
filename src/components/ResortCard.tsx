@@ -25,8 +25,8 @@ export function ResortCard({
 
   // Active only: unified schedule line (no slope status prose — badges cover that).
   // Дикие / неясные / закрытые — omit facts entirely.
+  // News-sourced caption («из новости») is detail-page only — not on home cards.
   const hoursText = !inactive ? cardHoursText(h) : null
-  const hoursNote = !inactive ? (h?.hoursNote || '').trim() || null : null
 
   return (
     <article className={`resort-card resort-card--${resort.status}${closed ? ' resort-card--slopes-closed' : ''}`}>
@@ -58,7 +58,6 @@ export function ResortCard({
           <div>
             <dt>Часы</dt>
             <dd className="resort-card__hours">{hoursText}</dd>
-            {hoursNote ? <dd className="resort-card__hours-note">{hoursNote}</dd> : null}
           </div>
         </dl>
       ) : null}

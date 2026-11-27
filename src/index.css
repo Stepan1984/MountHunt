@@ -669,7 +669,7 @@ main {
   white-space: pre-line;
 }
 
-/* Short caption under card hours (e.g. «из новости»). */
+/* Legacy unused: «из новости» is detail-only (see .detail-hours-note). */
 .resort-card__hours-note {
   margin: 0.15rem 0 0;
   font-size: 0.78rem;

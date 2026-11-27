@@ -2,13 +2,13 @@
  * Sync operating hours from resort news («Важное» / TG / VK) into hours.json.
  *
  * Prefer labeled slope/resort clocks; skip vacancies, elections, café-only ranges.
- * Card caption: short `hoursNote` («из новости»).
+ * Detail-page caption: short `hoursNote` («из новости»); not shown on home cards.
  */
 import { isFreshPublishedAt } from './important.mjs'
 import { normalizeCardTime } from './card-hours-format.mjs'
 import { cleanText, hoursSnapshot, nowIso } from './parse.mjs'
 
-/** Short muted line under card «Часы». */
+/** Short muted line under detail «Часы работы» (home cards omit this). */
 export const NEWS_HOURS_CARD_NOTE = 'из новости'
 
 /** Do not apply week-old schedule posts to live hours. */

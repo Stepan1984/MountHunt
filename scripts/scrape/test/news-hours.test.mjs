@@ -172,7 +172,11 @@ describe('news-hours wiring', () => {
     assert.match(wf, /hours\.json/)
 
     const cardSrc = readFileSync(join(root, 'src/components/ResortCard.tsx'), 'utf8')
-    assert.match(cardSrc, /hoursNote/)
-    assert.match(cardSrc, /resort-card__hours-note/)
+    // Home cards hide «из новости»; detail page still shows the note.
+    assert.doesNotMatch(cardSrc, /resort-card__hours-note/)
+    assert.doesNotMatch(cardSrc, /h\?\.hoursNote|hours\.hoursNote/)
+    const pageSrc = readFileSync(join(root, 'src/pages/ResortPage.tsx'), 'utf8')
+    assert.match(pageSrc, /hours\?\.hoursNote/)
+    assert.match(pageSrc, /detail-hours-note/)
   })
 })
