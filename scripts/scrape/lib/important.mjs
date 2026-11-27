@@ -21,7 +21,7 @@ export const MANAGED_IMPORTANT_IDS = Object.freeze({
   'okhta-park': Object.freeze(['okhta-season-open', 'okhta-presale']),
   'tuutari-park': Object.freeze(['tuutari-season-prep', 'tuutari-season-open']),
   snezhny: Object.freeze(['snezhny-hours-notice']),
-  'drop-park': Object.freeze(['drop-off-season']),
+  'drop-park': Object.freeze(['drop-off-season', 'drop-season-open']),
   'puhtolova-gora': Object.freeze(['puhtolova-season-open']),
   'putilovo-park': Object.freeze(['putilovo-off-season']),
 })
@@ -791,6 +791,23 @@ export function detectSnezhnyImportant(html, sourceUrl, opts = {}) {
 }
 
 /**
+ * MountHunt-authored Drop Park open day (YYYY-MM-DD, Europe/Moscow calendar).
+ * Wins over stale prior-season «закончен» in TG about until 2026/27 is finished.
+ * Body date must stay parseable by season-open-badge («Начало сезона DD.MM.YYYY»).
+ */
+export const DROP_PARK_SEASON_OPEN_YMD = '2026-11-27'
+
+/**
+ * @param {string} ymd YYYY-MM-DD
+ * @returns {string} DD.MM.YYYY
+ */
+function formatRuDayMonthYear(ymd) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd)
+  if (!m) return ymd
+  return `${m[3]}.${m[2]}.${m[1]}`
+}
+
+/**
  * @param {string} text
  */
 function dropParkSeasonOpenMatch(text) {
@@ -815,10 +832,41 @@ function dropParkOffSeasonMatch(text) {
 }
 
 /**
- * Drop Park: official TG channel about / page — off-season until opening copy appears.
+ * True when copy ends the *current* (2026/27) Drop Park season — not prior 2025/26.
+ * @param {string} text
+ */
+function dropParkCurrentSeasonFinished(text) {
+  const t = cleanText(text)
+  if (!t) return false
+  return (
+    /сезон\s+2026\s*\/\s*0?27\s+закончен/i.test(t) ||
+    /сезон\s+2026\s*\/\s*2027\s+закончен/i.test(t) ||
+    /снежн(?:ый|ого)?\s+сезон\s+2026.{0,12}закончен/i.test(t)
+  )
+}
+
+/**
+ * @param {string} sourceUrl
+ * @param {{ pageUrl?: string, tgUrl?: string }} [opts]
+ */
+function dropParkSeasonOpenItem(sourceUrl, opts = {}) {
+  const label = formatRuDayMonthYear(DROP_PARK_SEASON_OPEN_YMD)
+  return importantItem({
+    id: 'drop-season-open',
+    resortId: 'drop-park',
+    title: 'Drop Park: открытие сезона',
+    body: `${label} стартует зимний сезон на сноупарке Drop Park.`,
+    severity: 'info',
+    sourceUrl: opts.pageUrl || opts.tgUrl || sourceUrl,
+    publishedAt: `${DROP_PARK_SEASON_OPEN_YMD}T00:00:00Z`,
+  })
+}
+
+/**
+ * Drop Park: authored / live open wins; else off-season from TG about / page.
  *
  * Fail-soft: without a successful TG fetch, do not treat an empty match as
- * authoritative clear of `drop-off-season` (signal lives in TG about). Page-only
+ * authoritative clear of managed Drop Park ids (signal lives in TG about). Page-only
  * open/off-season text may still clear/upsert.
  *
  * @param {string | { pageHtml?: string, tgHtml?: string }} htmlOrPages
@@ -837,8 +885,32 @@ export function detectDropParkImportant(htmlOrPages, sourceUrl, opts = {}) {
   const tgText = cleanText(loadHtml(pages.tgHtml || '<body></body>')('body').text())
   const combined = [pageText, tgText].filter(Boolean).join('\n')
 
-  if (dropParkSeasonOpenMatch(combined)) {
-    return { ok: true, items: [] }
+  // End of 2026/27 season → off-season (overrides authored open).
+  if (dropParkCurrentSeasonFinished(combined)) {
+    const publishedAt =
+      extractPublishedAtFromHtml(pages.tgHtml) ||
+      extractPublishedAtFromHtml(pages.pageHtml) ||
+      httpDateToIso(opts.lastModified) ||
+      null
+    return {
+      ok: true,
+      items: [
+        importantItem({
+          id: 'drop-off-season',
+          resortId: 'drop-park',
+          title: 'Drop Park: межсезонье',
+          body: 'В официальном канале парка указано, что прошлый снежный сезон закончен.',
+          severity: 'info',
+          sourceUrl: opts.tgUrl || sourceUrl,
+          ...(publishedAt ? { publishedAt } : {}),
+        }),
+      ],
+    }
+  }
+
+  // Live open copy or MountHunt-authored 27.11.2026 open — keep news + season badge.
+  if (dropParkSeasonOpenMatch(combined) || DROP_PARK_SEASON_OPEN_YMD) {
+    return { ok: true, items: [dropParkSeasonOpenItem(sourceUrl, opts)] }
   }
 
   if (dropParkOffSeasonMatch(tgText) || dropParkOffSeasonMatch(pageText)) {

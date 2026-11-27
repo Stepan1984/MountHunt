@@ -66,14 +66,14 @@
     "publishedAt": "2026-11-16T10:10:37Z"
   },
   {
-    "id": "drop-off-season",
+    "id": "drop-season-open",
     "resortId": "drop-park",
-    "title": "Drop Park: межсезонье",
-    "body": "В официальном канале парка указано, что прошлый снежный сезон закончен.",
+    "title": "Drop Park: открытие сезона",
+    "body": "27.11.2026 стартует зимний сезон на сноупарке Drop Park.",
     "severity": "info",
-    "updatedAt": "2026-11-27T02:01:42Z",
-    "sourceUrl": "https://t.me/s/dropsnowpark",
-    "publishedAt": "2026-11-13T09:00:31Z"
+    "updatedAt": "2026-11-27T10:15:00Z",
+    "sourceUrl": "https://drop-park.ru/snow-park",
+    "publishedAt": "2026-11-27T00:00:00Z"
   },
   {
     "id": "okhta-season-open",

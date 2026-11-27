@@ -90,4 +90,26 @@ describe('season-open-badge', () => {
       null,
     )
   })
+
+  it('shows Drop Park «Начало сезона 27.11.2026» on open day (MSK)', () => {
+    const items = [
+      {
+        id: 'drop-season-open',
+        resortId: 'drop-park',
+        title: 'Drop Park: открытие сезона',
+        body: '27.11.2026 стартует зимний сезон на сноупарке Drop Park.',
+        publishedAt: '2026-11-27T00:00:00Z',
+        updatedAt: '2026-11-27T10:15:00Z',
+        severity: 'info',
+      },
+    ]
+    assert.equal(
+      seasonOpenBadgeLabel('drop-park', items, new Date('2026-11-27T12:00:00+03:00')),
+      'Начало сезона 27.11.2026',
+    )
+    assert.equal(
+      seasonOpenBadgeLabel('drop-park', items, new Date('2026-11-28T00:30:00+03:00')),
+      null,
+    )
+  })
 })
