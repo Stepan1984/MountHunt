@@ -249,7 +249,7 @@ describe('slope-status detectors', () => {
   })
 
   it('appendHoursExtraNote dedupes', () => {
-    const note = 'Щётки (Джиб Палас) работают — это не горнолыжные склоны'
+    const note = 'Щётки (Джиб Палас) работают'
     const once = appendHoursExtraNote('По прайсу сноупарка — будни: 11:00–23:00', note)
     assert.match(once, /щётки/i)
     assert.equal(appendHoursExtraNote(once, note), once)
