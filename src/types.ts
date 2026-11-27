@@ -22,20 +22,6 @@ export type ResortFeature = {
   note?: string
 }
 
-/** Optional single hero photo on the resort detail page (licensed source). */
-export type ResortPhoto = {
-  /** Filename under `public/photos/resorts/`. */
-  file: string
-  /** Russian alt text for the image. */
-  alt: string
-  /** Photographer / rights holder (for on-page credit). */
-  credit: string
-  /** Short license label, e.g. «CC BY 4.0», «CC0», «Public domain». */
-  license: string
-  /** Canonical source page (usually Wikimedia Commons file page). */
-  sourceUrl: string
-}
-
 export type Resort = {
   id: string
   name: string
@@ -63,11 +49,6 @@ export type Resort = {
   status: ResortStatus
   notes: string
   sources: string[]
-  /**
-   * Exactly one optional detail-page hero photo when a verified licensed
-   * image of this place shows snowy operating slopes; omit otherwise.
-   */
-  photo?: ResortPhoto
   /**
    * Extra on-site spots (brushes, jump cushion, …) shown as sections
    * on this resort’s page — not separate map/list entries.
