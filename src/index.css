@@ -662,7 +662,7 @@ main {
   overflow-wrap: anywhere;
 }
 
-/* Unified schedule on every active card; `\n` from cardHoursText → one day-group per line. */
+/* Unified schedule on cards + detail hours lead; `\n` → one day/lift line. */
 .resort-card__hours {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
