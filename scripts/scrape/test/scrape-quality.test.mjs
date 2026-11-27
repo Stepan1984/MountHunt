@@ -395,6 +395,27 @@ describe('closed-season card honesty signals', () => {
     assert.match(sev?.phone || '', /924/)
     assert.match(sev?.email || '', /@mail\.ru/i)
   })
+
+  it('active resorts with an official site keep visitor phone (and email when published)', () => {
+    const seed = JSON.parse(readFileSync(join(root, 'data/seed/resorts.json'), 'utf8'))
+    const pub = JSON.parse(readFileSync(join(root, 'public/data/resorts.json'), 'utf8'))
+    const active = seed.filter((r) => r.status === 'active')
+    assert.ok(active.length >= 12)
+    for (const r of active) {
+      assert.ok(r.phone, `seed ${r.id} missing phone`)
+      const p = pub.find((x) => x.id === r.id)
+      assert.equal(p?.phone, r.phone, `public phone drift for ${r.id}`)
+      if (r.email) assert.equal(p?.email, r.email, `public email drift for ${r.id}`)
+    }
+    // Wild / closed slopes: no invented contacts.
+    for (const r of seed.filter((x) => x.status !== 'active')) {
+      assert.equal(r.phone, undefined, `unexpected phone on ${r.id}`)
+      assert.equal(r.email, undefined, `unexpected email on ${r.id}`)
+    }
+    assert.match(seed.find((r) => r.id === 'okhta-park')?.email || '', /info@ohtapark\.ru/i)
+    assert.match(seed.find((r) => r.id === 'puhtolova-gora')?.email || '', /info@puhgora\.ru/i)
+    assert.equal(seed.find((r) => r.id === 'lazurnye-ozera')?.email, undefined)
+  })
 })
 
 describe('resort page block semantics', () => {
