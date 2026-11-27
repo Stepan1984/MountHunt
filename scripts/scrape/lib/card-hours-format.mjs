@@ -130,11 +130,12 @@ function hoursValue(slot) {
 }
 
 /**
- * Canonical multi-line card schedule from structured periods.
+ * Merge consecutive same-schedule weekdays and abbreviate day labels.
+ * Keep in sync with src/lib/data.ts `groupHoursPeriods`.
  * @param {{ days?: string, open?: string | null, close?: string | null }[] | undefined} periods
- * @returns {string | null}
+ * @returns {{ days: string, open: string, close: string }[] | null}
  */
-export function formatCardHoursFromPeriods(periods) {
+export function groupHoursPeriods(periods) {
   if (!periods?.length) return null
 
   /** @type {({ open: string, close: string, note: string, holidayExtra: string } | null)[]} */
@@ -164,8 +165,8 @@ export function formatCardHoursFromPeriods(periods) {
     }
   }
 
-  /** @type {string[]} */
-  const parts = []
+  /** @type {{ days: string, open: string, close: string }[]} */
+  const rows = []
 
   let i = 0
   while (i < 7) {
@@ -194,19 +195,26 @@ export function formatCardHoursFromPeriods(periods) {
     const note = notes.size === 1 ? [...notes][0] : ''
     let days = formatDayIndices(indices) + holidayExtra
     if (note) days = `${days} ${note}`
-    parts.push(`${days}: ${hoursValue(slot)}`)
+    rows.push({ days, open: slot.open, close: slot.close })
     i = j + 1
   }
 
   for (const ex of extras) {
-    parts.push(
-      ex.open && ex.close
-        ? `${ex.label}: ${ex.open}–${ex.close}`
-        : `${ex.label}: выходной`,
-    )
+    rows.push({ days: ex.label, open: ex.open, close: ex.close })
   }
 
-  return parts.length ? parts.join('\n') : null
+  return rows.length ? rows : null
+}
+
+/**
+ * Canonical multi-line card schedule from structured periods.
+ * @param {{ days?: string, open?: string | null, close?: string | null }[] | undefined} periods
+ * @returns {string | null}
+ */
+export function formatCardHoursFromPeriods(periods) {
+  const rows = groupHoursPeriods(periods)
+  if (!rows?.length) return null
+  return rows.map((r) => `${r.days}: ${hoursValue(r)}`).join('\n')
 }
 
 /**

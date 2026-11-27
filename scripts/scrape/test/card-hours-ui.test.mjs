@@ -10,6 +10,7 @@ import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import {
   formatCardHoursFromPeriods,
+  groupHoursPeriods,
   reformatCardHoursSummaryText,
 } from '../lib/card-hours-format.mjs'
 
@@ -181,17 +182,24 @@ describe('card hours UI helpers', () => {
       ]),
       'пн–вт: выходной\nср–пт: 15:00–21:00\nсб–вс: 10:00–21:00',
     )
+    const zoldolRaw = [
+      { days: 'Понедельник', open: '', close: '' },
+      { days: 'Вторник', open: '', close: '' },
+      { days: 'Среда', open: '12:00', close: '22:00' },
+      { days: 'Четверг', open: '12:00', close: '22:00' },
+      { days: 'Пятница', open: '12:00', close: '23:00' },
+      { days: 'Суббота', open: '11:00', close: '23:00' },
+    ]
     assert.equal(
-      formatCardHoursFromPeriods([
-        { days: 'Понедельник', open: '', close: '' },
-        { days: 'Вторник', open: '', close: '' },
-        { days: 'Среда', open: '12:00', close: '22:00' },
-        { days: 'Четверг', open: '12:00', close: '22:00' },
-        { days: 'Пятница', open: '12:00', close: '23:00' },
-        { days: 'Суббота', open: '11:00', close: '23:00' },
-      ]),
+      formatCardHoursFromPeriods(zoldolRaw),
       'пн–вт: выходной\nср–чт: 12:00–22:00\nпт: 12:00–23:00\nсб: 11:00–23:00',
     )
+    assert.deepEqual(groupHoursPeriods(zoldolRaw), [
+      { days: 'пн–вт', open: '', close: '' },
+      { days: 'ср–чт', open: '12:00', close: '22:00' },
+      { days: 'пт', open: '12:00', close: '23:00' },
+      { days: 'сб', open: '11:00', close: '23:00' },
+    ])
     assert.equal(
       formatCardHoursFromPeriods([
         { days: 'будни', open: '12:00', close: '18:00' },
@@ -206,6 +214,18 @@ describe('card hours UI helpers', () => {
       ]),
       'пн–пт: 11:00–22:30\nсб–вс: 9:00–22:30',
     )
+  })
+
+  it('committed Zolotaya hours are abbr+merged and match card summary', () => {
+    const hours = JSON.parse(readFileSync(join(root, 'public/data/hours.json'), 'utf8'))
+    const z = hours.find((h) => h.resortId === 'zolotaya-dolina')
+    assert.ok(z)
+    assert.deepEqual(
+      z.periods.map((p) => p.days),
+      ['пн–вт', 'ср–чт', 'пт', 'сб'],
+    )
+    assert.doesNotMatch(z.periods.map((p) => p.days).join(' '), /Понедельник|Вторник|Среда/i)
+    assert.equal(formatCardHoursFromPeriods(z.periods), z.summary)
   })
 
   it('active committed hours have no status-leak on the card line', () => {
@@ -238,9 +258,12 @@ describe('card hours UI helpers', () => {
     assert.match(cardSrc, /resort-card__hours-note/)
     assert.match(pageSrc, /detail-lead resort-card__hours/)
     assert.match(pageSrc, /detail-hours-note/)
+    assert.match(pageSrc, /groupHoursPeriods/)
+    assert.match(pageSrc, /hoursPeriodDisplayValue/)
     assert.match(cssSrc, /resort-card__hours-note/)
     assert.match(dataSrc, /stripSlopeStatusFromCardHours/)
     assert.match(dataSrc, /formatCardHoursFromPeriods/)
+    assert.match(dataSrc, /groupHoursPeriods/)
     assert.match(dataSrc, /formatDayIndices/)
     assert.match(cssSrc, /\.resort-card__hours[\s\S]*white-space:\s*pre-line/)
   })

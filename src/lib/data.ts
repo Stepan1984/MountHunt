@@ -137,7 +137,7 @@ function normHoursBlob(text: string): string {
 
 /**
  * Visitor-facing hours lead: omit summary when it only restates `periods`
- * (avoids «ежедневно 10:00–21:00» twice in the same block).
+ * (avoids «ежедневно 10:00–21:00» / card-style schedule twice in the same block).
  */
 export function hoursLeadText(
   summary: string | null | undefined,
@@ -156,6 +156,11 @@ export function hoursLeadText(
   const looseLead = normHoursBlob(lead.replace(/:/g, ' '))
   const loosePeriods = normHoursBlob(fromPeriods.replace(/:/g, ' '))
   if (looseLead === loosePeriods) return null
+
+  // Card-formatted summary already matches the table (e.g. Золотая Долина).
+  const formatted = formatCardHoursFromPeriods(periods)
+  if (formatted && normHoursBlob(lead) === normHoursBlob(formatted)) return null
+  if (formatted && looseLead === normHoursBlob(formatted.replace(/:/g, ' '))) return null
 
   return lead
 }
@@ -284,12 +289,19 @@ function cardHoursSlotValue(open: string, close: string): string {
   return open && close ? `${open}–${close}` : 'выходной'
 }
 
+export type HoursTablePeriod = {
+  days: string
+  open: string
+  close: string
+}
+
 /**
- * Canonical card schedule from structured periods:
- * «пн–пт: 11:00–22:00\nсб–вс: 9:00–22:30»
- * (line break between groups, no `;`, Mon-first, abbr + consecutive grouping).
+ * Merge consecutive same-schedule weekdays, abbreviate labels (Понедельник→пн).
+ * Opaque labels (даты, «ежедневно», …) stay as extras in source order.
  */
-export function formatCardHoursFromPeriods(periods: HoursPeriod[] | undefined): string | null {
+export function groupHoursPeriods(
+  periods: HoursPeriod[] | undefined,
+): HoursTablePeriod[] | null {
   if (!periods?.length) return null
 
   type DaySlot = {
@@ -323,7 +335,7 @@ export function formatCardHoursFromPeriods(periods: HoursPeriod[] | undefined): 
     }
   }
 
-  const parts: string[] = []
+  const rows: HoursTablePeriod[] = []
   let i = 0
   while (i < 7) {
     const slot = daySlots[i]
@@ -352,19 +364,31 @@ export function formatCardHoursFromPeriods(periods: HoursPeriod[] | undefined): 
     const note = notes.size === 1 ? [...notes][0] : ''
     let days = formatDayIndices(indices) + holidayExtra
     if (note) days = `${days} ${note}`
-    parts.push(`${days}: ${slotVal}`)
+    rows.push({ days, open: slot.open, close: slot.close })
     i = j + 1
   }
 
   for (const ex of extras) {
-    parts.push(
-      ex.open && ex.close
-        ? `${ex.label}: ${ex.open}–${ex.close}`
-        : `${ex.label}: выходной`,
-    )
+    rows.push({ days: ex.label, open: ex.open, close: ex.close })
   }
 
-  return parts.length ? parts.join('\n') : null
+  return rows.length ? rows : null
+}
+
+/** Hours cell for the detail periods table (closed days → «выходной»). */
+export function hoursPeriodDisplayValue(open: string, close: string): string {
+  return cardHoursSlotValue(open, close)
+}
+
+/**
+ * Canonical card schedule from structured periods:
+ * «пн–пт: 11:00–22:00\nсб–вс: 9:00–22:30»
+ * (line break between groups, no `;`, Mon-first, abbr + consecutive grouping).
+ */
+export function formatCardHoursFromPeriods(periods: HoursPeriod[] | undefined): string | null {
+  const rows = groupHoursPeriods(periods)
+  if (!rows?.length) return null
+  return rows.map((r) => `${r.days}: ${cardHoursSlotValue(r.open, r.close)}`).join('\n')
 }
 
 /** Reformat weekday schedule segments; leave opaque labels, join with `\n` (no `;`). */

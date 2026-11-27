@@ -7,8 +7,10 @@ import { SkipassTables } from '../components/SkipassTables'
 import { WebcamSection } from '../components/WebcamPlayer'
 import {
   formatUpdatedAt,
+  groupHoursPeriods,
   hoursFor,
   hoursLeadText,
+  hoursPeriodDisplayValue,
   localizePublicText,
   pricesFor,
   publicPriceNote,
@@ -88,6 +90,9 @@ export function ResortPage({ data }: { data: SiteData }) {
   const hoursSummary = inactive
     ? null
     : (hoursLead ?? (hours?.periods?.length ? null : 'Нет данных'))
+  const hoursTableRows = inactive
+    ? null
+    : (groupHoursPeriods(hours?.periods) ?? hours?.periods ?? null)
   // Slope badges only for active resorts; inactive detail pages show none.
   const badge = !inactive ? slopesBadgeLabel(resort.id, hours, data.important) : null
   const closed = badge === 'Склоны закрыты'
@@ -175,7 +180,7 @@ export function ResortPage({ data }: { data: SiteData }) {
             {!inactive && hours?.hoursNote ? (
               <p className="detail-hours-note">{hours.hoursNote}</p>
             ) : null}
-            {hours?.periods && hours.periods.length > 0 && (
+            {hoursTableRows && hoursTableRows.length > 0 && (
               <DataTable aria-label="Часы работы">
                 <thead>
                   <tr>
@@ -186,12 +191,12 @@ export function ResortPage({ data }: { data: SiteData }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {hours.periods.map((period) => (
+                  {hoursTableRows.map((period) => (
                     <tr key={`${period.days}-${period.open}-${period.close}`}>
                       <th scope="row">{period.days}</th>
                       <td className="mh-table__num">
                         <span className="mh-table__amount">
-                          {period.open}–{period.close}
+                          {hoursPeriodDisplayValue(period.open, period.close)}
                         </span>
                       </td>
                     </tr>
