@@ -1,10 +1,15 @@
 import { Hero } from '../components/Hero'
 import { ResortCard } from '../components/ResortCard'
 import { ResortMap } from '../components/ResortMap'
+import { sortResortsForCards } from '../lib/resort-card-sort'
 import type { SiteData } from '../types'
 
 export function HomePage({ data }: { data: SiteData }) {
-  const active = data.resorts.filter((r) => r.status === 'active')
+  const active = sortResortsForCards(
+    data.resorts.filter((r) => r.status === 'active'),
+    data.hours,
+    data.important,
+  )
   const secondary = data.resorts.filter((r) => r.status !== 'active')
 
   return (
