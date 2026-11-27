@@ -202,6 +202,7 @@ function applySeedFixes(resorts) {
       webcam_url: 'https://www.ohtapark.ru/webcam/',
       sourcesAdd: [
         'https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/',
+        'https://www.ohtapark.ru/services/others/ski-servis/',
         'https://www.ohtapark.ru/lenta/',
         'https://winter.ohtapark.ru/',
         'https://www.ohtapark.ru/webcam/',
