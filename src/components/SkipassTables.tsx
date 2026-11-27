@@ -36,6 +36,23 @@ function displayCategory(category: string): string {
   return t
 }
 
+/**
+ * Igora rental duration bands: break before «каждые» so
+ * «После 1 часа каждые 30 минут» / «После 4 часов каждые 30 минут» stack like the site.
+ * Other nested headers stay single-line.
+ */
+function formatColumnGroupLabel(label: string) {
+  const m = /^(После\s+\d+\s+час(?:а|ов))\s+(каждые\s+30\s+минут)$/iu.exec(label.trim())
+  if (!m) return label
+  return (
+    <>
+      {m[1]}
+      <br />
+      {m[2]}
+    </>
+  )
+}
+
 type Props = {
   groups: SkipassGroup[]
   /** Flat fallback when groups are empty. */
@@ -83,7 +100,7 @@ export function SkipassTables({
                             colSpan={cg.span}
                             className="mh-table__num mh-table__colgroup"
                           >
-                            {cg.label}
+                            {formatColumnGroupLabel(cg.label)}
                           </th>
                         ))}
                       </tr>
