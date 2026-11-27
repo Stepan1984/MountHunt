@@ -784,10 +784,6 @@ main {
   margin: 1.1rem 0 1.5rem;
 }
 
-.resort-detail__important {
-  margin-bottom: 1.5rem;
-}
-
 .resort-detail__map {
   margin-top: 0.75rem;
 }
@@ -1417,10 +1413,6 @@ main {
 
   .resort-detail__actions .btn {
     flex: 1 1 100%;
-  }
-
-  .resort-detail__important {
-    margin-bottom: 1.15rem;
   }
 
   .detail-grid {
