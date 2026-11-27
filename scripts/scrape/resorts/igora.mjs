@@ -201,7 +201,7 @@ function categoryForKind(h3, faqTitle, kind) {
 
 /**
  * Classify a site h3 / FAQ blob into a real Igora tariff family.
- * Only hours / rides / seasons / instructor — never invent rental/service groups.
+ * Ski-pass / instructor families only — rental & ski-service use dedicated parsers.
  * @param {string} h3
  * @param {string} faqTitle
  * @param {string[]} headerCells
@@ -209,7 +209,8 @@ function categoryForKind(h3, faqTitle, kind) {
  */
 export function classifyIgoraCategory(h3, faqTitle, headerCells = []) {
   const blob = `${faqTitle} ${h3} ${headerCells.join(' ')}`
-  if (/прокат|ски-сервис|ремонт/i.test(blob)) return null
+  // Rental / ski-service / repair are handled outside this classifier.
+  if (/прокат|ски-сервис|ремонт|тюбинг|ватрушк/i.test(blob)) return null
   if (/инструктор|занятия с/i.test(blob)) {
     // Instructor pack (fixed hours pack) is still the instructor family.
     return 'instructor'
@@ -230,6 +231,243 @@ export function classifyIgoraCategory(h3, faqTitle, headerCells = []) {
     if (headerCells.some((d) => /^\d+$/.test(cleanText(d)))) return 'passes'
   }
   return null
+}
+
+/**
+ * Parse «850 / 950» cells (лыжи / сноуборд) into primary price + visitor note.
+ * @param {string} raw
+ * @returns {{ price: number, note?: string, rawText: string } | null}
+ */
+function parseSlashPriceCell(raw) {
+  const text = cleanText(raw)
+  if (!text) return null
+  const parts = text.split(/\s*\/\s*/).map((p) => p.trim()).filter(Boolean)
+  if (parts.length >= 2) {
+    const a = parsePrice(parts[0])
+    const b = parsePrice(parts[1])
+    if (a != null && b != null && a !== b) {
+      return { price: a, note: `сноуборд ${b} ₽`, rawText: text }
+    }
+  }
+  const price = parsePrice(text)
+  if (price == null) return null
+  return { price, rawText: text }
+}
+
+/**
+ * Weekday/weekend rental matrix: duration bands × будни/выходные.
+ * Tubing (ватрушки) is split into its own group.
+ * @param {string[][]} rows
+ * @returns {{ rental: object | null, tubing: object | null }}
+ */
+function parseRentalWeekdayMatrix(rows) {
+  const top = rows[0] || []
+  const dayRow = rows[1] || []
+  if (!/час|минут|день/i.test(top.join(' ')) || !/будни/i.test(dayRow.join(' '))) {
+    return { rental: null, tubing: null }
+  }
+  // tableRows drops rowspan «Наименование» on the day row — durations are top.slice(1).
+  const durations = top.slice(1).filter(Boolean)
+  if (durations.length < 1 || dayRow.length < durations.length * 2) {
+    return { rental: null, tubing: null }
+  }
+
+  /** @type {object[]} */
+  const rentalRows = []
+  /** @type {object[]} */
+  const tubingRows = []
+
+  for (const row of rows.slice(2)) {
+    const name = cleanText(row[0] || '')
+    if (!name || /наименован/i.test(name)) continue
+    const cells = row.slice(1)
+    if (cells.length < 2) continue
+    const isTubing = /ватрушк|тюбинг/i.test(name)
+    const target = isTubing ? tubingRows : rentalRows
+    const displayName = isTubing
+      ? softenCategoryTitle(name.replace(/\*+\s*$/g, '').trim()) || 'Ватрушки (тюбинг)'
+      : name.replace(/\*+\s*$/g, '').trim()
+
+    for (let d = 0; d < durations.length; d++) {
+      const wd = parsePrice(cells[d * 2])
+      const we = parsePrice(cells[d * 2 + 1])
+      if (wd == null && we == null) continue
+      target.push({
+        name: displayName,
+        duration: durations[d],
+        prices: [
+          wd != null ? { price: wd, rawText: cells[d * 2] } : { price: null },
+          we != null ? { price: we, rawText: cells[d * 2 + 1] } : { price: null },
+        ],
+      })
+    }
+  }
+
+  return {
+    rental: rentalRows.length
+      ? {
+          kind: 'rental',
+          category: 'Прокат снаряжения',
+          columns: ['Будни', 'Выходные/праздники'],
+          rows: rentalRows,
+          priority: 5,
+        }
+      : null,
+    tubing: tubingRows.length
+      ? {
+          kind: 'tubing',
+          category: 'Тюбинг',
+          columns: ['Будни', 'Выходные/праздники'],
+          rows: tubingRows,
+          priority: 7,
+        }
+      : null,
+  }
+}
+
+/**
+ * Accessory / clothing rental: duration columns, no weekday split.
+ * Handles colspan quirks (БСК single price, Finnish sleds 1–4h + day).
+ * @param {string[][]} rows
+ * @param {string} category
+ */
+function parseRentalDurationMatrix(rows, category = 'Прокат одежды и аксессуаров') {
+  const top = rows[0] || []
+  const durRow = rows[1] || []
+  // Header may be «Наименование | Цена/рубли…» then a duration row, or a single header row.
+  // Do not use parsePrice() to detect the duration row — «1 час» parses as 1.
+  const durRowLooksLikeDurations =
+    durRow.length >= 2 &&
+    durRow.every((c) => /час|день|минут/i.test(c || '')) &&
+    !/наименован|цена|ндс/i.test(durRow.join(' '))
+  let durations = []
+  let dataStart = 1
+  if (durRowLooksLikeDurations) {
+    durations = durRow.filter(Boolean)
+    dataStart = 2
+  } else {
+    durations = top.slice(1).filter((c) => c && !/наименован|цена|ндс/i.test(c))
+    dataStart = 1
+  }
+  if (!durations.length) return null
+
+  /** @type {object[]} */
+  const outRows = []
+  for (const row of rows.slice(dataStart)) {
+    const name = cleanText(row[0] || '')
+    if (!name || /наименован/i.test(name)) continue
+    const cells = row.slice(1).filter((c) => cleanText(c))
+    if (!cells.length) continue
+
+    /** @type {( { price: number, rawText?: string } | { price: null } )[]} */
+    const prices = durations.map(() => ({ price: null }))
+    if (cells.length === 1) {
+      // Full-row colspan (e.g. БСК 250).
+      const cell = parseSlashPriceCell(cells[0])
+      if (!cell) continue
+      for (let i = 0; i < prices.length; i++) prices[i] = { price: cell.price, rawText: cell.rawText }
+    } else if (cells.length === durations.length) {
+      for (let i = 0; i < durations.length; i++) {
+        const cell = parseSlashPriceCell(cells[i])
+        prices[i] = cell || { price: null }
+      }
+    } else if (cells.length === 2 && durations.length >= 2) {
+      // e.g. Сани: colspan across early durations + last column.
+      const a = parseSlashPriceCell(cells[0])
+      const b = parseSlashPriceCell(cells[1])
+      for (let i = 0; i < durations.length - 1; i++) {
+        prices[i] = a || { price: null }
+      }
+      prices[durations.length - 1] = b || { price: null }
+    } else {
+      for (let i = 0; i < Math.min(cells.length, durations.length); i++) {
+        const cell = parseSlashPriceCell(cells[i])
+        prices[i] = cell || { price: null }
+      }
+    }
+    if (!prices.some((p) => p.price != null)) continue
+    outRows.push({ name, prices })
+  }
+  if (!outRows.length) return null
+  return {
+    kind: 'rental_extra',
+    category,
+    columns: durations,
+    rows: outRows,
+    priority: 6,
+  }
+}
+
+/**
+ * Ski-service / repair name→price list (optional № column).
+ * @param {string[][]} rows
+ * @param {string} category
+ */
+function parseServicePriceList(rows, category = 'Ски-сервис, ремонт оборудования') {
+  const top = rows[0] || []
+  const hasNum = /^№$/i.test(cleanText(top[0] || ''))
+  const nameIdx = hasNum ? 1 : 0
+  const priceIdx = hasNum ? 2 : top.length > 1 ? top.length - 1 : 1
+
+  /** @type {object[]} */
+  const outRows = []
+  for (const row of rows.slice(1)) {
+    const name = cleanText(row[nameIdx] || '')
+    if (!name || /наименован/i.test(name)) continue
+    const cell = parseSlashPriceCell(row[priceIdx] || '')
+    if (!cell) continue
+    outRows.push({
+      name,
+      prices: [{ price: cell.price, note: cell.note, rawText: cell.rawText }],
+    })
+  }
+  if (!outRows.length) return null
+  return {
+    kind: 'service',
+    category: softenCategoryTitle(category) || 'Ски-сервис, ремонт оборудования',
+    columns: ['Цена'],
+    rows: outRows,
+    priority: 8,
+  }
+}
+
+/**
+ * @param {string[][]} rows
+ */
+function isRentalWeekdayMatrixRows(rows) {
+  const top = rows[0] || []
+  const dayRow = rows[1] || []
+  return (
+    /час|минут|день/i.test(top.join(' ')) &&
+    /будни/i.test(dayRow.join(' ')) &&
+    /(сб|вс|выходн|праздн)/i.test(dayRow.join(' '))
+  )
+}
+
+/**
+ * @param {string[][]} rows
+ */
+function isRentalDurationMatrixRows(rows) {
+  if (rows.length < 2) return false
+  if (isRentalWeekdayMatrixRows(rows)) return false
+  const top = rows[0] || []
+  const second = rows[1] || []
+  const blob = `${top.join(' ')} ${second.join(' ')}`
+  return /час|день/i.test(blob) && /наименован|цена/i.test(top.join(' '))
+}
+
+/**
+ * @param {string[][]} rows
+ */
+function isServiceListRows(rows) {
+  const top = rows[0] || []
+  if (/^№$/i.test(cleanText(top[0] || ''))) return true
+  return (
+    /наименован/i.test(top.join(' ')) &&
+    /цена|руб/i.test(top.join(' ')) &&
+    !/час|будни/i.test(top.join(' ')) &&
+    top.length <= 4
+  )
 }
 
 /**
@@ -444,7 +682,22 @@ function itemsFromIgoraGroups(groups) {
   const items = []
   for (const g of groups) {
     const kind = igoraGroupKind(g.category)
-    const priority = kind === 'hourly' ? 1 : kind === 'passes' ? 2 : kind === 'instructor' ? 3 : 4
+    const priority =
+      kind === 'hourly'
+        ? 1
+        : kind === 'passes'
+          ? 2
+          : kind === 'instructor'
+            ? 3
+            : kind === 'rental'
+              ? 5
+              : kind === 'rental_extra'
+                ? 6
+                : kind === 'tubing'
+                  ? 7
+                  : kind === 'service'
+                    ? 8
+                    : 4
     const columns = g.columns?.length ? g.columns : ['Цена']
     for (const row of g.rows || []) {
       for (let i = 0; i < columns.length; i++) {
@@ -460,6 +713,22 @@ function itemsFromIgoraGroups(groups) {
             title: `${row.name} · ${row.duration} · ${day} (${onlineTag})`,
             price: cell.price,
             unit: 'час',
+            note: cell.note,
+            rawText: cell.rawText,
+            priority,
+          })
+          continue
+        }
+        if (
+          (kind === 'rental' || kind === 'tubing') &&
+          columns.length === 2 &&
+          /будни/i.test(columns[0] || '')
+        ) {
+          const day = /выходн/i.test(col) ? 'выходные/праздники' : 'будни'
+          items.push({
+            title: `${row.name} · ${row.duration} · ${day} (${g.category})`,
+            price: cell.price,
+            unit: /час|минут|день/i.test(row.duration || '') ? 'аренда' : 'тариф',
             note: cell.note,
             rawText: cell.rawText,
             priority,
@@ -485,9 +754,13 @@ function itemsFromIgoraGroups(groups) {
         const unit =
           kind === 'passes' || /^\d+\s*проход/i.test(row.duration || col)
             ? 'проход'
-            : /час/i.test(row.duration || col || '')
-              ? 'час'
-              : 'тариф'
+            : kind === 'service'
+              ? 'услуга'
+              : kind === 'rental' || kind === 'rental_extra' || kind === 'tubing'
+                ? 'аренда'
+                : /час/i.test(row.duration || col || '')
+                  ? 'час'
+                  : 'тариф'
         items.push({
           title,
           price: cell.price,
@@ -512,8 +785,81 @@ function itemsFromIgoraGroups(groups) {
 }
 
 /**
- * Rebuild Igora tariffs from site FAQ categories only:
- * hours / rides / seasons / instructor. Skip rental & ski-service.
+ * Collect ordered h3 / table blocks inside a FAQ content root.
+ * @param {import('cheerio').CheerioAPI} $
+ * @param {import('cheerio').Cheerio} $root
+ */
+function faqOrderedBlocks($, $root) {
+  /** @type {{ type: 'h3' | 'table', text?: string, el?: import('cheerio').Element }[]} */
+  const blocks = []
+  $root.children().each((_, child) => {
+    const $child = $(child)
+    if ($child.is('h3')) {
+      blocks.push({ type: 'h3', text: cleanText($child.text()) })
+      return
+    }
+    $child.find('h3, table.common-price__table').addBack('h3, table.common-price__table').each((__, el) => {
+      const $el = $(el)
+      if ($el.is('h3')) blocks.push({ type: 'h3', text: cleanText($el.text()) })
+      else if ($el.is('table.common-price__table')) blocks.push({ type: 'table', el })
+    })
+  })
+  /** @type {typeof blocks} */
+  const ordered = []
+  const seenTables = new Set()
+  for (const b of blocks) {
+    if (b.type === 'table') {
+      if (seenTables.has(b.el)) continue
+      seenTables.add(b.el)
+    }
+    ordered.push(b)
+  }
+  return ordered
+}
+
+/**
+ * Parse rental / tubing / clothing tables from a «прокат» FAQ section.
+ * @param {import('cheerio').CheerioAPI} $
+ * @param {import('cheerio').Cheerio} $root
+ * @param {object[]} drafts
+ */
+function pushRentalDrafts($, $root, drafts) {
+  for (const block of faqOrderedBlocks($, $root)) {
+    if (block.type !== 'table') continue
+    const rows = tableRows($, $(block.el))
+    if (rows.length < 2) continue
+    if (isRentalWeekdayMatrixRows(rows)) {
+      const { rental, tubing } = parseRentalWeekdayMatrix(rows)
+      if (rental) drafts.push(rental)
+      if (tubing) drafts.push(tubing)
+    } else if (isRentalDurationMatrixRows(rows)) {
+      const parsed = parseRentalDurationMatrix(rows)
+      if (parsed) drafts.push(parsed)
+    }
+  }
+}
+
+/**
+ * Parse ski-service / repair tables from the matching FAQ section.
+ * @param {import('cheerio').CheerioAPI} $
+ * @param {import('cheerio').Cheerio} $root
+ * @param {object[]} drafts
+ */
+function pushServiceDrafts($, $root, drafts) {
+  for (const block of faqOrderedBlocks($, $root)) {
+    if (block.type !== 'table') continue
+    const rows = tableRows($, $(block.el))
+    if (rows.length < 2) continue
+    if (!isServiceListRows(rows)) continue
+    // FAQ title on the site combines ski-service + repair into one family.
+    const parsed = parseServicePriceList(rows, 'Ски-сервис, ремонт оборудования')
+    if (parsed) drafts.push(parsed)
+  }
+}
+
+/**
+ * Rebuild Igora tariffs from site FAQ categories:
+ * ski-pass / instructor / rental / tubing / ski-service & repair.
  * @param {string} html
  * @returns {{ items: object[], groups: object[] }}
  */
@@ -527,38 +873,24 @@ export function parseIgoraPriceTables(html) {
     $faqs.each((_, section) => {
       const $section = $(section)
       const faqTitle = cleanText($section.find('.faq-section__item-title').first().text())
-      if (/прокат|ски-сервис|ремонт/i.test(faqTitle)) return
-      if (!/ски-?пасс|инструктор/i.test(faqTitle)) return
+      const isRentalFaq = /прокат/i.test(faqTitle)
+      const isServiceFaq = /ски-сервис|ремонт/i.test(faqTitle)
+      const isSkiOrInstr = /ски-?пасс|инструктор/i.test(faqTitle)
+      if (!isRentalFaq && !isServiceFaq && !isSkiOrInstr) return
 
       const $content = $section.find('.faq-section__item-content, .js-collapse-content').first()
       const $root = $content.length ? $content : $section
-      /** @type {{ type: 'h3' | 'table', text?: string, el?: import('cheerio').Element }[]} */
-      const blocks = []
-      $root.children().each((__, child) => {
-        const $child = $(child)
-        if ($child.is('h3')) {
-          blocks.push({ type: 'h3', text: cleanText($child.text()) })
-          return
-        }
-        $child.find('h3, table.common-price__table').addBack('h3, table.common-price__table').each((___, el) => {
-          const $el = $(el)
-          if ($el.is('h3')) blocks.push({ type: 'h3', text: cleanText($el.text()) })
-          else if ($el.is('table.common-price__table')) blocks.push({ type: 'table', el })
-        })
-      })
 
-      // Dedupe tables if addBack double-counted; keep order.
-      /** @type {typeof blocks} */
-      const ordered = []
-      const seenTables = new Set()
-      for (const b of blocks) {
-        if (b.type === 'table') {
-          if (seenTables.has(b.el)) continue
-          seenTables.add(b.el)
-        }
-        ordered.push(b)
+      if (isRentalFaq) {
+        pushRentalDrafts($, $root, drafts)
+        return
+      }
+      if (isServiceFaq) {
+        pushServiceDrafts($, $root, drafts)
+        return
       }
 
+      const ordered = faqOrderedBlocks($, $root)
       let currentH3 = ''
       for (const block of ordered) {
         if (block.type === 'h3') {
@@ -601,10 +933,29 @@ export function parseIgoraPriceTables(html) {
       const faqTitle = cleanText(
         $table.closest('.faq-section__item, .js-collapse').find('.faq-section__item-title').first().text(),
       )
-      if (/прокат|ски-сервис|ремонт/i.test(faqTitle)) return
-      const h3 = precedingH3($, $table)
       const rows = tableRows($, $table)
       if (rows.length < 2) return
+      if (/прокат/i.test(faqTitle) || isRentalWeekdayMatrixRows(rows) || isRentalDurationMatrixRows(rows)) {
+        if (isRentalWeekdayMatrixRows(rows)) {
+          const { rental, tubing } = parseRentalWeekdayMatrix(rows)
+          if (rental) drafts.push(rental)
+          if (tubing) drafts.push(tubing)
+        } else if (isRentalDurationMatrixRows(rows)) {
+          const parsed = parseRentalDurationMatrix(rows)
+          if (parsed) drafts.push(parsed)
+        }
+        return
+      }
+      if (/ски-сервис|ремонт/i.test(faqTitle) || isServiceListRows(rows)) {
+        const h3 = precedingH3($, $table)
+        const parsed = parseServicePriceList(
+          rows,
+          /прейскурант/i.test(h3) ? 'Ски-сервис, ремонт оборудования' : h3 || 'Ски-сервис, ремонт оборудования',
+        )
+        if (parsed) drafts.push(parsed)
+        return
+      }
+      const h3 = precedingH3($, $table)
       const top = rows[0] || []
       const headerDurations = top.slice(1).filter((c) => c && !/^в\s*кассе$/i.test(c) && !/^online$/i.test(c))
       const kind = classifyIgoraCategory(h3, faqTitle, headerDurations)
@@ -622,7 +973,12 @@ export function parseIgoraPriceTables(html) {
   const collapsed = collapseInstructorDrafts(drafts)
   const groups = collapsed
     .sort((a, b) => a.priority - b.priority)
-    .map(({ category, columns, rows }) => ({ category, columns, rows }))
+    .map(({ category, columns, rows, note }) => ({
+      category,
+      columns,
+      rows,
+      ...(note ? { note } : {}),
+    }))
     .filter((g) => g.rows?.length)
 
   return { items: itemsFromIgoraGroups(groups), groups }
@@ -630,11 +986,15 @@ export function parseIgoraPriceTables(html) {
 
 /**
  * @param {string | undefined} category
- * @returns {'hourly' | 'passes' | 'season' | 'instructor' | 'other'}
+ * @returns {'hourly' | 'passes' | 'season' | 'instructor' | 'rental' | 'rental_extra' | 'tubing' | 'service' | 'other'}
  */
 export function igoraGroupKind(category) {
   const c = cleanText(category || '')
   if (/инструктор|занятия с/i.test(c)) return 'instructor'
+  if (/тюбинг|ватрушк/i.test(c)) return 'tubing'
+  if (/ски-сервис|ремонт/i.test(c)) return 'service'
+  if (/одежд|аксессуар/i.test(c)) return 'rental_extra'
+  if (/прокат/i.test(c)) return 'rental'
   if (/почасов/i.test(c)) return 'hourly'
   if (/проход/i.test(c)) return 'passes'
   if (/сезон/i.test(c)) return 'season'
@@ -694,8 +1054,8 @@ function normalizeInstructorCategory(g) {
 
 /**
  * Merge live parse with fallback (bundled snapshot): keep live instructor when
- * present; fill missing ski-pass (hourly / passes / season) groups from fallback.
- * Live-only instructor scrapes must not wipe ski-pass categories.
+ * present; fill missing ski-pass / rental / service groups from fallback.
+ * Live-only instructor scrapes must not wipe ski-pass or rental categories.
  * @param {{ items?: object[], groups?: object[] }} primary
  * @param {{ items?: object[], groups?: object[] }} fallback
  */
@@ -735,28 +1095,24 @@ export function mergeIgoraPriceTables(primary, fallback) {
     }
   }
 
-  const primaryHasSki = (p.groups || []).some((g) => {
-    const k = igoraGroupKind(g.category)
-    return k === 'hourly' || k === 'passes' || k === 'season'
-  })
-  const primaryHasInstr =
-    (p.groups || []).some((g) => igoraGroupKind(g.category) === 'instructor') ||
-    (p.items || []).some(isInstructorPriceItem)
+  // Rental / tubing / ski-service after ski-pass + instructor (site FAQ order).
+  for (const kind of /** @type {const} */ (['rental', 'rental_extra', 'tubing', 'service'])) {
+    const fromP = (p.groups || []).filter((g) => igoraGroupKind(g.category) === kind)
+    const fromF = (f.groups || []).filter((g) => igoraGroupKind(g.category) === kind)
+    if (fromP.length) groups.push(...fromP)
+    else if (fromF.length) {
+      groups.push(...fromF)
+      filled.push(kind)
+    }
+  }
 
-  const skiItems = (primaryHasSki ? p.items : f.items || []).filter((it) => !isInstructorPriceItem(it))
-  const instrItems = (primaryHasInstr ? p.items : f.items || []).filter(isInstructorPriceItem)
-
-  const seen = new Set()
-  const items = [...skiItems, ...instrItems].filter((it) => {
-    const key = `${it.title}|${it.price}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+  // Flat items always follow the merged group set (live preferred per family above).
+  const items = itemsFromIgoraGroups(groups)
 
   return {
     items,
     groups,
+    // Any snapshot-filled gap (ski-pass or rental/service) → honest partial.
     filledSkiPass: filled.length > 0,
     filledKinds: filled,
   }
