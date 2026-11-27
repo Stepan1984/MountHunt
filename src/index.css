@@ -48,6 +48,10 @@
 
 html {
   scroll-behavior: smooth;
+  /* Contacts (and other short pages) have no vertical scrollbar; longer
+     pages do. Classic scrollbars then change the layout width and the whole
+     site jumps sideways on navigation. Reserve the gutter on every page. */
+  scrollbar-gutter: stable;
 }
 
 /* Sticky header offset for in-page hash targets (nav: Карта/Курорты/…). */
