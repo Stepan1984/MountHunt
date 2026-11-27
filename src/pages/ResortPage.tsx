@@ -7,7 +7,7 @@ import { SkipassTables } from '../components/SkipassTables'
 import { WebcamSection } from '../components/WebcamPlayer'
 import {
   formatUpdatedAt,
-  groupHoursPeriods,
+  formatHoursTablePeriods,
   hoursFor,
   hoursLeadText,
   hoursPeriodDisplayValue,
@@ -90,9 +90,7 @@ export function ResortPage({ data }: { data: SiteData }) {
   const hoursSummary = inactive
     ? null
     : (hoursLead ?? (hours?.periods?.length ? null : 'Нет данных'))
-  const hoursTableRows = inactive
-    ? null
-    : (groupHoursPeriods(hours?.periods) ?? hours?.periods ?? null)
+  const hoursTableRows = inactive ? null : formatHoursTablePeriods(hours?.periods)
   // Slope badges only for active resorts; inactive detail pages show none.
   const badge = !inactive ? slopesBadgeLabel(resort.id, hours, data.important) : null
   const closed = badge === 'Склоны закрыты'

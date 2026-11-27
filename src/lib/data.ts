@@ -289,10 +289,42 @@ function cardHoursSlotValue(open: string, close: string): string {
   return open && close ? `${open}–${close}` : 'выходной'
 }
 
+/**
+ * Drop trailing dots on weekday abbrs («пн., вт.» → «пн, вт»).
+ * Keeps commas and en-dashes; only removes the abbreviation period.
+ */
+export function stripWeekdayAbbrDots(days: string): string {
+  // No `\b` — JS word boundaries are ASCII-only and miss Cyrillic abbrs.
+  return days
+    .replace(/(пн|вт|ср|чт|пт|сб|вс)\./gi, '$1')
+    .replace(/\s*,\s*/g, ', ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 export type HoursTablePeriod = {
   days: string
   open: string
   close: string
+}
+
+/**
+ * Detail-table rows: strip abbr dots; merge/abbrev only when full weekday names remain.
+ */
+export function formatHoursTablePeriods(
+  periods: HoursPeriod[] | undefined,
+): HoursTablePeriod[] | null {
+  if (!periods?.length) return null
+  const stripped = periods.map((p) => ({
+    days: stripWeekdayAbbrDots(p.days || ''),
+    open: p.open ?? '',
+    close: p.close ?? '',
+  }))
+  const hasFullWeekday = stripped.some((p) =>
+    /понедельник|вторник|среда|четверг|пятница|суббота|воскресенье/i.test(p.days),
+  )
+  if (hasFullWeekday) return groupHoursPeriods(stripped) ?? stripped
+  return stripped
 }
 
 /**
