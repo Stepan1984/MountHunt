@@ -19,6 +19,14 @@ function isSinglePriceColumn(group: SkipassGroup): boolean {
   return group.columns.length === 1 && /^цена$/i.test(group.columns[0] ?? '')
 }
 
+/** Nested day×duration header when columnGroups spans match leaf columns. */
+function hasNestedColumnGroups(group: SkipassGroup): boolean {
+  const groups = group.columnGroups
+  if (!groups?.length || !group.columns.length) return false
+  const spanSum = groups.reduce((sum, g) => sum + (g.span || 0), 0)
+  return spanSum === group.columns.length
+}
+
 /** Soften ALL-CAPS site headings (e.g. Igora) for readable RU titles. */
 function displayCategory(category: string): string {
   const t = category.trim()
@@ -50,7 +58,8 @@ export function SkipassTables({
     return (
       <div className="skipass">
         {structured.map((group, groupIdx) => {
-          const showDuration = hasDurationColumn(group)
+          const nested = hasNestedColumnGroups(group)
+          const showDuration = !nested && hasDurationColumn(group)
           const singleCol = isSinglePriceColumn(group)
           const title = displayCategory(group.category)
           return (
@@ -60,46 +69,99 @@ export function SkipassTables({
                 <p className="skipass-group__note">{visitorNote(group.note)}</p>
               ) : null}
               <DataTable aria-label={title}>
-                <thead>
-                  <tr>
-                    <th scope="col">Тариф</th>
-                    {showDuration ? <th scope="col">Длительность</th> : null}
-                    {singleCol ? (
-                      <th scope="col" className="mh-table__num">
-                        Цена
-                      </th>
-                    ) : (
-                      group.columns.map((col) => (
-                        <th key={col} scope="col" className="mh-table__num">
-                          {col}
+                {nested ? (
+                  <>
+                    <thead>
+                      <tr>
+                        <th scope="col" rowSpan={2}>
+                          Тариф
                         </th>
-                      ))
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {group.rows.map((row, idx) => (
-                    <tr key={`${row.name}-${row.duration ?? ''}-${idx}`}>
-                      <th scope="row">
-                        {row.name}
-                        {visitorNote(row.note) ? (
-                          <span className="mh-table__note">{visitorNote(row.note)}</span>
-                        ) : null}
-                      </th>
-                      {showDuration ? <td>{row.duration || '—'}</td> : null}
-                      {(singleCol ? [group.columns[0]] : group.columns).map((col, ci) => {
-                        const cell = row.prices[ci]
-                        const cellNote = visitorNote(cell?.note)
-                        return (
-                          <td key={col} className="mh-table__num">
-                            <span className="mh-table__amount">{formatRub(cell?.price)}</span>
-                            {cellNote ? <span className="mh-table__note">{cellNote}</span> : null}
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
+                        {group.columnGroups!.map((cg) => (
+                          <th
+                            key={cg.label}
+                            scope="colgroup"
+                            colSpan={cg.span}
+                            className="mh-table__num mh-table__colgroup"
+                          >
+                            {cg.label}
+                          </th>
+                        ))}
+                      </tr>
+                      <tr>
+                        {group.columns.map((col, ci) => (
+                          <th key={`${col}-${ci}`} scope="col" className="mh-table__num">
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.rows.map((row, idx) => (
+                        <tr key={`${row.name}-${idx}`}>
+                          <th scope="row">
+                            {row.name}
+                            {visitorNote(row.note) ? (
+                              <span className="mh-table__note">{visitorNote(row.note)}</span>
+                            ) : null}
+                          </th>
+                          {group.columns.map((col, ci) => {
+                            const cell = row.prices[ci]
+                            const cellNote = visitorNote(cell?.note)
+                            return (
+                              <td key={`${col}-${ci}`} className="mh-table__num">
+                                <span className="mh-table__amount">{formatRub(cell?.price)}</span>
+                                {cellNote ? <span className="mh-table__note">{cellNote}</span> : null}
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </>
+                ) : (
+                  <>
+                    <thead>
+                      <tr>
+                        <th scope="col">Тариф</th>
+                        {showDuration ? <th scope="col">Длительность</th> : null}
+                        {singleCol ? (
+                          <th scope="col" className="mh-table__num">
+                            Цена
+                          </th>
+                        ) : (
+                          group.columns.map((col) => (
+                            <th key={col} scope="col" className="mh-table__num">
+                              {col}
+                            </th>
+                          ))
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.rows.map((row, idx) => (
+                        <tr key={`${row.name}-${row.duration ?? ''}-${idx}`}>
+                          <th scope="row">
+                            {row.name}
+                            {visitorNote(row.note) ? (
+                              <span className="mh-table__note">{visitorNote(row.note)}</span>
+                            ) : null}
+                          </th>
+                          {showDuration ? <td>{row.duration || '—'}</td> : null}
+                          {(singleCol ? [group.columns[0]] : group.columns).map((col, ci) => {
+                            const cell = row.prices[ci]
+                            const cellNote = visitorNote(cell?.note)
+                            return (
+                              <td key={col} className="mh-table__num">
+                                <span className="mh-table__amount">{formatRub(cell?.price)}</span>
+                                {cellNote ? <span className="mh-table__note">{cellNote}</span> : null}
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </>
+                )}
               </DataTable>
             </section>
           )

@@ -98,6 +98,12 @@ export type SkipassRow = {
   note?: string
 }
 
+/** Top-level header band spanning leaf columns (e.g. Igora instructor days). */
+export type SkipassColumnGroup = {
+  label: string
+  span: number
+}
+
 /**
  * Site-derived skipass block (hourly / per-ride / season).
  * Prefer real section titles from the resort site — do not invent categories.
@@ -106,6 +112,11 @@ export type SkipassGroup = {
   category: string
   /** Column headers after name/duration, e.g. «Будни», «Выходные», «Базовый». */
   columns: string[]
+  /**
+   * Optional two-level header: groups above `columns` (colSpan = span).
+   * Spans must sum to `columns.length` (e.g. Будние дни ×3 + Выходные ×3).
+   */
+  columnGroups?: SkipassColumnGroup[]
   rows: SkipassRow[]
   note?: string
 }

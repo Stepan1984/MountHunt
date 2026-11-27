@@ -481,6 +481,17 @@ describe('skipass groups', () => {
     assert.ok(hourly.rows.some((r) => /базов/i.test(r.name)))
     const lessons = groups.find((g) => /^Занятия с инструктором$/i.test(g.category))
     assert.ok(lessons?.rows?.every((r) => /человек|тренер/i.test(r.name || '')))
+    // Nested header from site: Будние дни | Выходные/Праздничные дни × 1 час / 1,5 / 2.
+    assert.ok(Array.isArray(lessons?.columnGroups) && lessons.columnGroups.length === 2)
+    assert.match(lessons.columnGroups[0].label, /Будние дни/i)
+    assert.match(lessons.columnGroups[1].label, /Выходные\/Праздничные дни/i)
+    assert.deepEqual(lessons.columns, ['1 час', '1,5 часа', '2 часа', '1 час', '1,5 часа', '2 часа'])
+    assert.equal(lessons.columnGroups[0].span + lessons.columnGroups[1].span, lessons.columns.length)
+    // One row per site tariff name (not duration × name).
+    assert.ok(lessons.rows.every((r) => !r.duration))
+    assert.ok(lessons.rows.every((r) => (r.prices || []).length === 6))
+    assert.ok(lessons.rows.some((r) => /^1 человек$/i.test(r.name || '')))
+    assert.ok(lessons.rows.some((r) => /^1 человек с тренером$/i.test(r.name || '')))
   })
 
   it('Igora snapshot parses rental, tubing, and ski-service tables', () => {
