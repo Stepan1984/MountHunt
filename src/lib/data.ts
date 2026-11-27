@@ -138,6 +138,8 @@ function normHoursBlob(text: string): string {
 /**
  * Visitor-facing hours lead: omit summary when it only restates `periods`
  * (avoids «ежедневно 10:00–21:00» twice in the same block).
+ * Also drops condensed card summaries (e.g. Severny «пн–пт (бар)…» from
+ * пн–чт + пт rows) that match `formatCardHoursFromPeriods`.
  */
 export function hoursLeadText(
   summary: string | null | undefined,
@@ -156,6 +158,14 @@ export function hoursLeadText(
   const looseLead = normHoursBlob(lead.replace(/:/g, ' '))
   const loosePeriods = normHoursBlob(fromPeriods.replace(/:/g, ' '))
   if (looseLead === loosePeriods) return null
+
+  // Condensed card format (пн–чт + пт → «пн–пт») that restates the table.
+  const cardFormatted = formatCardHoursFromPeriods(periods)
+  if (cardFormatted && normHoursBlob(lead) === normHoursBlob(cardFormatted)) return null
+  if (cardFormatted) {
+    const looseCard = normHoursBlob(cardFormatted.replace(/:/g, ' '))
+    if (looseLead === looseCard) return null
+  }
 
   return lead
 }

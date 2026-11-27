@@ -242,6 +242,21 @@ describe('card hours UI helpers', () => {
     assert.match(dataSrc, /stripSlopeStatusFromCardHours/)
     assert.match(dataSrc, /formatCardHoursFromPeriods/)
     assert.match(dataSrc, /formatDayIndices/)
+    assert.match(pageSrc, /hoursLeadText/)
+    // Detail lead omits condensed card summaries that restate the periods table
+    // (Severny «пн–пт (бар)…» vs пн–чт + пт rows).
+    assert.match(
+      dataSrc,
+      /hoursLeadText[\s\S]*formatCardHoursFromPeriods\(periods\)/,
+    )
     assert.match(cssSrc, /\.resort-card__hours[\s\S]*white-space:\s*pre-line/)
+  })
+
+  it('Severny hours summary is only a condensed restatement of periods', async () => {
+    const { formatCardHoursFromPeriods } = await import('../lib/card-hours-format.mjs')
+    const hours = JSON.parse(readFileSync(join(root, 'public/data/hours.json'), 'utf8'))
+    const sev = hours.find((h) => h.resortId === 'severny-sklon')
+    assert.ok(sev?.periods?.length)
+    assert.equal(formatCardHoursFromPeriods(sev.periods), sev.summary.trim())
   })
 })
