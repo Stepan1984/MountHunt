@@ -13,7 +13,6 @@ import {
   pricesFor,
   publicPriceNote,
   resortAddressQuery,
-  resortPhotoUrl,
   scrapeStatusLabel,
   slopesBadgeLabel,
   yandexMapsUrl,
@@ -26,10 +25,9 @@ const PRICE_PREVIEW = 8
 
 /**
  * Shared resort-detail section order:
- * header → [photo] → site / news → webcam → [hours → prices if active] →
+ * header → site / news → webcam → [hours → prices if active] →
  * features → contacts → location → links
  * Hours / prices sections are omitted for дикие / неясные / закрытые (status !== active).
- * Photo: at most one licensed hero; omitted when no verified image of this place.
  * Address lives only under «Локация» (Yandex link); phone/email only under «Контакты».
  * Features (щётки, подушка…) are in-resort sections — never separate catalog entries.
  * News live on /news?resort=<id> — no inline «Важное» block on detail pages.
@@ -132,26 +130,6 @@ export function ResortPage({ data }: { data: SiteData }) {
           )
         ) : null}
       </header>
-
-      {resort.photo && (
-        <figure className="resort-detail__photo">
-          <img
-            src={resortPhotoUrl(resort.photo.file)}
-            alt={resort.photo.alt}
-            width={1500}
-            height={1000}
-            decoding="async"
-            fetchPriority="high"
-          />
-          <figcaption className="resort-detail__photo-credit">
-            Фото:{' '}
-            <ExternalLink href={resort.photo.sourceUrl}>
-              {resort.photo.credit}
-            </ExternalLink>
-            {` · ${resort.photo.license}`}
-          </figcaption>
-        </figure>
-      )}
 
       {/* Top CTAs: official site + filtered news feed. Hours / tariffs / cam live below. */}
       <div className="resort-detail__actions" role="group" aria-label="Ссылки курорта">
