@@ -292,8 +292,8 @@ function cardHoursSlotValue(open: string, close: string): string {
 
 /**
  * Canonical card schedule from structured periods:
- * «пн–пт: 11:00–22:00;\nсб–вс: 9:00–22:30»
- * (line break after `;`, Mon-first, abbr + consecutive grouping).
+ * «пн–пт: 11:00–22:00\nсб–вс: 9:00–22:30»
+ * (line break between groups, no `;`, Mon-first, abbr + consecutive grouping).
  */
 export function formatCardHoursFromPeriods(periods: HoursPeriod[] | undefined): string | null {
   if (!periods?.length) return null
@@ -370,10 +370,10 @@ export function formatCardHoursFromPeriods(periods: HoursPeriod[] | undefined): 
     )
   }
 
-  return parts.length ? parts.join(';\n') : null
+  return parts.length ? parts.join('\n') : null
 }
 
-/** Reformat weekday schedule segments; leave opaque labels, join with `;\n`. */
+/** Reformat weekday schedule segments; leave opaque labels, join with `\n` (no `;`). */
 function reformatCardHoursSummaryText(text: string): string {
   const segments = text
     .split(/\s*;\s*/)
@@ -413,9 +413,12 @@ function reformatCardHoursSummaryText(text: string): string {
 
   const formatted = formatCardHoursFromPeriods(periods)
   const parts: string[] = []
-  if (formatted) parts.push(...formatted.split(/;\n/))
+  if (formatted) parts.push(...formatted.split(/\n/))
   parts.push(...opaque)
-  return parts.map((p) => p.trim()).filter(Boolean).join(';\n')
+  return parts
+    .map((p) => p.trim().replace(/;+\s*$/g, '').trim())
+    .filter(Boolean)
+    .join('\n')
 }
 
 /** Cyrillic-safe letter run (JS `\w` is ASCII-only without the unicode flag). */
@@ -511,6 +514,8 @@ export function normalizeCardHoursSummary(text: string): string {
   if (!t || isPureSlopeStatusHours(t) || isBlankHoursScheduleLabel(t)) return ''
 
   t = t
+    // Newlines and `;`/`|` are segment separators (card lines use `\n`, no `;`).
+    .replace(/\n+/g, ';')
     .replace(/\s*[;|]\s*/g, '; ')
     // Convert HH.MM→HH:MM only inside time ranges (do not touch dates like 25.11.2026).
     .replace(/(\d{1,2})\.(\d{2})(?=\s*[-−—–]\s*\d)/g, '$1:$2')

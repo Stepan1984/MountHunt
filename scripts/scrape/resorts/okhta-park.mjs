@@ -309,7 +309,7 @@ function parseTrailHours(html) {
     periods.push({ days: 'сб–вс', open: hit[3], close: hit[4] })
     summary =
       formatCardHoursFromPeriods(periods) ||
-      `пн–пт: ${hit[1]}–${hit[2]};\nсб–вс: ${hit[3]}–${hit[4]}`
+      `пн–пт: ${hit[1]}–${hit[2]}\nсб–вс: ${hit[3]}–${hit[4]}`
   } else if (/11:00\s*[-–—]\s*21:00/.test(text) || /с 11:00 до 21:00/.test(text)) {
     periods.push({ days: 'ежедневно', open: '11:00', close: '21:00' })
     summary = formatCardHoursFromPeriods(periods) || 'ежедневно: 11:00–21:00'

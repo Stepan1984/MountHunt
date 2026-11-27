@@ -3,7 +3,7 @@
  * Keep in sync with src/lib/data.ts (formatCardHoursFromPeriods / normalizeCardHoursSummary).
  *
  * Rules:
- * - line break after each `;`
+ * - one day-group per line (join with `\n`, no `;`)
  * - weekdays as пн вт ср чт пт сб вс
  * - Monday-first order when days are parseable
  * - group consecutive same-hours days (пн–пт, сб–вс) or comma for gaps
@@ -206,23 +206,23 @@ export function formatCardHoursFromPeriods(periods) {
     )
   }
 
-  return parts.length ? parts.join(';\n') : null
+  return parts.length ? parts.join('\n') : null
 }
 
 /**
- * Join schedule segments with `;\n` (and trim).
+ * Join schedule segments with `\n` (and trim). No trailing/separating `;`.
  * @param {string[]} parts
  */
 export function joinCardHoursParts(parts) {
   return parts
-    .map((p) => p.trim())
+    .map((p) => p.trim().replace(/;+\s*$/g, '').trim())
     .filter(Boolean)
-    .join(';\n')
+    .join('\n')
 }
 
 /**
  * Reformat a free-text summary into card style (abbr, Mon-first, grouping, line breaks).
- * Non-weekday segments (lift names etc.) keep order and only get `;\n` joins.
+ * Non-weekday segments (lift names etc.) keep order and only get `\n` joins.
  * @param {string} text
  */
 export function reformatCardHoursSummaryText(text) {
@@ -269,7 +269,7 @@ export function reformatCardHoursSummaryText(text) {
 
   const formatted = formatCardHoursFromPeriods(periods)
   const parts = []
-  if (formatted) parts.push(...formatted.split(/;\n/))
+  if (formatted) parts.push(...formatted.split(/\n/))
   parts.push(...opaque)
   return joinCardHoursParts(parts)
 }

@@ -77,6 +77,7 @@ function normalizeCardHoursSummary(text) {
   let t = stripSlopeStatusFromCardHours(text)
   if (!t || isPureSlopeStatusHours(t) || isBlankHoursScheduleLabel(t)) return ''
   t = t
+    .replace(/\n+/g, ';')
     .replace(/\s*[;|]\s*/g, '; ')
     .replace(/(\d{1,2})\.(\d{2})(?=\s*[-−—–]\s*\d)/g, '$1:$2')
     .replace(/(?<=[-−—–]\s*)(\d{1,2})\.(\d{2})\b/g, '$1:$2')
@@ -111,11 +112,11 @@ describe('card hours UI helpers', () => {
       normalizeCardHoursSummary(
         'Горнолыжные склоны закрыты на летний период. Ближайший график (прочее): Понедельник: закрыто; Вторник: закрыто; Среда: 12:00–22:00',
       ),
-      'пн–вт: выходной;\nср: 12:00–22:00',
+      'пн–вт: выходной\nср: 12:00–22:00',
     )
     assert.equal(
       normalizeCardHoursSummary('Сезон закрыт. пн: выходной; вт–пт: 11:00–22:00'),
-      'пн: выходной;\nвт–пт: 11:00–22:00',
+      'пн: выходной\nвт–пт: 11:00–22:00',
     )
     assert.equal(
       normalizeCardHoursSummary('На 25.11.2026: склоны/подъёмники закрыты до сезона'),
@@ -127,7 +128,7 @@ describe('card hours UI helpers', () => {
     )
     assert.equal(
       normalizeCardHoursSummary('будни 12:00–18:00; выходные 10:00–18:00'),
-      'пн–пт: 12:00–18:00;\nсб–вс: 10:00–18:00',
+      'пн–пт: 12:00–18:00\nсб–вс: 10:00–18:00',
     )
   })
 
@@ -161,14 +162,14 @@ describe('card hours UI helpers', () => {
     )
   })
 
-  it('formats periods: abbr, Mon-first, grouping, line breaks after ;', () => {
+  it('formats periods: abbr, Mon-first, grouping, line breaks without ;', () => {
     assert.equal(
       formatCardHoursFromPeriods([
         { days: 'ср., чт., пт.', open: '15:00', close: '21:00' },
         { days: 'сб., вс.', open: '10:00', close: '21:00' },
         { days: 'пн., вт.', open: '', close: '' },
       ]),
-      'пн–вт: выходной;\nср–пт: 15:00–21:00;\nсб–вс: 10:00–21:00',
+      'пн–вт: выходной\nср–пт: 15:00–21:00\nсб–вс: 10:00–21:00',
     )
     assert.equal(
       formatCardHoursFromPeriods([
@@ -179,21 +180,21 @@ describe('card hours UI helpers', () => {
         { days: 'Пятница', open: '12:00', close: '23:00' },
         { days: 'Суббота', open: '11:00', close: '23:00' },
       ]),
-      'пн–вт: выходной;\nср–чт: 12:00–22:00;\nпт: 12:00–23:00;\nсб: 11:00–23:00',
+      'пн–вт: выходной\nср–чт: 12:00–22:00\nпт: 12:00–23:00\nсб: 11:00–23:00',
     )
     assert.equal(
       formatCardHoursFromPeriods([
         { days: 'будни', open: '12:00', close: '18:00' },
         { days: 'выходные', open: '10:00', close: '18:00' },
       ]),
-      'пн–пт: 12:00–18:00;\nсб–вс: 10:00–18:00',
+      'пн–пт: 12:00–18:00\nсб–вс: 10:00–18:00',
     )
     assert.equal(
       formatCardHoursFromPeriods([
         { days: 'пн–пт', open: '11:00', close: '22:30' },
         { days: 'сб–вс', open: '9:00', close: '22:30' },
       ]),
-      'пн–пт: 11:00–22:30;\nсб–вс: 9:00–22:30',
+      'пн–пт: 11:00–22:30\nсб–вс: 9:00–22:30',
     )
   })
 
@@ -208,10 +209,10 @@ describe('card hours UI helpers', () => {
       assert.ok(line.length > 0, h.resortId)
       // Never a bare date-only «График на …» with empty schedule.
       assert.doesNotMatch(line, /^(?:график\s+)?на\s+\d{1,2}\.\d{1,2}/i, h.resortId)
-      // Multi-segment schedules use a line break after each `;`.
-      if (line.includes(';')) {
-        assert.match(line, /;\n/, h.resortId)
-        assert.doesNotMatch(line, /; [^\n]/, h.resortId)
+      // Card hours never use `;` — multi-segment schedules are newline-separated.
+      assert.doesNotMatch(line, /;/, h.resortId)
+      if (line.includes('\n')) {
+        assert.doesNotMatch(line, /;\n|; [^\n]/, h.resortId)
       }
     }
   })

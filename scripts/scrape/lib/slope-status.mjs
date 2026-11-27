@@ -291,7 +291,7 @@ export function detectGenericSlopeStatus(htmlOrText, opts = {}) {
 
 /**
  * Append extras note to hours summary without duplicating.
- * Keeps card-hours `;\n` line breaks in the base schedule (do not collapse via cleanText).
+ * Keeps card-hours `\n` line breaks in the base schedule (do not collapse via cleanText).
  * @param {string} summary
  * @param {string | null | undefined} note
  */

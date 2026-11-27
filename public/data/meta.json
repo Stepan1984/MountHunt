@@ -9,7 +9,7 @@
       "prices": "ok",
       "hours": "ok",
       "itemCount": 20,
-      "summary": "пн–пт: 12:00–18:00;\nсб–вс: 10:00–18:00",
+      "summary": "пн–пт: 12:00–18:00\nсб–вс: 10:00–18:00",
       "importantInconclusive": false,
       "clearImportantPrefixes": true
     },
@@ -19,7 +19,7 @@
       "prices": "ok",
       "hours": "ok",
       "itemCount": 36,
-      "summary": "пн–вт: выходной;\nср–чт: 12:00–22:00;\nпт: 12:00–23:00;\nсб: 11:00–23:00",
+      "summary": "пн–вт: выходной\nср–чт: 12:00–22:00\nпт: 12:00–23:00\nсб: 11:00–23:00",
       "importantInconclusive": false,
       "clearImportantPrefixes": true
     },
@@ -29,7 +29,7 @@
       "prices": "ok",
       "hours": "ok",
       "itemCount": 8,
-      "summary": "пн: выходной;\nвт–пт: 11:00–22:00;\nсб–вс: 10:00–22:00",
+      "summary": "пн: выходной\nвт–пт: 11:00–22:00\nсб–вс: 10:00–22:00",
       "importantInconclusive": false,
       "clearImportantPrefixes": true
     },
@@ -39,7 +39,7 @@
       "prices": "partial",
       "hours": "ok",
       "itemCount": 0,
-      "summary": "пн–вт: выходной;\nср–пт: 15:00–21:00;\nсб–вс: 10:00–21:00",
+      "summary": "пн–вт: выходной\nср–пт: 15:00–21:00\nсб–вс: 10:00–21:00",
       "importantInconclusive": false,
       "clearImportantPrefixes": true
     },
@@ -59,7 +59,7 @@
       "prices": "ok",
       "hours": "ok",
       "itemCount": 30,
-      "summary": "Подъемник кресельный №10: закрыт;\nПодъемник с крыши гостиницы: закрыт;\nКресельный подъемник №1: закрыт;\nЛенточный подъемник № 6: закрыт",
+      "summary": "Подъемник кресельный №10: закрыт\nПодъемник с крыши гостиницы: закрыт\nКресельный подъемник №1: закрыт\nЛенточный подъемник № 6: закрыт",
       "importantInconclusive": false,
       "clearImportantPrefixes": true
     },
@@ -79,7 +79,7 @@
       "prices": "ok",
       "hours": "partial",
       "itemCount": 25,
-      "summary": "пн–пт: 11:00–23:00;\nсб–вс и праздники: 10:00–21:00. Щётки (Джиб Палас) работают — это не горнолыжные склоны",
+      "summary": "пн–пт: 11:00–23:00\nсб–вс и праздники: 10:00–21:00. Щётки (Джиб Палас) работают — это не горнолыжные склоны",
       "importantInconclusive": false,
       "clearImportantPrefixes": true
     },
@@ -89,7 +89,7 @@
       "prices": "ok",
       "hours": "ok",
       "itemCount": 35,
-      "summary": "пн–пт: 11:00–22:30;\nсб–вс: 9:00–22:30",
+      "summary": "пн–пт: 11:00–22:30\nсб–вс: 9:00–22:30",
       "importantInconclusive": false,
       "clearImportantPrefixes": true
     },
@@ -99,7 +99,7 @@
       "prices": "ok",
       "hours": "ok",
       "itemCount": 51,
-      "summary": "пн–пт: 11:00–22:00;\nсб: 10:00–23:00;\nвс: 10:00–21:00",
+      "summary": "пн–пт: 11:00–22:00\nсб: 10:00–23:00\nвс: 10:00–21:00",
       "importantInconclusive": false,
       "clearImportantPrefixes": true
     },
@@ -109,7 +109,7 @@
       "prices": "unavailable",
       "hours": "partial",
       "itemCount": 0,
-      "summary": "пн–пт (бар): 11:00–21:00;\nсб–вс: 10:00–22:00",
+      "summary": "пн–пт (бар): 11:00–21:00\nсб–вс: 10:00–22:00",
       "importantInconclusive": false,
       "clearImportantPrefixes": true
     },

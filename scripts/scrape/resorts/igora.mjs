@@ -860,7 +860,7 @@ export function parseIgoraHours(html) {
       }
       if (periods.length >= 6) break
     }
-    summary = formatCardHoursFromPeriods(periods) || periods.map((p) => `${p.days}: ${p.open}–${p.close}`).join(';\n')
+    summary = formatCardHoursFromPeriods(periods) || periods.map((p) => `${p.days}: ${p.open}–${p.close}`).join('\n')
   } else if (slopeBlock) {
     periods.push({ days: 'склоны', open: slopeBlock[1], close: slopeBlock[2] })
     summary = `склоны: ${slopeBlock[1]}–${slopeBlock[2]}`
