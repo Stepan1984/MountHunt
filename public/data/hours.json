@@ -17,7 +17,7 @@
       }
     ],
     "status": "ok",
-    "slopesOpen": false
+    "slopesOpen": true
   },
   {
     "resortId": "igora",
@@ -62,7 +62,7 @@
       }
     ],
     "status": "ok",
-    "slopesOpen": true
+    "slopesOpen": false
   },
   {
     "resortId": "krasnoe-ozero",

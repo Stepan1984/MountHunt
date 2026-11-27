@@ -87,6 +87,22 @@ describe('important detectors', () => {
     assert.equal(items[0].publishedAt, '2026-11-22T06:05:00Z')
   })
 
+  it('detects Okhta open from trails widget / «будут работать» over leftover presale', () => {
+    const trails = `<html><body>
+      <p class="service_widget_cost_caption">Горнолыжные трассы</p>
+      <div class="service_widget_status service_widget_status--open"><p>Открыто</p></div>
+      <p>С 28 ноября будут работать первый и второй склоны</p>
+      <p>Открыли предпродажу</p>
+    </body></html>`
+    const items = detectOkhtaImportant(
+      { trailsHtml: trails, lentaHtml: '' },
+      'https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/',
+      { trailsUrl: 'https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/' },
+    )
+    assert.equal(items.length, 1)
+    assert.equal(items[0].id, 'okhta-season-open')
+  })
+
   it('clears Okhta when neither opening nor presale remain', () => {
     const html = '<html><body><p>Горнолыжные трассы работают ежедневно</p></body></html>'
     assert.equal(detectOkhtaImportant(html, 'https://www.ohtapark.ru/').length, 0)

@@ -157,14 +157,36 @@ export function detectDropParkSlopeStatus(pageHtml, tgHtml) {
  * @param {{ trailsHtml?: string, lentaHtml?: string, homeHtml?: string }} pages
  * @param {{ dayClosed?: boolean }} [opts]
  */
+/**
+ * Okhta trails page marks alpine service with Bitrix widget class
+ * `service_widget_status--open` (caption «Горнолыжные трассы»).
+ * @param {string} trailsHtml
+ */
+export function okhtaTrailsServiceOpen(trailsHtml) {
+  const html = String(trailsHtml || '')
+  if (
+    /Горнолыжные\s+трассы[\s\S]{0,500}service_widget_status--open/i.test(html) ||
+    /service_widget_status--open[\s\S]{0,500}Горнолыжные\s+трассы/i.test(html)
+  ) {
+    return true
+  }
+  const trailsText = cleanText(loadHtml(html || '<body></body>')('body').text())
+  return /горнолыжные\s+трассы\s+открыто/i.test(trailsText)
+}
+
 export function detectOkhtaSlopeStatus(pages, opts = {}) {
-  const trailsText = cleanText(loadHtml(pages.trailsHtml || '<body></body>')('body').text())
+  const trailsHtml = pages.trailsHtml || ''
+  const trailsText = cleanText(loadHtml(trailsHtml || '<body></body>')('body').text())
   const lentaText = cleanText(loadHtml(pages.lentaHtml || '<body></body>')('body').text())
   const homeText = cleanText(loadHtml(pages.homeHtml || '<body></body>')('body').text())
   const combined = [trailsText, lentaText, homeText].filter(Boolean).join('\n')
 
-  if (okhtaSeasonOpenMatch(combined) || alpineSlopesOpenMatch(combined)) {
-    // Opening announcement wins over leftover «предпродажа» / day-tariff closed.
+  if (
+    okhtaTrailsServiceOpen(trailsHtml) ||
+    okhtaSeasonOpenMatch(combined) ||
+    alpineSlopesOpenMatch(combined)
+  ) {
+    // Opening / live «Открыто» widget wins over leftover «предпродажа» / day-tariff closed.
     return { slopesOpen: true }
   }
   if (opts.dayClosed || alpineSlopesClosedMatch(combined) || /предпродаж/i.test(combined)) {
@@ -243,20 +265,17 @@ export function detectLazurnyeSlopeStatus(homeHtml, importantItems = []) {
 }
 
 /**
- * Tuutari from important detectors / news html.
+ * Tuutari from important detectors only.
+ * Do not scan the full news archive HTML: old «открыты … склоны» posts
+ * (2021+) false-trigger alpineSlopesOpenMatch and invent «Склоны открыты».
  * @param {object[]} importantItems
- * @param {string} [newsHtml]
+ * @param {string} [_newsHtml] unused; kept for call-site compatibility
  */
-export function detectTuutariSlopeStatus(importantItems = [], newsHtml = '') {
+export function detectTuutariSlopeStatus(importantItems = [], _newsHtml = '') {
   if (importantItems.some((i) => i?.id === 'tuutari-season-open')) {
     return { slopesOpen: true }
   }
-  if (importantItems.some((i) => i?.id === 'tuutari-season-prep')) {
-    return { slopesOpen: false }
-  }
-  const text = cleanText(loadHtml(newsHtml || '<body></body>')('body').text())
-  if (alpineSlopesOpenMatch(text)) return { slopesOpen: true }
-  if (alpineSlopesClosedMatch(text)) return { slopesOpen: false }
+  // Prep / unknown / stale archive → closed (fail-soft).
   return { slopesOpen: false }
 }
 
