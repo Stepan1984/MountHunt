@@ -70,8 +70,8 @@ export type HoursSnapshot = {
    */
   slopesOpen?: boolean
   /**
-   * Very short muted line under card «Часы» (e.g. «из новости»
-   * when schedule was taken from a resort news post).
+   * Short muted caption under detail «Часы работы» (e.g. «из новости»
+   * when schedule was taken from a resort news post). Not shown on home cards.
    */
   hoursNote?: string
 }
