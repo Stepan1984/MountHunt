@@ -548,6 +548,13 @@ main {
   grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
 }
 
+/* Desktop: 3 across for active + closed/wild (shared .resort-grid). */
+@media (min-width: 960px) {
+  .resort-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .resort-card {
   position: relative;
   min-width: 0;
