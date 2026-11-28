@@ -30,6 +30,7 @@ import {
   importantItem,
   mergeImportantFailSoft,
 } from './scrape/lib/important.mjs'
+import { enrichCardTags } from './scrape/lib/card-tags.mjs'
 import { enrichHoursFromImportant } from './scrape/lib/news-hours.mjs'
 import { nowIso } from './scrape/lib/parse.mjs'
 import {
@@ -79,6 +80,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const outDir = join(root, 'public', 'data')
 const importantPath = join(outDir, 'important.json')
 const hoursPath = join(outDir, 'hours.json')
+const cardTagsPath = join(outDir, 'card-tags.json')
 const metaPath = join(outDir, 'meta.json')
 
 function parseArgs(argv) {
@@ -361,6 +363,9 @@ async function main() {
   const important = mergeImportantFailSoft(prevImportant, results, { chromeNote })
   const prevHours = readJson(hoursPath, [])
   const hours = enrichHoursFromImportant(prevHours, important)
+  const prevCardTags = readJson(cardTagsPath, { resorts: {} })
+  // Krasnoe-only AI/rule tags → public/data/card-tags.json (no live API required).
+  const cardTags = await enrichCardTags(important, { previous: prevCardTags })
   const okCount = results.filter((r) => r.ok).length
   const failCount = results.length - okCount
   const scrapedAt = nowIso()
@@ -373,6 +378,7 @@ async function main() {
     ...prevMeta,
     importantScrapedAt: scrapedAt,
     importantNote: `Важное: ok ${okCount}, fail ${failCount}`,
+    cardTagsUpdatedAt: cardTags.updatedAt,
     // Keep daily scrape source if present; annotate important refresh.
     source: prevMeta.source?.startsWith('scrape')
       ? prevMeta.source
@@ -390,6 +396,7 @@ async function main() {
           results,
           important,
           hoursNewsSynced: hours.filter((h) => h.hoursNote).map((h) => h.resortId),
+          cardTags,
           meta,
         },
         null,
@@ -401,9 +408,13 @@ async function main() {
 
   writeJson(importantPath, important)
   writeJson(hoursPath, hours)
+  writeJson(cardTagsPath, cardTags)
   writeJson(metaPath, meta)
 
   console.log(`\nЗаписано ${importantPath} · ${important.length} пунктов · ${scrapedAt}`)
+  console.log(
+    `Card tags (${cardTags.mode}): ${cardTagsPath} · krasnoe=${cardTags.resorts?.['krasnoe-ozero']?.length ?? 0}`,
+  )
   console.log(`Часы из новостей: обновлено курортов ${hours.filter((h) => h.hoursNote).length}`)
   console.log(
     `Успешно: ${results.filter((r) => r.ok).map((r) => r.resortId).join(', ') || '—'}`,

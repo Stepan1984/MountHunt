@@ -36,15 +36,16 @@ jobs:
         # Fail-soft at script level; still fail the step on orchestration/I/O errors.
         continue-on-error: false
 
-      - name: Commit important + hours if changed
+      - name: Commit important + hours + card-tags if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # Hours may update when news carries operating clocks (news→hours sync).
-          git add public/data/important.json public/data/hours.json public/data/meta.json
+          # Card tags: Krasnoe AI/rule badges from news (rules offline; LLM if secret set).
+          git add public/data/important.json public/data/hours.json public/data/card-tags.json public/data/meta.json
           if git diff --staged --quiet; then
-            echo "Нет изменений «Важного» / часов из новостей"
+            echo "Нет изменений «Важного» / часов / card-tags"
           else
-            git commit -m "chore(data): обновление Важного и часов из новостей (hourly)"
+            git commit -m "chore(data): обновление Важного, часов и card-tags (hourly)"
             git push
           fi

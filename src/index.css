@@ -718,6 +718,18 @@ main {
   background: rgba(63, 122, 146, 0.12);
 }
 
+/* AI/rule card tags (events) — fixed taxonomy labels only. */
+.badge--event {
+  color: var(--pine);
+  background: rgba(47, 90, 74, 0.1);
+  border-color: rgba(47, 90, 74, 0.18);
+}
+
+.badge--info {
+  color: var(--ice);
+  background: rgba(63, 122, 146, 0.1);
+}
+
 .page-narrow {
   width: min(760px, calc(100% - 2rem));
   max-width: 100%;

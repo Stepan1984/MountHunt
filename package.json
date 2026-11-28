@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "scrape": "node scripts/scrape.mjs",
     "scrape:important": "node scripts/scrape-important.mjs",
+    "scrape:card-tags": "node scripts/scrape-card-tags.mjs",
     "test:scrape": "node --test scripts/scrape/test/*.test.mjs",
     "data:refresh": "node scripts/refresh-seed.mjs"
   },

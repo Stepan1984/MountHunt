@@ -1,0 +1,52 @@
+{
+  "updatedAt": "2026-11-28T07:32:53.781Z",
+  "mode": "rules",
+  "resorts": {
+    "krasnoe-ozero": [
+      {
+        "id": "warning.lift",
+        "kind": "warning",
+        "label": "Подъёмник закрыт",
+        "severity": "warn",
+        "sourceItemIds": [
+          "krasnoe-vk-34933"
+        ],
+        "expiresAt": "2026-12-05T02:32:12.000Z",
+        "updatedAt": "2026-11-28T07:32:53.776Z"
+      },
+      {
+        "id": "warning.partial",
+        "kind": "warning",
+        "label": "Частичное ограничение",
+        "severity": "warn",
+        "sourceItemIds": [
+          "krasnoe-tg-1864"
+        ],
+        "expiresAt": "2026-12-04T18:44:28.000Z",
+        "updatedAt": "2026-11-28T07:32:53.776Z"
+      },
+      {
+        "id": "warning.weather",
+        "kind": "warning",
+        "label": "Погодные ограничения",
+        "severity": "warn",
+        "sourceItemIds": [
+          "krasnoe-tg-1864"
+        ],
+        "expiresAt": "2026-12-04T18:44:28.000Z",
+        "updatedAt": "2026-11-28T07:32:53.776Z"
+      },
+      {
+        "id": "closure.until_season",
+        "kind": "closure",
+        "label": "Закрыто до сезона",
+        "severity": "warn",
+        "sourceItemIds": [
+          "krasnoe-slopes-closed"
+        ],
+        "expiresAt": "2026-12-19T00:00:00.000Z",
+        "updatedAt": "2026-11-28T07:32:53.776Z"
+      }
+    ]
+  }
+}
