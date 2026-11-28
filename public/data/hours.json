@@ -18,7 +18,6 @@
     ],
     "status": "ok",
     "slopesOpen": true,
-    "newsSummary": "28.11: 9:00–22:30",
     "newsPeriods": [
       {
         "days": "28.11",
@@ -26,6 +25,7 @@
         "close": "22:30"
       }
     ],
+    "newsSummary": "28.11: 9:00–22:30",
     "newsSourceUrl": "https://t.me/OhtaPark/10554"
   },
   {
@@ -72,7 +72,15 @@
     ],
     "status": "failed",
     "slopesOpen": false,
-    "note": "Сбор данных не удался — показаны прежние данные"
+    "newsPeriods": [
+      {
+        "days": "12.00",
+        "open": "12:00",
+        "close": "18:00"
+      }
+    ],
+    "newsSummary": "12.00: 12:00–18:00",
+    "newsSourceUrl": "https://vk.com/wall-38655690_9603"
   },
   {
     "resortId": "krasnoe-ozero",
@@ -82,15 +90,15 @@
     "periods": [],
     "status": "ok",
     "slopesOpen": false,
-    "newsSummary": "28.11: 12:00–21:45",
     "newsPeriods": [
       {
-        "days": "28.11",
+        "days": "12.00",
         "open": "12:00",
         "close": "21:45"
       }
     ],
-    "newsSourceUrl": "https://t.me/redlakeclub/1864"
+    "newsSummary": "12.00: 12:00–21:45",
+    "newsSourceUrl": "https://t.me/redlakeclub/1865"
   },
   {
     "resortId": "zolotaya-dolina",
