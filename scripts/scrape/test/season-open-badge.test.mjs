@@ -30,7 +30,7 @@ describe('season-open-badge', () => {
     assert.equal(extractSeasonOpenYmd(body, '2026-11-10T00:00:00Z'), '2026-11-22')
   })
 
-  it('shows badge while opening date is today or future (MSK)', () => {
+  it('never shows «Начало сезона» for Krasnoe (opening postponed indefinitely)', () => {
     const items = [
       {
         id: 'krasnoe-tg-1849',
@@ -44,28 +44,50 @@ describe('season-open-badge', () => {
     ]
     assert.equal(
       seasonOpenBadgeLabel('krasnoe-ozero', items, new Date('2026-11-27T12:00:00+03:00')),
-      'Начало сезона 28.11.2026',
+      null,
     )
     assert.equal(
       seasonOpenBadgeLabel('krasnoe-ozero', items, new Date('2026-11-28T10:00:00+03:00')),
-      'Начало сезона 28.11.2026',
+      null,
     )
   })
 
-  it('hides badge once opening date has passed (MSK)', () => {
+  it('shows badge while opening date is today or future (MSK)', () => {
     const items = [
       {
-        id: 'krasnoe-tg-1849',
-        resortId: 'krasnoe-ozero',
-        title: 'Красное озеро: МЫ ОТКРЫВАЕМСЯ',
-        body: 'Друзья, в эту субботу, 28.11 стартует зимний сезон!',
+        id: 'okhta-tg-open',
+        resortId: 'okhta-park',
+        title: 'Охта-Парк: открытие',
+        body: 'Открытие 29 ноября! С 29 ноября будет открыт первый склон',
         publishedAt: '2026-11-25T17:10:56Z',
         updatedAt: '2026-11-27T02:01:26Z',
         severity: 'info',
       },
     ]
     assert.equal(
-      seasonOpenBadgeLabel('krasnoe-ozero', items, new Date('2026-11-29T00:30:00+03:00')),
+      seasonOpenBadgeLabel('okhta-park', items, new Date('2026-11-27T12:00:00+03:00')),
+      'Начало сезона 29.11.2026',
+    )
+    assert.equal(
+      seasonOpenBadgeLabel('okhta-park', items, new Date('2026-11-29T10:00:00+03:00')),
+      'Начало сезона 29.11.2026',
+    )
+  })
+
+  it('hides badge once opening date has passed (MSK)', () => {
+    const items = [
+      {
+        id: 'okhta-tg-open',
+        resortId: 'okhta-park',
+        title: 'Охта-Парк: открытие',
+        body: 'Открытие 28 ноября! С 28 ноября будет открыт первый склон',
+        publishedAt: '2026-11-25T17:10:56Z',
+        updatedAt: '2026-11-27T02:01:26Z',
+        severity: 'info',
+      },
+    ]
+    assert.equal(
+      seasonOpenBadgeLabel('okhta-park', items, new Date('2026-11-29T00:30:00+03:00')),
       null,
     )
   })

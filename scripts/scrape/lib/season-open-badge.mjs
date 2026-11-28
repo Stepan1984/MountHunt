@@ -6,6 +6,12 @@
  * Keep in sync with src/lib/season-open-badge.ts.
  */
 
+/**
+ * Resorts that must never show «Начало сезона» / season-open date badges.
+ * Krasnoe: opening postponed indefinitely («всё переносится на неопределенный срок»).
+ */
+export const SEASON_START_BADGE_SUPPRESSED_RESORTS = new Set(['krasnoe-ozero'])
+
 const RU_MONTHS = Object.freeze({
   января: 1,
   февраля: 2,
@@ -179,6 +185,8 @@ export function seasonOpenYmdFromItem(item, resortId) {
  */
 export function seasonOpenBadgeLabel(resortId, important, now = new Date()) {
   if (!resortId || !Array.isArray(important)) return null
+  // Indefinite postponement / policy suppress — never advertise a start date.
+  if (SEASON_START_BADGE_SUPPRESSED_RESORTS.has(resortId)) return null
   const today = mskTodayYmd(now)
   /** @type {{ ymd: string, sort: number }[]} */
   const hits = []
