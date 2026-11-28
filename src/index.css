@@ -669,9 +669,13 @@ main {
   white-space: pre-line;
 }
 
-/* Additive news hours on the card — short highlighted line, no «из новости» label. */
-.resort-card__hours--extra {
+/* Additive news hours on the card — short highlighted line, no «из новости» label.
+   Negative left margin cancels horizontal padding so text shares the same left
+   edge as primary `.resort-card__hours` lines (пн–пт / сб–вс).
+   Must beat `.resort-card__facts dd { margin: 0 }` specificity. */
+.resort-card__facts dd.resort-card__hours--extra {
   margin-top: 0.35rem;
+  margin-left: -0.45rem;
   padding: 0.28rem 0.45rem;
   border-radius: 8px;
   background: rgba(166, 107, 43, 0.12);

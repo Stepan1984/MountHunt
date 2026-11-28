@@ -282,6 +282,12 @@ describe('card hours UI helpers', () => {
     assert.match(pageSrc, /formatHoursTablePeriods/)
     assert.match(pageSrc, /hoursPeriodDisplayValue/)
     assert.match(cssSrc, /resort-card__hours--extra/)
+    // Highlight padding must not indent news text past primary hours
+    // (beats `.resort-card__facts dd { margin: 0 }`).
+    assert.match(
+      cssSrc,
+      /\.resort-card__facts dd\.resort-card__hours--extra[\s\S]*margin-left:\s*-0\.45rem/,
+    )
     assert.match(cssSrc, /detail-hours-extra/)
     assert.match(dataSrc, /stripSlopeStatusFromCardHours/)
     assert.match(dataSrc, /formatCardHoursFromPeriods/)
