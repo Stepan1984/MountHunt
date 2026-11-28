@@ -206,6 +206,7 @@ describe('slope-status detectors', () => {
       dateCol: '25.11.2026',
     })
     assert.equal(closed.slopesOpen, false)
+    assert.equal('brushesOpen' in closed, false)
 
     const withAirbag = detectKrasnoeSlopeStatus(
       {
@@ -225,7 +226,27 @@ describe('slope-status detectors', () => {
       },
     )
     assert.equal(withAirbag.slopesOpen, false)
+    assert.equal(withAirbag.brushesOpen, true)
     assert.match(withAirbag.note || '', /подушка|airbag/i)
+
+    const brushesClosed = detectKrasnoeSlopeStatus(
+      {
+        closedUntilSeason: true,
+        allClosed: true,
+        slopesCount: 10,
+        dateCol: '25.11.2026',
+      },
+      {
+        dateCol: '25.11.2026',
+        rows: [
+          {
+            Наименование: 'Щётки (трасса №9)',
+            '25.11.2026': 'закрыто',
+          },
+        ],
+      },
+    )
+    assert.equal(brushesClosed.brushesOpen, false)
   })
 
   it('Zoldol closed banner → slopesOpen false', () => {
@@ -234,18 +255,26 @@ describe('slope-status detectors', () => {
     assert.equal(detectZoldolSlopeStatus(html).slopesOpen, false)
   })
 
-  it('hoursSnapshot writes slopesOpen only when boolean', () => {
+  it('hoursSnapshot writes slopesOpen / brushesOpen only when boolean', () => {
     const withFlag = hoursSnapshot({
       resortId: 'okhta-park',
       summary: 'пн–пт: 11:00–22:30',
       slopesOpen: true,
     })
     assert.equal(withFlag.slopesOpen, true)
+    const withBrushes = hoursSnapshot({
+      resortId: 'drop-park',
+      summary: 'щётки работают',
+      slopesOpen: false,
+      brushesOpen: true,
+    })
+    assert.equal(withBrushes.brushesOpen, true)
     const omitted = hoursSnapshot({
       resortId: 'x',
       summary: 'нет данных',
     })
     assert.equal('slopesOpen' in omitted, false)
+    assert.equal('brushesOpen' in omitted, false)
   })
 
   it('appendHoursExtraNote dedupes', () => {

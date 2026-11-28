@@ -897,3 +897,69 @@ export function slopesBadgeLabel(
   if (openImportant) return 'Склоны открыты'
   return 'Склоны закрыты'
 }
+
+/** Resort has an in-page щётки / Jib Palace feature section. */
+export function resortHasBrushes(resort: Resort): boolean {
+  return (resort.features ?? []).some((f) =>
+    /щ[её]тк|джиб|jib\s*palace|brushes/i.test(`${f.id} ${f.title} ${f.summary ?? ''}`),
+  )
+}
+
+/**
+ * Honest brush open/closed from scrape flag, then summary / «Важное» text.
+ * Prefer structured hours.brushesOpen; never invent open from silence.
+ */
+function brushesOpenFromText(text: string): boolean | null {
+  const t = text.replace(/\s+/g, ' ').trim()
+  if (!t) return null
+  const aboutBrushes =
+    /щ[её]тк/i.test(t) || /джиб\s*палас/i.test(t) || /jib\s*palace/i.test(t)
+  if (!aboutBrushes) return null
+  // Explicit closed / day-off for the brush spot.
+  if (
+    /(?:джиб\s*палас|jib\s*palace|щ[её]тк\w*)[^.!?\n]{0,40}не\s+работа/i.test(t) ||
+    /не\s+работа[^.!?\n]{0,40}(?:джиб\s*палас|jib\s*palace|щ[её]тк)/i.test(t) ||
+    /(?:джиб\s*палас|jib\s*palace|щ[её]тк\w*)[^.!?\n]{0,40}закрыт/i.test(t)
+  ) {
+    return false
+  }
+  if (
+    /щ[её]тк\w*[^.!?\n]{0,40}работа/i.test(t) ||
+    /работа[^.!?\n]{0,40}щ[её]тк/i.test(t) ||
+    /(?:джиб\s*палас|jib\s*palace)[^.!?\n]{0,40}(?:открыл|работа|ждём)/i.test(t) ||
+    /открыл[аи]?[^.!?\n]{0,40}(?:джиб|щ[её]тк)/i.test(t)
+  ) {
+    return true
+  }
+  return null
+}
+
+/**
+ * Card/page brush badge for resorts that have щётки features only.
+ * Fail-soft unknown → «Щётки закрыты» (never invent open).
+ */
+export function brushesBadgeLabel(
+  resort: Resort,
+  hours: HoursSnapshot | undefined,
+  important: ImportantItem[] = [],
+): 'Щётки открыты' | 'Щётки закрыты' | null {
+  if (resort.status !== 'active' || !resortHasBrushes(resort)) return null
+  if (hours?.brushesOpen === true) return 'Щётки открыты'
+  if (hours?.brushesOpen === false) return 'Щётки закрыты'
+
+  const fromSummary = brushesOpenFromText(hours?.summary ?? '')
+  if (fromSummary === true) return 'Щётки открыты'
+  if (fromSummary === false) return 'Щётки закрыты'
+
+  const items = important.filter((i) => i.resortId === resort.id)
+  let sawClosed = false
+  for (const item of items) {
+    const signal = brushesOpenFromText(`${item.title} ${item.body ?? ''}`)
+    if (signal === true) return 'Щётки открыты'
+    if (signal === false) sawClosed = true
+  }
+  if (sawClosed) return 'Щётки закрыты'
+
+  // Honest fallback: no positive open signal → closed (do not invent open).
+  return 'Щётки закрыты'
+}

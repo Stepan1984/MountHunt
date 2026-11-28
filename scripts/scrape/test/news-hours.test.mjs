@@ -122,6 +122,7 @@ describe('enrichHoursFromImportant', () => {
         periods: [],
         status: 'ok',
         slopesOpen: true,
+        brushesOpen: false,
       },
     ]
     const next = enrichHoursFromImportant(prev, important, {
@@ -131,6 +132,7 @@ describe('enrichHoursFromImportant', () => {
     assert.ok(h)
     assert.equal(h.hoursNote, undefined)
     assert.equal(h.slopesOpen, true)
+    assert.equal(h.brushesOpen, false)
     assert.equal(h.sourceUrl, 'https://krasnoeozero.ru/grafik/')
     assert.equal(h.summary, 'Подъемник кресельный №10: закрыт')
     assert.deepEqual(h.periods, [])

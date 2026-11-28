@@ -187,6 +187,10 @@ export function parseHoursFromCsv(csv) {
       periods,
       status: bits.length || closedUntilSeason ? 'ok' : 'partial',
       slopesOpen: slopeStatus.slopesOpen,
+      // Щётки / подушка from CSV when present; omit when unknown.
+      ...(slopeStatus.brushesOpen === true || slopeStatus.brushesOpen === false
+        ? { brushesOpen: slopeStatus.brushesOpen }
+        : {}),
     }),
     important,
   }

@@ -66,9 +66,15 @@ export type HoursSnapshot = {
   /**
    * Alpine slopes open/closed from scrape detectors.
    * true → badge «Склоны открыты»; false/omit → do not invent open
-   * (щётки / подушка are not alpine — stay in summary, not this flag).
+   * (щётки / подушка are not alpine — stay in summary / brushesOpen).
    */
   slopesOpen?: boolean
+  /**
+   * Brush / Jib Palace open/closed from scrape detectors.
+   * Only meaningful for resorts with brush features; UI shows tags
+   * «Щётки открыты» / «Щётки закрыты». Omit when unknown.
+   */
+  brushesOpen?: boolean
   /**
    * Additive schedule from a fresh resort news post (TG/VK / «Важное»).
    * Shown highlighted on the card and above the main hours table on the detail page.

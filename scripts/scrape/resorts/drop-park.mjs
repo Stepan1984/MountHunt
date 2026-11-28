@@ -528,8 +528,10 @@ export async function scrapeDropPark() {
         summary: hoursSummary,
         periods: parsed.hours.periods,
         status: parsed.hours.status,
-        // Щётки ≠ alpine slopes — badge stays closed while season finished / no alpine open.
+        // Щётки ≠ alpine slopes — alpine badge stays closed while season finished / no alpine open.
         slopesOpen: slopeStatus.slopesOpen,
+        // Structured brush / Jib Palace flag for card/page «Щётки …» tags.
+        brushesOpen: slopeStatus.brushesOpen,
       }),
       webcamUrl: PAGE_URL,
       // rtsp.ru cams deleted / stream failed — avoid empty player boxes.

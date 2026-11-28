@@ -6,6 +6,7 @@ import { ResortMap } from '../components/ResortMap'
 import { SkipassTables } from '../components/SkipassTables'
 import { WebcamSection } from '../components/WebcamPlayer'
 import {
+  brushesBadgeLabel,
   cardNewsHoursText,
   formatUpdatedAt,
   formatHoursTablePeriods,
@@ -98,6 +99,11 @@ export function ResortPage({ data }: { data: SiteData }) {
   // Slope badges only for active resorts; inactive detail pages show none.
   const badge = !inactive ? slopesBadgeLabel(resort.id, hours, data.important) : null
   const closed = badge === 'Склоны закрыты'
+  // Brush tags only when the resort has щётки features.
+  const brushBadge = !inactive
+    ? brushesBadgeLabel(resort, hours, data.important)
+    : null
+  const brushesClosed = brushBadge === 'Щётки закрыты'
   const visitorPriceNote = inactive || hasBookingLink ? null : publicPriceNote(prices?.note)
   const priceItems = hasBookingLink ? [] : (prices?.items ?? [])
   const priceGroups = hasBookingLink ? [] : (prices?.groups ?? [])
@@ -129,12 +135,23 @@ export function ResortPage({ data }: { data: SiteData }) {
 
       <header className="resort-detail__header">
         <h1>{resort.name}</h1>
-        {!inactive && badge ? (
-          closed ? (
-            <span className="badge badge--warn">{badge}</span>
-          ) : (
-            <span className="badge badge--open">{badge}</span>
-          )
+        {!inactive && (badge || brushBadge) ? (
+          <div className="resort-detail__badges">
+            {badge ? (
+              closed ? (
+                <span className="badge badge--warn">{badge}</span>
+              ) : (
+                <span className="badge badge--open">{badge}</span>
+              )
+            ) : null}
+            {brushBadge ? (
+              brushesClosed ? (
+                <span className="badge badge--warn">{brushBadge}</span>
+              ) : (
+                <span className="badge badge--open">{brushBadge}</span>
+              )
+            ) : null}
+          </div>
         ) : null}
       </header>
 

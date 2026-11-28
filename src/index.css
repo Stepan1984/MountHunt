@@ -794,6 +794,15 @@ main {
   line-height: 1.15;
 }
 
+.resort-detail__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+
 .resort-detail__header .badge {
   flex: 0 0 auto;
 }

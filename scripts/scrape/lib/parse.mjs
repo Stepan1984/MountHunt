@@ -170,6 +170,7 @@ export function priceSnapshot(partial) {
 /**
  * @param {object} partial
  * @param {boolean} [partial.slopesOpen] alpine slopes open when scrape knows; omit if unknown
+ * @param {boolean} [partial.brushesOpen] brushes / Jib Palace open when scrape knows; omit if unknown
  */
 export function hoursSnapshot(partial) {
   const snap = {
@@ -183,6 +184,10 @@ export function hoursSnapshot(partial) {
   // Structured alpine open/closed for card badges. Omit when unknown (UI fail-soft ≠ open).
   if (partial.slopesOpen === true || partial.slopesOpen === false) {
     snap.slopesOpen = partial.slopesOpen
+  }
+  // Brush / Jib Palace status for resorts that have щётки features.
+  if (partial.brushesOpen === true || partial.brushesOpen === false) {
+    snap.brushesOpen = partial.brushesOpen
   }
   // Additive news overlay (never replaces periods/summary).
   if (Array.isArray(partial.newsPeriods) && partial.newsPeriods.length) {
