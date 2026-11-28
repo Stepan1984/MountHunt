@@ -2,13 +2,14 @@
  * Sync operating hours from resort news («Важное» / TG / VK) into hours.json.
  *
  * Prefer labeled slope/resort clocks; skip vacancies, elections, café-only ranges.
- * Detail-page caption: short `hoursNote` («из новости»); not shown on home cards.
+ * News hours are additive: primary site scrape periods/summary stay intact;
+ * overlay lives in `newsPeriods` / `newsSummary` (highlighted in UI, no «из новости» label).
  */
 import { isFreshPublishedAt } from './important.mjs'
 import { normalizeCardTime } from './card-hours-format.mjs'
 import { cleanText, hoursSnapshot, nowIso } from './parse.mjs'
 
-/** Short muted line under detail «Часы работы» (home cards omit this). */
+/** @deprecated No longer written into hours.json or shown in UI. */
 export const NEWS_HOURS_CARD_NOTE = 'из новости'
 
 /** Do not apply week-old schedule posts to live hours. */
@@ -197,7 +198,7 @@ export function newsTextHasOperatingHours(text) {
 /**
  * @param {{ title?: string, body?: string, publishedAt?: string | null, sourceUrl?: string, resortId?: string, id?: string }} item
  * @param {{ nowMs?: number, maxAgeDays?: number }} [opts]
- * @returns {{ summary: string, periods: { days: string, open: string, close: string }[], sourceUrl: string | null, publishedAt: string | null, hoursNote: string } | null}
+ * @returns {{ summary: string, periods: { days: string, open: string, close: string }[], sourceUrl: string | null, publishedAt: string | null } | null}
  */
 export function parseHoursFromImportantItem(item, opts = {}) {
   const title = item?.title || ''
@@ -222,7 +223,6 @@ export function parseHoursFromImportantItem(item, opts = {}) {
     periods: [{ days, open: clock.open, close: clock.close }],
     sourceUrl: item.sourceUrl || null,
     publishedAt,
-    hoursNote: NEWS_HOURS_CARD_NOTE,
   }
 }
 
@@ -256,7 +256,32 @@ export function collectNewsHoursByResort(important, opts = {}) {
 }
 
 /**
- * Merge news-derived clocks into an hours snapshot (keep slopesOpen).
+ * Legacy wipe: news replaced primary periods (old `hoursNote: «из новости»`).
+ * Some resorts (e.g. Putilovo) legitimately use TG as the primary schedule source —
+ * only the deprecated hoursNote marker means primary was overwritten.
+ * @param {object | undefined} prev
+ */
+export function isLegacyNewsWipedSnapshot(prev) {
+  if (!prev || typeof prev !== 'object') return false
+  if (Array.isArray(prev.newsPeriods) && prev.newsPeriods.length) return false
+  return typeof prev.hoursNote === 'string' && Boolean(prev.hoursNote.trim())
+}
+
+/**
+ * Drop additive news overlay fields (and deprecated hoursNote).
+ * @param {object} snap
+ */
+function stripNewsOverlayFields(snap) {
+  const next = { ...snap }
+  delete next.newsPeriods
+  delete next.newsSummary
+  delete next.newsSourceUrl
+  delete next.hoursNote
+  return next
+}
+
+/**
+ * Merge news-derived clocks into an hours snapshot without wiping primary schedule.
  * @param {object | undefined} prev
  * @param {object} newsPack
  * @param {string} resortId
@@ -266,20 +291,34 @@ export function applyNewsHoursToSnapshot(prev, newsPack, resortId) {
     prev && (prev.slopesOpen === true || prev.slopesOpen === false)
       ? prev.slopesOpen
       : undefined
-  return hoursSnapshot({
+
+  const wiped = isLegacyNewsWipedSnapshot(prev)
+
+  // Primary site baseline — never replaced by news periods/summary.
+  const primaryPeriods = wiped ? [] : Array.isArray(prev?.periods) ? [...prev.periods] : []
+  const primarySummary = wiped ? '' : (prev?.summary ?? '')
+  const primarySourceUrl = wiped ? null : (prev?.sourceUrl ?? null)
+  const primaryStatus = wiped ? 'partial' : (prev?.status ?? 'ok')
+  const primaryScrapedAt = wiped ? null : (prev?.scrapedAt ?? null)
+
+  const snap = hoursSnapshot({
     resortId,
-    scrapedAt: nowIso(),
-    sourceUrl: newsPack.sourceUrl || prev?.sourceUrl || null,
-    summary: newsPack.summary,
-    periods: newsPack.periods,
-    status: 'ok',
+    scrapedAt: primaryScrapedAt || nowIso(),
+    sourceUrl: primarySourceUrl,
+    summary: primarySummary,
+    periods: primaryPeriods,
+    status: primaryStatus,
     slopesOpen,
-    hoursNote: newsPack.hoursNote || NEWS_HOURS_CARD_NOTE,
+    newsSummary: newsPack.summary,
+    newsPeriods: newsPack.periods,
+    newsSourceUrl: newsPack.sourceUrl || null,
   })
+  return snap
 }
 
 /**
  * Enrich hours[] from important news items. Fail-soft: untouched resorts stay as-is.
+ * Additive only — never overwrites primary periods/summary from the site scrape.
  * @param {object[]} hoursList
  * @param {object[]} important
  * @param {{ nowMs?: number, maxAgeDays?: number }} [opts]
@@ -293,6 +332,13 @@ export function enrichHoursFromImportant(hoursList, important, opts = {}) {
     const prev = byId.get(resortId)
     const next = applyNewsHoursToSnapshot(prev, pack, resortId)
     byId.set(resortId, next)
+  }
+
+  // Drop stale news overlays when no fresh applicable post remains.
+  for (const [resortId, h] of byId) {
+    if (newsByResort.has(resortId)) continue
+    if (!h?.newsPeriods && !h?.newsSummary && !h?.hoursNote) continue
+    byId.set(resortId, stripNewsOverlayFields(h))
   }
 
   // Preserve original order; append any new resort ids at the end.

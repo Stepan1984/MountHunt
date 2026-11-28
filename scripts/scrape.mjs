@@ -413,7 +413,7 @@ async function main() {
   )
   const hoursFromScrape = resorts.map((r) => hoursById.get(r.id) || blankHours(r.id, resorts))
   const important = mergeImportantFromDailyScrape(prevImportant, importantAdds, results)
-  // News clocks win over site stubs when a fresh schedule post is in «Важное».
+  // News clocks are additive (newsPeriods) — never replace site-scrape periods.
   const hours = enrichHoursFromImportant(hoursFromScrape, important)
 
   const success = results.filter(

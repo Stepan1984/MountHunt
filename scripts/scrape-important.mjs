@@ -389,7 +389,9 @@ async function main() {
         {
           results,
           important,
-          hoursNewsSynced: hours.filter((h) => h.hoursNote).map((h) => h.resortId),
+          hoursNewsSynced: hours
+            .filter((h) => h.newsPeriods?.length || h.newsSummary)
+            .map((h) => h.resortId),
           meta,
         },
         null,
@@ -404,7 +406,9 @@ async function main() {
   writeJson(metaPath, meta)
 
   console.log(`\nЗаписано ${importantPath} · ${important.length} пунктов · ${scrapedAt}`)
-  console.log(`Часы из новостей: обновлено курортов ${hours.filter((h) => h.hoursNote).length}`)
+  console.log(
+    `Часы из новостей: обновлено курортов ${hours.filter((h) => h.newsPeriods?.length || h.newsSummary).length}`,
+  )
   console.log(
     `Успешно: ${results.filter((r) => r.ok).map((r) => r.resortId).join(', ') || '—'}`,
   )
