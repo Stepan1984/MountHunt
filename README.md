@@ -77,6 +77,7 @@ Workflow собирает `dist`, но **деплой падает с 404**, п�
 | `public/data/hours.json` | Часы работы |
 | `public/data/prices.json` | Цены |
 | `public/data/important.json` | Блок «Важное» |
+| `public/data/card-tags.json` | Бейджи на карточках (прототип: только `krasnoe-ozero`) |
 | `public/data/meta.json` | Время последнего обновления + статус прогона |
 
 ### Локальный scrape
@@ -175,5 +176,6 @@ npm run data:refresh
 | `npm run build` | Production-сборка (включая sitemap) |
 | `npm run preview` | Просмотр сборки |
 | `npm run scrape` | Сбор цен/часов → `public/data` |
-| `npm run scrape:important` | Лёгкий сбор блока «Важное» → `important.json` |
+| `npm run scrape:important` | Лёгкий сбор блока «Важное» → `important.json` (+ card-tags) |
+| `npm run scrape:card-tags` | Только card-tags из `important.json` (rules; LLM при `MOUNTHUNT_LLM_API_KEY` / `OPENAI_API_KEY`) |
 | `npm run data:refresh` | Обновить `public/data` из seed (без сети) |

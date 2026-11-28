@@ -30,6 +30,7 @@ export function HomePage({ data }: { data: SiteData }) {
               resort={resort}
               hours={data.hours}
               important={data.important}
+              cardTags={data.cardTags}
             />
           ))}
         </div>
@@ -54,6 +55,7 @@ export function HomePage({ data }: { data: SiteData }) {
                 resort={resort}
                 hours={data.hours}
                 important={data.important}
+                cardTags={data.cardTags}
               />
             ))}
           </div>

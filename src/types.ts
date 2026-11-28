@@ -162,6 +162,25 @@ export type Meta = {
   /** Last successful «Важное» scrape (hourly job). */
   importantScrapedAt?: string
   importantNote?: string
+  /** Last card-tags enrich (hourly with «Важное»). */
+  cardTagsUpdatedAt?: string
+}
+
+/** Fixed-taxonomy AI/rule card badge (scrape writes JSON; site only displays). */
+export type CardTag = {
+  id: string
+  kind: 'event' | 'closure' | 'warning' | 'season_start' | 'season_open'
+  label: string
+  severity: 'info' | 'warn'
+  sourceItemIds?: string[]
+  expiresAt?: string | null
+  updatedAt?: string
+}
+
+export type CardTagsDocument = {
+  updatedAt: string
+  mode: 'rules' | 'llm' | 'fixture'
+  resorts: Record<string, CardTag[]>
 }
 
 export type SiteData = {
@@ -170,4 +189,6 @@ export type SiteData = {
   prices: PriceSnapshot[]
   important: ImportantItem[]
   meta: Meta
+  /** Optional — missing file → empty tags (fail-soft). */
+  cardTags?: CardTagsDocument | null
 }

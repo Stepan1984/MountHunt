@@ -1,5 +1,6 @@
 import { stripUrlsFromText } from './links'
 import type {
+  CardTagsDocument,
   HoursSnapshot,
   ImportantItem,
   Meta,
@@ -18,15 +19,24 @@ async function loadJson<T>(path: string): Promise<T> {
   return res.json() as Promise<T>
 }
 
+async function loadJsonOptional<T>(path: string): Promise<T | null> {
+  try {
+    return await loadJson<T>(path)
+  } catch {
+    return null
+  }
+}
+
 export async function loadSiteData(): Promise<SiteData> {
-  const [resorts, hours, prices, important, meta] = await Promise.all([
+  const [resorts, hours, prices, important, meta, cardTags] = await Promise.all([
     loadJson<Resort[]>('data/resorts.json'),
     loadJson<HoursSnapshot[]>('data/hours.json'),
     loadJson<PriceSnapshot[]>('data/prices.json'),
     loadJson<ImportantItem[]>('data/important.json'),
     loadJson<Meta>('data/meta.json'),
+    loadJsonOptional<CardTagsDocument>('data/card-tags.json'),
   ])
-  return { resorts, hours, prices, important, meta }
+  return { resorts, hours, prices, important, meta, cardTags }
 }
 
 export function statusLabel(status: Resort['status']): string {
