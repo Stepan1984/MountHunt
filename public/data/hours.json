@@ -1,23 +1,19 @@
 [
   {
     "resortId": "okhta-park",
-    "scrapedAt": "2026-11-28T01:47:00Z",
-    "sourceUrl": "https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/",
-    "summary": "пн–пт: 11:00–22:30\nсб–вс: 9:00–22:30",
+    "scrapedAt": "2026-11-28T02:33:22Z",
+    "sourceUrl": "https://t.me/OhtaPark/10554",
+    "summary": "28.11: 9:00–22:30",
     "periods": [
       {
-        "days": "пн–пт",
-        "open": "11:00",
-        "close": "22:30"
-      },
-      {
-        "days": "сб–вс",
+        "days": "28.11",
         "open": "9:00",
         "close": "22:30"
       }
     ],
     "status": "ok",
-    "slopesOpen": true
+    "slopesOpen": true,
+    "hoursNote": "из новости"
   },
   {
     "resortId": "igora",
@@ -67,7 +63,7 @@
   },
   {
     "resortId": "krasnoe-ozero",
-    "scrapedAt": "2026-11-28T01:49:26Z",
+    "scrapedAt": "2026-11-28T02:33:22Z",
     "sourceUrl": "https://t.me/redlakeclub/1864",
     "summary": "28.11: 12:00–21:45",
     "periods": [
