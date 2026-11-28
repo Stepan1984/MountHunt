@@ -12,6 +12,7 @@ import {
   parsePrice,
   priceSnapshot,
 } from '../lib/parse.mjs'
+import { isSeasonOpeningAnnouncement } from '../lib/season-open-badge.mjs'
 import {
   appendHoursExtraNote,
   detectKrasnoeSlopeStatus,
@@ -468,6 +469,17 @@ export async function scrapeKrasnoeOzero() {
     } catch {
       tgItems = []
       tgFetched = false
+    }
+
+    // Opening postponed: schedule still «закрыты до сезона» → drop TG season-open posts
+    // so they cannot drive «Начало сезона» on the card after the next scrape.
+    const slopesClosed = (hoursPack.important || []).some(
+      (i) => i && i.id === 'krasnoe-slopes-closed',
+    )
+    if (slopesClosed && tgItems.length) {
+      tgItems = tgItems.filter(
+        (i) => !isSeasonOpeningAnnouncement(`${i.title || ''} ${i.body || ''}`),
+      )
     }
 
     return {

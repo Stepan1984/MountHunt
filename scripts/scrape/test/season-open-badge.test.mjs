@@ -5,6 +5,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   extractSeasonOpenYmd,
+  hasClosedSeasonImportant,
   isSeasonOpeningAnnouncement,
   seasonOpenBadgeLabel,
 } from '../lib/season-open-badge.mjs'
@@ -49,6 +50,33 @@ describe('season-open-badge', () => {
     assert.equal(
       seasonOpenBadgeLabel('krasnoe-ozero', items, new Date('2026-11-28T10:00:00+03:00')),
       'Начало сезона 28.11.2026',
+    )
+  })
+
+  it('hides badge when managed slopes-closed is present (postponed open)', () => {
+    const items = [
+      {
+        id: 'krasnoe-slopes-closed',
+        resortId: 'krasnoe-ozero',
+        title: 'Красное озеро: склоны закрыты до сезона',
+        body: 'На 28.11.2026 трассы и подъёмники отмечены как закрытые до сезона.',
+        publishedAt: '2026-11-28T00:00:00Z',
+        severity: 'warn',
+      },
+      {
+        id: 'krasnoe-tg-1849',
+        resortId: 'krasnoe-ozero',
+        title: 'Красное озеро: МЫ ОТКРЫВАЕМСЯ',
+        body: 'Друзья, в эту субботу, 28.11 стартует зимний сезон!',
+        publishedAt: '2026-11-25T17:10:56Z',
+        updatedAt: '2026-11-27T02:01:26Z',
+        severity: 'info',
+      },
+    ]
+    assert.equal(hasClosedSeasonImportant('krasnoe-ozero', items), true)
+    assert.equal(
+      seasonOpenBadgeLabel('krasnoe-ozero', items, new Date('2026-11-28T10:00:00+03:00')),
+      null,
     )
   })
 

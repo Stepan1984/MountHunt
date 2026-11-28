@@ -146,8 +146,26 @@ export function seasonOpenYmdFromItem(
 }
 
 /**
+ * Managed «Важное» ids that mean slopes / season are still closed
+ * (e.g. krasnoe-slopes-closed). An old opening post must not show
+ * «Начало сезона» while these are present.
+ */
+export function hasClosedSeasonImportant(
+  resortId: string,
+  important: Pick<ImportantItem, 'id' | 'resortId'>[],
+): boolean {
+  if (!resortId || !Array.isArray(important)) return false
+  return important.some(
+    (item) =>
+      item &&
+      item.resortId === resortId &&
+      /-(?:slopes-closed|season-closed)$/.test(String(item.id || '')),
+  )
+}
+
+/**
  * Newest announcement wins when several news items carry a date.
- * Returns badge text or null when absent / past.
+ * Returns badge text or null when absent / past / closed.
  */
 export function seasonOpenBadgeLabel(
   resortId: string,
@@ -155,6 +173,8 @@ export function seasonOpenBadgeLabel(
   now: Date = new Date(),
 ): string | null {
   if (!resortId || !Array.isArray(important)) return null
+  // Schedule / site still says closed → hide postponed opening dates.
+  if (hasClosedSeasonImportant(resortId, important)) return null
   const today = mskTodayYmd(now)
   const hits: { ymd: string; sort: number }[] = []
   for (const item of important) {
