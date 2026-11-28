@@ -1,23 +1,27 @@
 [
   {
     "resortId": "okhta-park",
-    "scrapedAt": "2026-11-27T22:31:22Z",
-    "sourceUrl": "https://t.me/OhtaPark/10554",
-    "summary": "28.11: 9:00–22:30",
+    "scrapedAt": "2026-11-28T01:47:00Z",
+    "sourceUrl": "https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/",
+    "summary": "пн–пт: 11:00–22:30\nсб–вс: 9:00–22:30",
     "periods": [
       {
-        "days": "28.11",
+        "days": "пн–пт",
+        "open": "11:00",
+        "close": "22:30"
+      },
+      {
+        "days": "сб–вс",
         "open": "9:00",
         "close": "22:30"
       }
     ],
     "status": "ok",
-    "slopesOpen": true,
-    "hoursNote": "из новости"
+    "slopesOpen": true
   },
   {
     "resortId": "igora",
-    "scrapedAt": "2026-11-27T17:06:10Z",
+    "scrapedAt": "2026-11-28T01:49:13Z",
     "sourceUrl": "https://igora.ru/en/working-hours/",
     "summary": "пн–пт: 11:00–22:00\nсб: 10:00–23:00\nвс: 10:00–21:00",
     "periods": [
@@ -63,7 +67,7 @@
   },
   {
     "resortId": "krasnoe-ozero",
-    "scrapedAt": "2026-11-27T22:31:22Z",
+    "scrapedAt": "2026-11-28T01:49:26Z",
     "sourceUrl": "https://t.me/redlakeclub/1864",
     "summary": "28.11: 12:00–21:45",
     "periods": [
@@ -79,7 +83,7 @@
   },
   {
     "resortId": "zolotaya-dolina",
-    "scrapedAt": "2026-11-27T17:02:47Z",
+    "scrapedAt": "2026-11-28T01:45:43Z",
     "sourceUrl": "https://zoldol.ru/vremya-raboty",
     "summary": "пн–вт: выходной\nср–чт: 12:00–22:00\nпт: 12:00–23:00\nсб: 11:00–23:00",
     "periods": [
@@ -109,7 +113,7 @@
   },
   {
     "resortId": "snezhny",
-    "scrapedAt": "2026-11-27T17:03:35Z",
+    "scrapedAt": "2026-11-28T01:46:40Z",
     "sourceUrl": "https://snegny.ru/",
     "summary": "Нет данных о режиме склонов",
     "periods": [],
@@ -118,7 +122,7 @@
   },
   {
     "resortId": "severny-sklon",
-    "scrapedAt": "2026-11-27T17:06:12Z",
+    "scrapedAt": "2026-11-28T01:49:16Z",
     "sourceUrl": "https://severnysklon.ru/",
     "summary": "пн–пт (бар): 11:00–21:00\nсб–вс: 10:00–22:00",
     "periods": [
@@ -143,7 +147,7 @@
   },
   {
     "resortId": "puhtolova-gora",
-    "scrapedAt": "2026-11-27T22:57:34Z",
+    "scrapedAt": "2026-11-28T01:45:56Z",
     "sourceUrl": "https://puhgora.ru/o-kurorte/chasy-raboty",
     "summary": "пн–вт: выходной\nср–пт: 15:00–21:00\nсб–вс: 10:00–21:00",
     "periods": [
@@ -168,7 +172,7 @@
   },
   {
     "resortId": "yukki",
-    "scrapedAt": "2026-11-27T17:03:15Z",
+    "scrapedAt": "2026-11-28T01:46:12Z",
     "sourceUrl": "https://stc.lenobl.ru/ru/obekty-gau-lo-stc/sk-yukki/",
     "summary": "ежедневно: 10:00–21:00",
     "periods": [
@@ -183,7 +187,7 @@
   },
   {
     "resortId": "lazurnye-ozera",
-    "scrapedAt": "2026-11-27T17:02:53Z",
+    "scrapedAt": "2026-11-28T01:45:49Z",
     "sourceUrl": "https://lazoorsnow.ru/",
     "summary": "пн: выходной\nвт–пт: 11:00–22:00\nсб–вс: 10:00–22:00",
     "periods": [
@@ -208,7 +212,7 @@
   },
   {
     "resortId": "drop-park",
-    "scrapedAt": "2026-11-27T17:03:39Z",
+    "scrapedAt": "2026-11-28T01:46:45Z",
     "sourceUrl": "https://drop-park.ru/snow-park",
     "summary": "пн–пт: 11:00–23:00\nсб–вс и праздники: 10:00–21:00. Щётки (Джиб Палас) работают",
     "periods": [
@@ -228,8 +232,8 @@
   },
   {
     "resortId": "putilovo-park",
-    "scrapedAt": "2026-11-27T17:06:23Z",
-    "sourceUrl": "https://t.me/SPORTPARKPUTILOVO/27",
+    "scrapedAt": "2026-11-28T01:49:26Z",
+    "sourceUrl": "https://t.me/SPORTPARKPUTILOVO/23",
     "summary": "по сеансам: 12:00–19:00",
     "periods": [
       {

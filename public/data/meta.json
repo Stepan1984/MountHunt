@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-27T22:57:34Z",
+  "updatedAt": "2026-11-28T01:49:26Z",
   "source": "scrape-wave1+wave2+wave3",
-  "note": "Волны 1–3: zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park, igora, severny-sklon, putilovo-park; failed: tuutari-park · Важное 2026-11-27T22:17:14Z",
+  "note": "Волны 1–3: zolotaya-dolina, lazurnye-ozera, puhtolova-gora, yukki, krasnoe-ozero, snezhny, drop-park, okhta-park, igora, severny-sklon, putilovo-park; failed: tuutari-park",
   "resortsScraped": [
     {
       "id": "tuutari-park",
@@ -58,8 +58,8 @@
       "error": null,
       "prices": "ok",
       "hours": "ok",
-      "itemCount": 30,
-      "summary": "Подъемник кресельный №10: закрыт\nПодъемник с крыши гостиницы: закрыт\nКресельный подъемник №1: закрыт\nЛенточный подъемник № 6: закрыт",
+      "itemCount": 31,
+      "summary": "Подъемник кресельный №10: 12:00–21:45\nПодъемник с крыши гостиницы: закрыт\nКресельный подъемник №1: 12:00–21:45\nЛенточный подъемник № 6: 12:00–21:45",
       "importantInconclusive": false,
       "clearImportantPrefixes": true
     },
@@ -123,7 +123,5 @@
       "importantInconclusive": false,
       "clearImportantPrefixes": true
     }
-  ],
-  "importantScrapedAt": "2026-11-27T22:17:14Z",
-  "importantNote": "Важное: ok 12, fail 0"
+  ]
 }
