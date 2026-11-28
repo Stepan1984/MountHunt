@@ -26,6 +26,8 @@ export function ResortCard({
   // Active only: primary site schedule + optional highlighted news overlay.
   // Дикие / неясные / закрытые — omit facts entirely.
   // No «из новости» label on cards (prefs).
+  // Primary + news share one <dd> so the news line is the same text flow /
+  // left edge as «пн–пт» (separate <dd> + highlight chrome was shifting ink).
   const hoursText = !inactive ? cardHoursText(h) : null
   const newsHoursText = !inactive ? cardNewsHoursText(h) : null
   const hasPrimaryHours = Boolean(hoursText && hoursText !== 'нет данных')
@@ -60,12 +62,15 @@ export function ResortCard({
         <dl className="resort-card__facts">
           <div>
             <dt>Часы</dt>
-            {hasPrimaryHours ? (
-              <dd className="resort-card__hours">{hoursText}</dd>
-            ) : null}
-            {newsHoursText ? (
-              <dd className="resort-card__hours resort-card__hours--extra">{newsHoursText}</dd>
-            ) : null}
+            <dd className="resort-card__hours">
+              {hasPrimaryHours ? hoursText : null}
+              {newsHoursText ? (
+                <>
+                  {hasPrimaryHours ? '\n' : null}
+                  <span className="resort-card__hours-extra">{newsHoursText}</span>
+                </>
+              ) : null}
+            </dd>
           </div>
         </dl>
       ) : null}

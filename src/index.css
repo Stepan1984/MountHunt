@@ -669,30 +669,19 @@ main {
   white-space: pre-line;
 }
 
-/* Additive news hours on the card — short highlighted line, no «из новости» label.
-   Text has no horizontal padding (same left edge as primary schedule lines).
-   Highlight fill is a ::before so background can bleed without shifting glyphs.
-   Must beat `.resort-card__facts dd { margin: 0 }` specificity. */
-.resort-card__facts dd.resort-card__hours--extra {
-  position: relative;
-  z-index: 0;
-  margin: 0.35rem 0 0;
-  padding: 0.28rem 0;
+/* Additive news hours on the card — inline span in the same <dd> as primary
+   schedule so the first glyph shares the text-flow left edge with «пн–пт».
+   Zero padding / no radius: background hugs glyphs (no inset chrome). */
+.resort-card__hours-extra {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
   color: var(--amber);
   font-weight: 600;
-}
-
-.resort-card__facts dd.resort-card__hours--extra::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  top: 0;
-  bottom: 0;
-  /* Start at the text's left edge (same as primary hours); bleed right only. */
-  left: 0;
-  right: -0.45rem;
-  border-radius: 8px;
-  background: rgba(166, 107, 43, 0.12);
+  background: rgba(166, 107, 43, 0.16);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 /* Legacy unused: «из новости» caption removed from UI. */

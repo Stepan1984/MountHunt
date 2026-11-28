@@ -244,7 +244,7 @@ describe('news-hours wiring', () => {
     assert.doesNotMatch(cardSrc, /resort-card__hours-note/)
     assert.doesNotMatch(cardSrc, /h\?\.hoursNote|hours\.hoursNote/)
     assert.match(cardSrc, /cardNewsHoursText/)
-    assert.match(cardSrc, /resort-card__hours--extra/)
+    assert.match(cardSrc, /resort-card__hours-extra/)
     const pageSrc = readFileSync(join(root, 'src/pages/ResortPage.tsx'), 'utf8')
     assert.doesNotMatch(pageSrc, /hours\?\.hoursNote/)
     assert.match(pageSrc, /detail-hours-extra/)

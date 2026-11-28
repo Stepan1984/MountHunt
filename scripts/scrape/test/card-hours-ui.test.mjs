@@ -272,7 +272,9 @@ describe('card hours UI helpers', () => {
     assert.match(cardSrc, /cardHoursText/)
     assert.match(cardSrc, /cardNewsHoursText/)
     assert.match(cardSrc, /resort-card__hours/)
-    assert.match(cardSrc, /resort-card__hours--extra/)
+    assert.match(cardSrc, /resort-card__hours-extra/)
+    // News hours live in the same <dd> as primary (shared text-flow left edge).
+    assert.match(cardSrc, /span className=\"resort-card__hours-extra\"/)
     // «из новости» label is never shown — news hours are a highlighted extra line.
     assert.doesNotMatch(cardSrc, /resort-card__hours-note/)
     assert.doesNotMatch(cardSrc, /h\?\.hoursNote|hours\.hoursNote/)
@@ -281,13 +283,9 @@ describe('card hours UI helpers', () => {
     assert.doesNotMatch(pageSrc, /hours\?\.hoursNote|hours\.hoursNote/)
     assert.match(pageSrc, /formatHoursTablePeriods/)
     assert.match(pageSrc, /hoursPeriodDisplayValue/)
-    assert.match(cssSrc, /resort-card__hours--extra/)
-    // Highlight via ::before; dd text has no horizontal padding (same left edge).
-    assert.match(
-      cssSrc,
-      /\.resort-card__facts dd\.resort-card__hours--extra[\s\S]*padding:\s*0\.28rem 0;/,
-    )
-    assert.match(cssSrc, /dd\.resort-card__hours--extra::before/)
+    assert.match(cssSrc, /\.resort-card__hours-extra/)
+    // Zero padding on the highlight span (same glyph left edge as primary).
+    assert.match(cssSrc, /\.resort-card__hours-extra[\s\S]*padding:\s*0;/)
     assert.match(cssSrc, /detail-hours-extra/)
     assert.match(dataSrc, /stripSlopeStatusFromCardHours/)
     assert.match(dataSrc, /formatCardHoursFromPeriods/)
