@@ -239,7 +239,8 @@
       }
     ],
     "status": "partial",
-    "slopesOpen": false
+    "slopesOpen": false,
+    "brushesOpen": true
   },
   {
     "resortId": "putilovo-park",

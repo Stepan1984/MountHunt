@@ -282,6 +282,7 @@ function stripNewsOverlayFields(snap) {
 
 /**
  * Merge news-derived clocks into an hours snapshot without wiping primary schedule.
+ * Keeps slopesOpen / brushesOpen from the previous scrape snapshot.
  * @param {object | undefined} prev
  * @param {object} newsPack
  * @param {string} resortId
@@ -290,6 +291,10 @@ export function applyNewsHoursToSnapshot(prev, newsPack, resortId) {
   const slopesOpen =
     prev && (prev.slopesOpen === true || prev.slopesOpen === false)
       ? prev.slopesOpen
+      : undefined
+  const brushesOpen =
+    prev && (prev.brushesOpen === true || prev.brushesOpen === false)
+      ? prev.brushesOpen
       : undefined
 
   const wiped = isLegacyNewsWipedSnapshot(prev)
@@ -309,6 +314,7 @@ export function applyNewsHoursToSnapshot(prev, newsPack, resortId) {
     periods: primaryPeriods,
     status: primaryStatus,
     slopesOpen,
+    brushesOpen,
     newsSummary: newsPack.summary,
     newsPeriods: newsPack.periods,
     newsSourceUrl: newsPack.sourceUrl || null,

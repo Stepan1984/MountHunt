@@ -1,5 +1,11 @@
 import { Link } from 'react-router-dom'
-import { cardHoursText, cardNewsHoursText, hoursFor, slopesBadgeLabel } from '../lib/data'
+import {
+  brushesBadgeLabel,
+  cardHoursText,
+  cardNewsHoursText,
+  hoursFor,
+  slopesBadgeLabel,
+} from '../lib/data'
 import { seasonOpenBadgeLabel } from '../lib/season-open-badge'
 import type { HoursSnapshot, ImportantItem, Resort } from '../types'
 
@@ -20,6 +26,9 @@ export function ResortCard({
   // Fail-soft: open only when scrape/important positively says so.
   const badge = !inactive ? slopesBadgeLabel(resort.id, h, important) : null
   const closed = badge === 'Склоны закрыты'
+  // Brush tags only for resorts with щётки features (Drop Park, Красное озеро, …).
+  const brushBadge = !inactive ? brushesBadgeLabel(resort, h, important) : null
+  const brushesClosed = brushBadge === 'Щётки закрыты'
   // Future season start from scraped news (hide once the date has passed, MSK).
   const seasonBadge = !inactive ? seasonOpenBadgeLabel(resort.id, important) : null
 
@@ -42,13 +51,20 @@ export function ResortCard({
         <h3>
           <Link to={`/resort/${resort.id}`}>{resort.name}</Link>
         </h3>
-        {!inactive && (badge || seasonBadge) ? (
+        {!inactive && (badge || brushBadge || seasonBadge) ? (
           <div className="resort-card__badges">
             {badge ? (
               closed ? (
                 <span className="badge badge--warn">{badge}</span>
               ) : (
                 <span className="badge badge--open">{badge}</span>
+              )
+            ) : null}
+            {brushBadge ? (
+              brushesClosed ? (
+                <span className="badge badge--warn">{brushBadge}</span>
+              ) : (
+                <span className="badge badge--open">{brushBadge}</span>
               )
             ) : null}
             {seasonBadge ? (

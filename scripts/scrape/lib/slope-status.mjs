@@ -265,9 +265,11 @@ export function detectOkhtaSlopeStatus(pages, opts = {}) {
 }
 
 /**
- * Krasnoe schedule CSV flags + optional airbag/подушка row for today's column.
+ * Krasnoe schedule CSV flags + optional щётки / airbag/подушка rows for today's column.
+ * Brush feature on the resort page covers both щётки and прыжковая подушка.
  * @param {{ closedUntilSeason: boolean, allClosed: boolean, slopesCount: number, dateCol: string }} pack
  * @param {{ header?: string[], rows?: Record<string, string>[], dateCol?: string }} [csv]
+ * @returns {{ slopesOpen: boolean, brushesOpen?: boolean, note: string | null }}
  */
 export function detectKrasnoeSlopeStatus(pack, csv = {}) {
   const alpineClosed =
@@ -275,21 +277,31 @@ export function detectKrasnoeSlopeStatus(pack, csv = {}) {
   const alpineOpen = !alpineClosed && pack.slopesCount > 0 && !pack.allClosed
 
   let airbagNote = null
+  /** @type {boolean | undefined} */
+  let brushesOpen
   const dateCol = csv.dateCol || pack.dateCol
   const rows = Array.isArray(csv.rows) ? csv.rows : []
   if (dateCol && rows.length) {
     for (const r of rows) {
       const name = cleanText(r['Наименование'] || '')
-      if (!/подушк|airbag|воздушн/i.test(name)) continue
+      const isBrushFeature = /щ[её]тк|подушк|airbag|воздушн/i.test(name)
+      if (!isBrushFeature) continue
       const val = cleanText(r[dateCol] || '')
       if (!val) continue
-      if (/закрыт/i.test(val)) continue
+      if (/закрыт|выход/i.test(val)) {
+        if (brushesOpen !== true) brushesOpen = false
+        continue
+      }
       if (
         /\d{1,2}[:.]\d{2}/.test(val) ||
         /открыт|работа/i.test(val)
       ) {
-        airbagNote = `Подушка/airbag: ${val} (${dateCol}) — не горнолыжные склоны`
-        break
+        brushesOpen = true
+        if (/подушк|airbag|воздушн/i.test(name) && !airbagNote) {
+          airbagNote = `Подушка/airbag: ${val} (${dateCol}) — не горнолыжные склоны`
+        } else if (/щ[её]тк/i.test(name) && !airbagNote) {
+          airbagNote = `Щётки: ${val} (${dateCol}) — не горнолыжные склоны`
+        }
       }
     }
   }
@@ -299,6 +311,7 @@ export function detectKrasnoeSlopeStatus(pack, csv = {}) {
       clearOpen: Boolean(alpineOpen) && !alpineClosed,
       closed: alpineClosed,
     }),
+    ...(brushesOpen === true || brushesOpen === false ? { brushesOpen } : {}),
     note: airbagNote,
   }
 }
