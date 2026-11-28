@@ -669,7 +669,17 @@ main {
   white-space: pre-line;
 }
 
-/* Legacy unused: «из новости» is detail-only (see .detail-hours-note). */
+/* Additive news hours on the card — short highlighted line, no «из новости» label. */
+.resort-card__hours--extra {
+  margin-top: 0.35rem;
+  padding: 0.28rem 0.45rem;
+  border-radius: 8px;
+  background: rgba(166, 107, 43, 0.12);
+  color: var(--amber);
+  font-weight: 600;
+}
+
+/* Legacy unused: «из новости» caption removed from UI. */
 .resort-card__hours-note {
   margin: 0.15rem 0 0;
   font-size: 0.78rem;
@@ -682,6 +692,20 @@ main {
   margin: 0.25rem 0 0.75rem;
   font-size: 0.85rem;
   color: var(--muted);
+}
+
+/* News/extra hours above the main hours table on the resort detail page. */
+.detail-hours-extra {
+  margin: 0 0 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius);
+  border: 1px solid rgba(166, 107, 43, 0.28);
+  background: rgba(166, 107, 43, 0.1);
+  color: var(--graphite);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  white-space: pre-line;
 }
 
 .badge {

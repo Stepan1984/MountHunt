@@ -1,19 +1,32 @@
 [
   {
     "resortId": "okhta-park",
-    "scrapedAt": "2026-11-28T02:33:22Z",
-    "sourceUrl": "https://t.me/OhtaPark/10554",
-    "summary": "28.11: 9:00–22:30",
+    "scrapedAt": "2026-11-28T01:47:00Z",
+    "sourceUrl": "https://www.ohtapark.ru/services/servisy-kurorta/gornolyzhnye-trassy/",
+    "summary": "пн–пт: 11:00–22:30\nсб–вс: 9:00–22:30",
     "periods": [
       {
-        "days": "28.11",
+        "days": "пн–пт",
+        "open": "11:00",
+        "close": "22:30"
+      },
+      {
+        "days": "сб–вс",
         "open": "9:00",
         "close": "22:30"
       }
     ],
     "status": "ok",
     "slopesOpen": true,
-    "hoursNote": "из новости"
+    "newsSummary": "28.11: 9:00–22:30",
+    "newsPeriods": [
+      {
+        "days": "28.11",
+        "open": "9:00",
+        "close": "22:30"
+      }
+    ],
+    "newsSourceUrl": "https://t.me/OhtaPark/10554"
   },
   {
     "resortId": "igora",
@@ -63,19 +76,21 @@
   },
   {
     "resortId": "krasnoe-ozero",
-    "scrapedAt": "2026-11-28T02:33:22Z",
-    "sourceUrl": "https://t.me/redlakeclub/1864",
-    "summary": "28.11: 12:00–21:45",
-    "periods": [
+    "scrapedAt": "2026-11-27T17:03:21Z",
+    "sourceUrl": "https://krasnoeozero.ru/grafik/",
+    "summary": "Подъемник кресельный №10: закрыт\nПодъемник с крыши гостиницы: закрыт\nКресельный подъемник №1: закрыт\nЛенточный подъемник № 6: закрыт",
+    "periods": [],
+    "status": "ok",
+    "slopesOpen": false,
+    "newsSummary": "28.11: 12:00–21:45",
+    "newsPeriods": [
       {
         "days": "28.11",
         "open": "12:00",
         "close": "21:45"
       }
     ],
-    "status": "ok",
-    "slopesOpen": false,
-    "hoursNote": "из новости"
+    "newsSourceUrl": "https://t.me/redlakeclub/1864"
   },
   {
     "resortId": "zolotaya-dolina",

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { cardHoursText, hoursFor, slopesBadgeLabel } from '../lib/data'
+import { cardHoursText, cardNewsHoursText, hoursFor, slopesBadgeLabel } from '../lib/data'
 import { seasonOpenBadgeLabel } from '../lib/season-open-badge'
 import type { HoursSnapshot, ImportantItem, Resort } from '../types'
 
@@ -23,10 +23,13 @@ export function ResortCard({
   // Future season start from scraped news (hide once the date has passed, MSK).
   const seasonBadge = !inactive ? seasonOpenBadgeLabel(resort.id, important) : null
 
-  // Active only: unified schedule line (no slope status prose — badges cover that).
+  // Active only: primary site schedule + optional highlighted news overlay.
   // Дикие / неясные / закрытые — omit facts entirely.
-  // News-sourced caption («из новости») is detail-page only — not on home cards.
+  // No «из новости» label on cards (prefs).
   const hoursText = !inactive ? cardHoursText(h) : null
+  const newsHoursText = !inactive ? cardNewsHoursText(h) : null
+  const hasPrimaryHours = Boolean(hoursText && hoursText !== 'нет данных')
+  const showHours = !inactive && (hasPrimaryHours || newsHoursText)
 
   return (
     <article className={`resort-card resort-card--${resort.status}${closed ? ' resort-card--slopes-closed' : ''}`}>
@@ -53,11 +56,16 @@ export function ResortCard({
         ) : null}
       </div>
       <p className="resort-card__area">{resort.city_or_district || resort.area}</p>
-      {!inactive && hoursText ? (
+      {showHours ? (
         <dl className="resort-card__facts">
           <div>
             <dt>Часы</dt>
-            <dd className="resort-card__hours">{hoursText}</dd>
+            {hasPrimaryHours ? (
+              <dd className="resort-card__hours">{hoursText}</dd>
+            ) : null}
+            {newsHoursText ? (
+              <dd className="resort-card__hours resort-card__hours--extra">{newsHoursText}</dd>
+            ) : null}
           </div>
         </dl>
       ) : null}

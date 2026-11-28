@@ -184,7 +184,15 @@ export function hoursSnapshot(partial) {
   if (partial.slopesOpen === true || partial.slopesOpen === false) {
     snap.slopesOpen = partial.slopesOpen
   }
-  // Short card caption (e.g. «из новости») — omit when empty.
+  // Additive news overlay (never replaces periods/summary).
+  if (Array.isArray(partial.newsPeriods) && partial.newsPeriods.length) {
+    snap.newsPeriods = partial.newsPeriods
+  }
+  const newsSummary =
+    typeof partial.newsSummary === 'string' ? partial.newsSummary.trim() : ''
+  if (newsSummary) snap.newsSummary = newsSummary
+  if (partial.newsSourceUrl) snap.newsSourceUrl = partial.newsSourceUrl
+  // Deprecated: hoursNote («из новости») — kept only for reading legacy snapshots.
   const note = typeof partial.hoursNote === 'string' ? partial.hoursNote.trim() : ''
   if (note) snap.hoursNote = note
   return snap

@@ -605,6 +605,21 @@ export function cardHoursText(hours: HoursSnapshot | undefined): string {
   return cleaned || 'нет данных'
 }
 
+/**
+ * Additive news-hours line for resort cards (highlighted; no «из новости» label).
+ */
+export function cardNewsHoursText(hours: HoursSnapshot | undefined): string | null {
+  if (!hours) return null
+  const fromPeriods = formatCardHoursFromPeriods(hours.newsPeriods)
+  if (fromPeriods) return fromPeriods
+  const raw = (hours.newsSummary || '').trim()
+  if (!raw) return null
+  const cleaned = normalizeCardHoursSummary(
+    stripUrlsFromText(localizePublicText(raw)),
+  )
+  return cleaned || null
+}
+
 export function pricesFor(resortId: string, prices: PriceSnapshot[]): PriceSnapshot | undefined {
   return prices.find((p) => p.resortId === resortId)
 }

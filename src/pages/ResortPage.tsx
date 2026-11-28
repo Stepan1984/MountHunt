@@ -6,6 +6,7 @@ import { ResortMap } from '../components/ResortMap'
 import { SkipassTables } from '../components/SkipassTables'
 import { WebcamSection } from '../components/WebcamPlayer'
 import {
+  cardNewsHoursText,
   formatUpdatedAt,
   formatHoursTablePeriods,
   hoursFor,
@@ -87,9 +88,12 @@ export function ResortPage({ data }: { data: SiteData }) {
   const hoursSummaryRaw =
     !inactive && hours?.summary ? localizePublicText(hours.summary) : null
   const hoursLead = hoursLeadText(hoursSummaryRaw, hours?.periods)
+  // Additive news overlay — above the main table, highlighted (no «из новости» label).
+  const newsHoursExtra = inactive ? null : cardNewsHoursText(hours)
   const hoursSummary = inactive
     ? null
-    : (hoursLead ?? (hours?.periods?.length ? null : 'Нет данных'))
+    : (hoursLead ??
+      (hours?.periods?.length || newsHoursExtra ? null : 'Нет данных'))
   const hoursTableRows = inactive ? null : formatHoursTablePeriods(hours?.periods)
   // Slope badges only for active resorts; inactive detail pages show none.
   const badge = !inactive ? slopesBadgeLabel(resort.id, hours, data.important) : null
@@ -170,14 +174,14 @@ export function ResortPage({ data }: { data: SiteData }) {
                 </ExternalLink>
               )}
             </div>
+            {newsHoursExtra ? (
+              <p className="detail-hours-extra">{newsHoursExtra}</p>
+            ) : null}
             {hoursSummary && (
               <p className="detail-lead resort-card__hours">
                 <LinkedText text={hoursSummary} />
               </p>
             )}
-            {!inactive && hours?.hoursNote ? (
-              <p className="detail-hours-note">{hours.hoursNote}</p>
-            ) : null}
             {hoursTableRows && hoursTableRows.length > 0 && (
               <DataTable aria-label="Часы работы">
                 <thead>

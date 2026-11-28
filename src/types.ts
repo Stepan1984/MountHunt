@@ -70,8 +70,18 @@ export type HoursSnapshot = {
    */
   slopesOpen?: boolean
   /**
-   * Short muted caption under detail «Часы работы» (e.g. «из новости»
-   * when schedule was taken from a resort news post). Not shown on home cards.
+   * Additive schedule from a fresh resort news post (TG/VK / «Важное»).
+   * Shown highlighted on the card and above the main hours table on the detail page.
+   * Never replaces `periods` / `summary` from the site scrape.
+   */
+  newsPeriods?: { days: string; open: string; close: string }[]
+  /** Short line for the news overlay, e.g. «28.11: 12:00–21:45». */
+  newsSummary?: string
+  /** Source URL of the news post that produced the overlay. */
+  newsSourceUrl?: string | null
+  /**
+   * @deprecated Legacy wipe marker («из новости»). No longer written or shown;
+   * kept optional for reading old snapshots during migration.
    */
   hoursNote?: string
 }
